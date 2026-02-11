@@ -135,14 +135,13 @@
 
 // export default AcademicSetup;
 
-
 import React, { useEffect, useState } from "react";
 import { 
   Plus, Edit, Trash2, BookOpen, Layers, Users, Building2, Search, Filter, X, Save 
 } from "lucide-react";
 
 export default function AcademicSetup() {
-  const [activeTab, setActiveTab] = useState("departments");
+  const [activeTab, setActiveTab] = useState("courses");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // --- DATA STATE ---
@@ -207,8 +206,8 @@ export default function AcademicSetup() {
       {/* 2. TABS */}
       <div className="flex flex-col md:flex-row gap-6 mb-8 border-b border-slate-200 pb-1">
         {[
-            { id: "departments", label: "Departments", icon: Building2 },
             { id: "courses", label: "Courses", icon: BookOpen },
+            { id: "departments", label: "Departments", icon: Building2 },
             { id: "classes", label: "Classes & Sections", icon: Users }
         ].map((tab) => (
           <button
