@@ -60,7 +60,7 @@ export const StudentForm = () => {
       <div className="flex items-center justify-between p-6 border-b">
         <div>
           <h1 className="text-xl font-bold">Enroll New Student</h1>
-          <p className="text-xs text-slate-400 uppercase mt-1">
+          <p className="text-md text-slate-400 uppercase mt-1">
             Fill in registration details
           </p>
         </div>
@@ -74,7 +74,7 @@ export const StudentForm = () => {
         <section>
           <div className="flex items-center gap-2 mb-6">
             <User size={18} />
-            <h3 className="font-bold uppercase text-sm">Personal Details</h3>
+            <h3 className="font-bold uppercase text-md">Personal Details</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -96,7 +96,7 @@ export const StudentForm = () => {
         <section>
           <div className="flex items-center gap-2 mb-6">
             <GraduationCap size={18} />
-            <h3 className="font-bold uppercase text-sm">Academic Info</h3>
+            <h3 className="font-bold uppercase text-md">Academic Info</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -206,7 +206,7 @@ export const StudentForm = () => {
         <section>
           <div className="flex items-center gap-2 mb-6">
             <Lock size={18} />
-            <h3 className="font-bold uppercase text-sm">Login Credentials</h3>
+            <h3 className="font-bold uppercase text-md">Login Credentials</h3>
           </div>
 
           <div className="flex gap-2">

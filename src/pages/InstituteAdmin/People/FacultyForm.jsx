@@ -73,7 +73,7 @@ export const FacultyForm = () => {
           <Upload size={22} />
         </div>
 
-        <p className="text-sm font-semibold text-slate-800">
+        <p className="text-md font-semibold text-slate-800">
           {label}
         </p>
 
@@ -103,7 +103,7 @@ export const FacultyForm = () => {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Add New Faculty</h1>
-          <p className="text-sm text-slate-500">Create a profile for a new teacher</p>
+          <p className="text-md text-slate-500">Create a profile for a new teacher</p>
         </div>
       </div>
 

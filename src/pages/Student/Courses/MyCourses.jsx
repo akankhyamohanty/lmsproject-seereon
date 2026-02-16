@@ -1,12 +1,15 @@
 import { BookOpen, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom"; // ✅ Import Link
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export const MyCourses = () => {
+  const [courses, setCourses] = useState([]);
+
   // Mock data based on the screenshot
-  const courses = [
+  const mockCourses = [
     {
       id: 1,
-      title: "Advanced Mathematics", // Fixed typo "Mathmatics"
+      title: "Advanced Mathematics",
       instructor: "Dr Smith",
       progress: 60,
       modules: 8,
@@ -27,8 +30,44 @@ export const MyCourses = () => {
     },
   ];
 
+  // Load courses from localStorage on mount
+  useEffect(() => {
+    const storedCourses = localStorage.getItem("student_courses");
+    if (storedCourses) {
+      try {
+        setCourses(JSON.parse(storedCourses));
+      } catch (error) {
+        console.error("Error parsing stored courses:", error);
+        // Fallback to mock data if parsing fails
+        setCourses(mockCourses);
+        localStorage.setItem("student_courses", JSON.stringify(mockCourses));
+      }
+    } else {
+      // First time - store mock data
+      setCourses(mockCourses);
+      localStorage.setItem("student_courses", JSON.stringify(mockCourses));
+    }
+  }, []);
+
+  // Handle course click - store selected course in localStorage
+  const handleCourseClick = (courseId) => {
+    const selectedCourse = courses.find(c => c.id === courseId);
+    if (selectedCourse) {
+      localStorage.setItem("selected_course", JSON.stringify(selectedCourse));
+    }
+  };
+
+  // Update course progress in localStorage
+  const updateCourseProgress = (courseId, newProgress) => {
+    const updatedCourses = courses.map(course =>
+      course.id === courseId ? { ...course, progress: newProgress } : course
+    );
+    setCourses(updatedCourses);
+    localStorage.setItem("student_courses", JSON.stringify(updatedCourses));
+  };
+
   return (
-    <div className="w-full max-w-7xl mx-auto pb-12">
+    <div className="w-full max-w-10xl mx-auto pb-12">
       
       {/* 1. HEADER */}
       <div className="mb-10 mt-2">
@@ -50,7 +89,11 @@ export const MyCourses = () => {
               </div>
               <div>
                 {/* Linked Title */}
-                <Link to="/student/courses/view" className="hover:text-blue-600 transition-colors">
+                <Link 
+                  to="/student/courses/view" 
+                  onClick={() => handleCourseClick(course.id)}
+                  className="hover:text-blue-600 transition-colors"
+                >
                   <h3 className="text-xl font-bold text-slate-800">{course.title}</h3>
                 </Link>
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-1 mt-1">
@@ -63,8 +106,8 @@ export const MyCourses = () => {
             {/* Progress Section */}
             <div className="mb-6">
               <div className="flex justify-between items-end mb-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Progress</span>
-                <span className="text-sm font-black text-slate-800">{course.progress}%</span>
+                <span className="text-md font-bold text-slate-400 uppercase tracking-wide">Progress</span>
+                <span className="text-md font-black text-slate-800">{course.progress}%</span>
               </div>
               
               {/* Progress Bar */}
@@ -78,19 +121,25 @@ export const MyCourses = () => {
 
             {/* Footer: Modules count & Action Link */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-50">
-              <span className="text-xs font-bold text-slate-500">{course.modules} Modules</span>
+              <span className="text-md font-bold text-slate-500">{course.modules} Modules</span>
               
-              {/* ✅ UPDATED: Link to Course Details */}
+              {/* ✅ Link to Course Details */}
               <Link 
                 to="/student/courses/view" 
-                className="text-blue-600 text-xs font-black uppercase tracking-wide flex items-center gap-1 hover:gap-2 transition-all z-10"
+                onClick={() => handleCourseClick(course.id)}
+                className="text-blue-600 text-md font-black uppercase tracking-wide flex items-center gap-1 hover:gap-2 transition-all z-10"
               >
                 View Course <ChevronRight size={14} strokeWidth={3} />
               </Link>
             </div>
 
-            {/* Optional: Make the whole card clickable via an overlay link */}
-            <Link to="/student/courses/view" className="absolute inset-0 z-0" aria-hidden="true" />
+            {/* Make the whole card clickable via an overlay link */}
+            <Link 
+              to="/student/courses/view" 
+              onClick={() => handleCourseClick(course.id)}
+              className="absolute inset-0 z-0" 
+              aria-hidden="true" 
+            />
           </div>
         ))}
       </div>

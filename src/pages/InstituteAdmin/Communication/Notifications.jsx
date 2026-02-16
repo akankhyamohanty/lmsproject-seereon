@@ -364,14 +364,14 @@ export const Notifications = () => {
           <form onSubmit={handleSend} className="p-10 space-y-8">
             {/* Course */}
             <div>
-              <label className="text-xs font-black uppercase tracking-widest text-slate-700">
+              <label className="text-md font-black uppercase tracking-widest text-slate-700">
                 Course / Class
               </label>
               <div className="relative mt-2">
                 <select
                   value={course}
                   onChange={(e) => setCourse(e.target.value)}
-                  className="w-full bg-slate-100 rounded-xl px-5 py-4 font-bold text-sm appearance-none outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
+                  className="w-full bg-slate-100 rounded-xl px-5 py-4 font-bold text-md appearance-none outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
                 >
                   <option value="">Select Target Audience</option>
                   <option>B.Tech CSE - Year 1</option>
@@ -384,30 +384,30 @@ export const Notifications = () => {
 
             {/* Title */}
             <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-700">Title</label>
+                <label className="text-md font-black uppercase tracking-widest text-slate-700">Title</label>
                 <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Notification Title"
-                className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
+                className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-md outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
                 />
             </div>
 
             {/* Message */}
             <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-700">Message</label>
+                <label className="text-md font-black uppercase tracking-widest text-slate-700">Message</label>
                 <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows="4"
                 placeholder="Notification Message"
-                className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-sm resize-none outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
+                className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-md resize-none outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700"
                 />
             </div>
 
             {/* Target Roles */}
             <div>
-              <p className="text-xs font-black uppercase tracking-widest mb-3 text-slate-700">
+              <p className="text-md font-black uppercase tracking-widest mb-3 text-slate-700">
                 Target Roles
               </p>
               <div className="flex flex-wrap gap-2">
@@ -417,7 +417,7 @@ export const Notifications = () => {
                     key={role}
                     type="button"
                     onClick={() => toggleRole(role)}
-                    className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                    className={`px-5 py-2.5 rounded-xl text-md font-bold uppercase tracking-wider transition-all ${
                       targetRoles.includes(role)
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
                         : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -431,14 +431,14 @@ export const Notifications = () => {
 
             {/* Delivery Channels */}
             <div>
-              <p className="text-xs font-black uppercase tracking-widest mb-3 text-slate-700">
+              <p className="text-md font-black uppercase tracking-widest mb-3 text-slate-700">
                 Delivery Channels
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => toggleChannel("Email")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-md font-bold uppercase tracking-wider transition-all ${
                     channels.includes("Email")
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -449,7 +449,7 @@ export const Notifications = () => {
                 <button
                   type="button"
                   onClick={() => toggleChannel("SMS")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-md font-bold uppercase tracking-wider transition-all ${
                     channels.includes("SMS")
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-500/30"
                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -463,21 +463,21 @@ export const Notifications = () => {
             {/* Schedule */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-700">Schedule Date</label>
+                  <label className="text-md font-black uppercase tracking-widest text-slate-700">Schedule Date</label>
                   <input
                     type="date"
                     value={scheduleDate}
                     onChange={(e) => setScheduleDate(e.target.value)}
-                    className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-500 uppercase"
+                    className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-md outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-500 uppercase"
                   />
               </div>
               <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-700">Schedule Time</label>
+                  <label className="text-md font-black uppercase tracking-widest text-slate-700">Schedule Time</label>
                   <input
                     type="time"
                     value={scheduleTime}
                     onChange={(e) => setScheduleTime(e.target.value)}
-                    className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-500 uppercase"
+                    className="w-full mt-2 bg-slate-100 rounded-xl px-5 py-4 font-bold text-md outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-500 uppercase"
                   />
               </div>
             </div>
@@ -486,7 +486,7 @@ export const Notifications = () => {
             <div className="flex justify-end pt-4">
               <button
                 disabled={loading}
-                className="bg-blue-600 text-white px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
+                className="bg-blue-600 text-white px-8 py-3.5 rounded-xl text-md font-bold uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95"
               >
                 {loading ? "Sending..." : <><Send size={16} strokeWidth={2.5} /> Send Notification</>}
               </button>

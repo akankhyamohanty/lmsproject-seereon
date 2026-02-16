@@ -177,11 +177,11 @@ export const FacultyList = () => {
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty Approval Queue</h1>
-          <p className="text-sm text-gray-500">Review and approve faculty applications</p>
+          <p className="text-md text-gray-500">Review and approve faculty applications</p>
         </div>
         <button 
           onClick={() => setIsAddModalOpen(true)} 
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-md font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
         >
           <Plus size={18} /> Add Faculty
         </button>
@@ -194,7 +194,7 @@ export const FacultyList = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+              className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
                 activeTab === tab 
                   ? "bg-slate-800 text-white shadow-md" 
                   : "text-slate-500 hover:bg-slate-50"
@@ -212,7 +212,7 @@ export const FacultyList = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search faculty..." 
-            className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600 placeholder:text-slate-400 shadow-sm"
+            className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-md font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600 placeholder:text-slate-400 shadow-sm"
           />
         </div>
       </div>
@@ -222,12 +222,12 @@ export const FacultyList = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="py-4 pl-6 pr-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Faculty Name</th>
-                <th className="py-4 px-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Qualification</th>
-                <th className="py-4 px-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Applied Date</th>
-                <th className="py-4 px-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Status</th>
-                <th className="py-4 pr-6 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Actions</th>
+              <tr className="bg-slate-50  border-b border-slate-200">
+                <th className="py-4 pl-6 pr-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Faculty Name</th>
+                <th className="py-4 px-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Qualification</th>
+                <th className="py-4 px-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Applied Date</th>
+                <th className="py-4 px-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Status</th>
+                <th className="py-4 pr-6 text-[15px] font-black uppercase text-slate-400 tracking-widest text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -236,25 +236,25 @@ export const FacultyList = () => {
                   <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="py-4 pl-6 pr-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0 border border-blue-100">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-md shrink-0 border border-blue-100">
                           {item.name[0]}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-700 text-sm">{item.name}</p>
-                          <p className="text-xs text-slate-400">{item.email}</p>
+                          <p className="font-bold text-slate-700 text-md">{item.name}</p>
+                          <p className="text-md text-slate-400">{item.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-700 text-sm">{item.qual_pg || item.qual_grad}</span>
-                        <span className="text-xs font-bold text-slate-400">{item.exp} Experience</span>
+                        <span className="font-bold text-slate-700 text-md">{item.qual_pg || item.qual_grad}</span>
+                        <span className="text-md font-bold text-slate-400">{item.exp} Experience</span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
                         <Calendar size={14} className="text-slate-400" />
-                        <span className="text-sm font-bold text-slate-600 font-mono">{item.date}</span>
+                        <span className="text-md font-bold text-slate-600 font-mono">{item.date}</span>
                       </div>
                     </td>
                     <td className="py-4 px-4">
@@ -295,8 +295,8 @@ export const FacultyList = () => {
                   <td colSpan="5" className="py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Filter size={48} className="text-slate-200 mb-4" />
-                      <p className="text-sm font-bold">No faculty found</p>
-                      <p className="text-xs mt-1 font-medium">Try changing the filter or adding a new faculty member.</p>
+                      <p className="text-md font-bold">No faculty found</p>
+                      <p className="text-md mt-1 font-medium">Try changing the filter or adding a new faculty member.</p>
                     </div>
                   </td>
                 </tr>
@@ -331,8 +331,8 @@ export const FacultyList = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-800">{selectedFaculty.name}</h3>
-                  <p className="text-sm font-medium text-slate-500">{selectedFaculty.dept || "General Department"}</p>
-                  <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${
+                  <p className="text-md font-medium text-slate-500">{selectedFaculty.dept || "General Department"}</p>
+                  <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-[15px] font-bold uppercase tracking-wide border ${
                       selectedFaculty.status === "Approved" ? "bg-green-50 text-green-700 border-green-100" :
                       selectedFaculty.status === "Rejected" ? "bg-red-50 text-red-700 border-red-100" :
                       "bg-yellow-50 text-yellow-700 border-yellow-100"
@@ -342,15 +342,15 @@ export const FacultyList = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-6">
-                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label><p className="text-sm font-bold text-slate-700">{selectedFaculty.email}</p></div>
-                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone</label><p className="text-sm font-bold text-slate-700">{selectedFaculty.phone}</p></div>
-                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Highest Qual</label><p className="text-sm font-bold text-slate-700">{selectedFaculty.qual_pg || selectedFaculty.qual_grad}</p></div>
-                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Experience</label><p className="text-sm font-bold text-slate-700">{selectedFaculty.exp}</p></div>
+                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</label><p className="text-md font-bold text-slate-700">{selectedFaculty.email}</p></div>
+                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Phone</label><p className="text-md font-bold text-slate-700">{selectedFaculty.phone}</p></div>
+                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Highest Qual</label><p className="text-md font-bold text-slate-700">{selectedFaculty.qual_pg || selectedFaculty.qual_grad}</p></div>
+                 <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Experience</label><p className="text-md font-bold text-slate-700">{selectedFaculty.exp}</p></div>
               </div>
               {selectedFaculty.status === "Pending" && (
                 <div className="mt-8 pt-6 border-t border-slate-100 flex gap-3">
-                  <button onClick={() => initiateAction('approve', selectedFaculty)} className="flex-1 bg-green-600 text-white py-3 rounded-xl text-sm font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all">Approve</button>
-                  <button onClick={() => initiateAction('reject', selectedFaculty)} className="flex-1 bg-white border-2 border-red-100 text-red-600 py-3 rounded-xl text-sm font-bold hover:bg-red-50 transition-all">Reject</button>
+                  <button onClick={() => initiateAction('approve', selectedFaculty)} className="flex-1 bg-green-600 text-white py-3 rounded-xl text-md font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all">Approve</button>
+                  <button onClick={() => initiateAction('reject', selectedFaculty)} className="flex-1 bg-white border-2 border-red-100 text-red-600 py-3 rounded-xl text-md font-bold hover:bg-red-50 transition-all">Reject</button>
                 </div>
               )}
             </div>
@@ -363,10 +363,10 @@ export const FacultyList = () => {
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 p-6 animate-in zoom-in-95 duration-200 text-center">
             <h3 className="text-lg font-black text-slate-800 mb-1">Confirm Action</h3>
-            <p className="text-sm text-slate-500 mb-6">Are you sure you want to {confirmAction.type} <strong>{confirmAction.name}</strong>?</p>
+            <p className="text-md text-slate-500 mb-6">Are you sure you want to {confirmAction.type} <strong>{confirmAction.name}</strong>?</p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmAction(null)} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50">Cancel</button>
-              <button onClick={executeAction} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700">Confirm</button>
+              <button onClick={() => setConfirmAction(null)} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-md font-bold hover:bg-slate-50">Cancel</button>
+              <button onClick={executeAction} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-md font-bold hover:bg-blue-700">Confirm</button>
             </div>
           </div>
         </div>
@@ -410,7 +410,7 @@ const FacultyFormModal = ({ onClose, onSave }) => {
         <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
           <div>
             <h3 className="font-black text-slate-800 text-lg">Onboard New Faculty</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Enter personal and academic details</p>
+            <p className="text-md font-bold text-slate-400 uppercase tracking-widest mt-1">Enter personal and academic details</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors">
             <X size={20} />
@@ -423,11 +423,11 @@ const FacultyFormModal = ({ onClose, onSave }) => {
             
             {/* 1. PERSONAL DETAILS */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><User size={16} /></div><span className="text-sm font-black text-slate-700 uppercase tracking-wide">Personal Details</span></div>
+              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><User size={16} /></div><span className="text-md font-black text-slate-700 uppercase tracking-wide">Personal Details</span></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Name *</label><input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="e.g. Dr. John Doe" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email Address *</label><input name="email" type="email" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="john@institute.edu" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone Number</label><input name="phone" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="+91 98765 43210" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Full Name *</label><input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="e.g. Dr. John Doe" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Email Address *</label><input name="email" type="email" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="john@institute.edu" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Phone Number</label><input name="phone" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500 transition-all" placeholder="+91 98765 43210" /></div>
               </div>
             </div>
 
@@ -435,10 +435,10 @@ const FacultyFormModal = ({ onClose, onSave }) => {
 
             {/* 2. IDENTITY PROOFS */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><CreditCard size={16} /></div><span className="text-sm font-black text-slate-700 uppercase tracking-wide">Identity Proofs</span></div>
+              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg"><CreditCard size={16} /></div><span className="text-md font-black text-slate-700 uppercase tracking-wide">Identity Proofs</span></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Aadhar Card No.</label><input name="aadhar" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="XXXX XXXX XXXX" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PAN Card No.</label><input name="pan" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="ABCDE1234F" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Aadhar Card No.</label><input name="aadhar" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="XXXX XXXX XXXX" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">PAN Card No.</label><input name="pan" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-emerald-500" placeholder="ABCDE1234F" /></div>
               </div>
             </div>
 
@@ -446,12 +446,12 @@ const FacultyFormModal = ({ onClose, onSave }) => {
 
             {/* 3. EDUCATION */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg"><BookOpen size={16} /></div><span className="text-sm font-black text-slate-700 uppercase tracking-wide">Education</span></div>
+              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg"><BookOpen size={16} /></div><span className="text-md font-black text-slate-700 uppercase tracking-wide">Education</span></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">10th Grade</label><input name="qual_10th" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Board / %" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">12th Grade</label><input name="qual_12th" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Board / %" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Graduation</label><input name="qual_grad" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Degree / University" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Post Graduation</label><input name="qual_pg" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Degree / University" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">10th Grade</label><input name="qual_10th" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Board / %" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">12th Grade</label><input name="qual_12th" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Board / %" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Graduation</label><input name="qual_grad" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Degree / University" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Post Graduation</label><input name="qual_pg" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-orange-500" placeholder="Degree / University" /></div>
               </div>
             </div>
 
@@ -459,16 +459,16 @@ const FacultyFormModal = ({ onClose, onSave }) => {
 
             {/* 4. PROFESSIONAL INFO */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><Briefcase size={16} /></div><span className="text-sm font-black text-slate-700 uppercase tracking-wide">Professional Info</span></div>
+              <div className="flex items-center gap-2 mb-2"><div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg"><Briefcase size={16} /></div><span className="text-md font-black text-slate-700 uppercase tracking-wide">Professional Info</span></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Department</label>
-                  <select name="dept" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-purple-500 transition-all">
+                  <select name="dept" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-500 transition-all">
                       <option value="">Select Department</option><option>Computer Science</option><option>Physics</option><option>Mathematics</option>
                   </select>
                 </div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Designation</label><input name="designation" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-purple-500" placeholder="e.g. Senior Professor" /></div>
-                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Experience (Years)</label><input name="exp" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-purple-500" placeholder="e.g. 5 Years" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Designation</label><input name="designation" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-500" placeholder="e.g. Senior Professor" /></div>
+                <div className="space-y-1"><label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Experience (Years)</label><input name="exp" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-500" placeholder="e.g. 5 Years" /></div>
               </div>
             </div>
 
@@ -478,7 +478,7 @@ const FacultyFormModal = ({ onClose, onSave }) => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                  <div className="p-1.5 bg-pink-50 text-pink-600 rounded-lg"><FileText size={16} /></div>
-                 <span className="text-sm font-black text-slate-700 uppercase tracking-wide">Documents</span>
+                 <span className="text-md font-black text-slate-700 uppercase tracking-wide">Documents</span>
               </div>
 
               <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:bg-slate-50 transition-colors group cursor-pointer relative">
@@ -493,7 +493,7 @@ const FacultyFormModal = ({ onClose, onSave }) => {
                     <Upload size={24} />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-700">
+                    <p className="text-md font-bold text-slate-700">
                       {form.resume ? form.resume.name : "Click to upload Resume / CV"}
                     </p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-1">PDF, DOCX up to 5MB</p>
@@ -507,8 +507,8 @@ const FacultyFormModal = ({ onClose, onSave }) => {
 
         {/* Footer Actions */}
         <div className="p-6 border-t border-slate-100 bg-white rounded-b-2xl flex gap-3">
-          <button type="button" onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
-          <button onClick={handleSubmit} type="button" className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
+          <button type="button" onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-md uppercase tracking-wider text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
+          <button onClick={handleSubmit} type="button" className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
               <Save size={16} /> Save Faculty
           </button>
         </div>

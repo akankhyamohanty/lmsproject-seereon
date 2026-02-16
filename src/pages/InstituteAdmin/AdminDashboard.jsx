@@ -21,7 +21,7 @@ const CustomStatCard = ({ title, value, subtext, icon: Icon, color }) => {
       </div>
       <div>
         <h3 className="text-3xl font-bold text-gray-900">{value}</h3>
-        <p className="text-xs text-gray-500 mt-1">{subtext}</p>
+        <p className="text-md text-gray-500 mt-1">{subtext}</p>
       </div>
     </div>
   );
@@ -35,8 +35,8 @@ const ExamItem = () => (
     </div>
     <div>
       <h4 className="font-bold text-gray-800">Data Structures</h4>
-      <p className="text-xs text-gray-500">B.Tech CSE</p>
-      <p className="text-xs text-gray-500">2026-01-28 • 10:00 AM</p>
+      <p className="text-md text-gray-500">B.Tech CSE</p>
+      <p className="text-md text-gray-500">2026-01-28 • 10:00 AM</p>
     </div>
   </div>
 );
@@ -62,8 +62,8 @@ const AdminDashboard = () => {
       <main>
         
         {/* 6 Stats Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <CustomStatCard title="Total Faculties" value="45" subtext="All registered Faculties" icon={Users} color="purple" />
+        <div className="grid grid-cols- text-lg md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          <CustomStatCard title="Total Faculties" value="45"  subtext="All registered Faculties" icon={Users} color="purple" />
           <CustomStatCard title="Pending Approvals" value="138" subtext="Currently active" icon={Hourglass} color="beige" />
           <CustomStatCard title="Total Students" value="150" subtext="All registered students" icon={GraduationCap} color="purple" />
           <CustomStatCard title="Fees Collected" value="12.5L" subtext="Total Collected" icon={DollarSign} color="beige" />

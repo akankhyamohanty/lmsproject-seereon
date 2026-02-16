@@ -86,7 +86,7 @@ export default function Institute() {
             <h1 className="text-2xl md:text-4xl font-bold text-gray-800">
               Institute Master List
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-gray-600 text-xl md:text-base">
               View and manage all registered institutes
             </p>
           </div>
@@ -95,13 +95,13 @@ export default function Institute() {
             onClick={() => navigate("/admin/institute/form")}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold transition shadow-md w-full md:w-auto"
           >
-            <Plus size={20} /> Add Organisation
+            <Plus size={20} /> Add Institute
           </button>
         </div>
 
         {/* ================= STATS (MOVED TO TOP) ================= */}
         {institutes.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid text-xl grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <StatCard title="Total" value={institutes.length} />
             <StatCard
               title="Active"
@@ -188,7 +188,7 @@ export default function Institute() {
                     <div className="font-semibold">
                       {formatText(inst?.organisation?.name)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-md text-gray-500">
                       {inst?.organisation?.email}
                     </div>
                   </td>
@@ -208,7 +208,7 @@ export default function Institute() {
 
                   <td className="px-4 py-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[inst?.status]}`}
+                      className={`px-3 py-1 rounded-full text-md font-semibold ${statusStyles[inst?.status]}`}
                     >
                       {inst?.status}
                     </span>
@@ -266,22 +266,22 @@ export default function Institute() {
               <div className="font-semibold text-lg">
                 {formatText(inst?.organisation?.name)}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-md text-gray-500">
                 {inst?.organisation?.email}
               </div>
 
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Type:</strong> {inst?.organisation?.type}
               </div>
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Location:</strong>{" "}
                 {formatText(inst?.organisation?.city)},{" "}
                 {formatText(inst?.organisation?.state)}
               </div>
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Status:</strong>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${statusStyles[inst?.status]}`}
+                  className={`px-2 py-1 rounded-full text-md ${statusStyles[inst?.status]}`}
                 >
                   {inst?.status}
                 </span>
@@ -327,7 +327,7 @@ export default function Institute() {
 function StatCard({ title, value, color = "text-gray-800" }) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-      <div className="text-sm text-gray-500">{title}</div>
+      <div className="text-md text-gray-500">{title}</div>
       <div className={`text-3xl font-bold ${color}`}>{value}</div>
     </div>
   );

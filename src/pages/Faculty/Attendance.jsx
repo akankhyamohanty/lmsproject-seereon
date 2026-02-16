@@ -14,6 +14,7 @@ export const Attendance = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   
   // --- MOCK STUDENT DATA ---
+  
   const [students, setStudents] = useState([
     { id: 1, roll: "01", name: "Amit Sharma", status: "Present" },
     { id: 2, roll: "02", name: "Anjali Gupta", status: "Present" },

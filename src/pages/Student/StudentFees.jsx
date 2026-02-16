@@ -14,9 +14,9 @@ export const StudentFees = () => {
       {/* Summary Card */}
       <div className="bg-linear-to-r from-slate-800 to-slate-900 rounded-2xl p-8 text-white mb-8 shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-          <p className="text-slate-400 text-sm font-medium mb-1">Total Outstanding</p>
+          <p className="text-slate-400 text-md font-medium mb-1">Total Outstanding</p>
           <h2 className="text-4xl font-bold">₹ 25,000</h2>
-          <p className="text-slate-400 text-xs mt-2">Due by 15 Feb, 2024</p>
+          <p className="text-slate-400 text-md mt-2">Due by 15 Feb, 2024</p>
         </div>
         <button className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/50">
           <CreditCard size={20} /> Pay Online
@@ -37,7 +37,7 @@ export const StudentFees = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-800">{txn.title}</h4>
-                  <p className="text-xs text-slate-500 font-mono mt-0.5">{txn.id} • {txn.date}</p>
+                  <p className="text-md text-slate-500 font-mono mt-0.5">{txn.id} • {txn.date}</p>
                 </div>
               </div>
               
@@ -48,7 +48,7 @@ export const StudentFees = () => {
                     <Download size={18} />
                   </button>
                 ) : (
-                  <span className="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-bold rounded-full">Due</span>
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 text-md font-bold rounded-full">Due</span>
                 )}
               </div>
             </div>
