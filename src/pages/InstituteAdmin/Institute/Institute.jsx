@@ -1,285 +1,3 @@
-// import { Eye, Check, X, Plus } from "lucide-react";
-// import { useNavigate } from "react-router-dom";
-// // import { use } from "react";
-
-// const institutes = [
-//   {
-//     name: "St. Mary's",
-//     type: "College",
-//     city: "Mumbai",
-//     state: "Maharashtra",
-//     plan: "Premium",
-//     status: "Active",
-//     date: "1/15/2024",
-//   },
-//   {
-//     name: "Bright Future",
-//     type: "College",
-//     city: "Mumbai",
-//     state: "Maharashtra",
-//     plan: "Premium",
-//     status: "Active",
-//     date: "1/15/2024",
-//   },
-//   {
-//     name: "Green Valley",
-//     type: "College",
-//     city: "Mumbai",
-//     state: "Maharashtra",
-//     plan: "Premium",
-//     status: "Suspended",
-//     date: "1/15/2024",
-//   },
-//   {
-//     name: "Tech Institute",
-//     type: "College",
-//     city: "Mumbai",
-//     state: "Maharashtra",
-//     plan: "Premium",
-//     status: "Active",
-//     date: "1/15/2024",
-//   },
-//   {
-//     name: "Bright Future",
-//     type: "College",
-//     city: "Mumbai",
-//     state: "Maharashtra",
-//     plan: "Premium",
-//     status: "Trial",
-//     date: "1/15/2024",
-//   },
-// ];
-
-// const statusStyles = {
-//   Active: "bg-green-500 text-white",
-//   Suspended: "bg-red-500 text-white",
-//   Trial: "bg-indigo-500 text-white",
-// };
-
-// export default function InstituteMasterList() {
-//     const navigate = useNavigate(); // Use useNavigate hook from react-router-dom
-//   return (
-//     <div className="p-2 bg-gray-50 min-h-screen">
-//       {/* Header */}
-//       <div className="flex justify-between items-center mb-4">
-//         <div>
-//           <h1 className="text-xl text-start font-semibold">Institute Master List</h1>
-//           <p className="text-sm text-gray-500">
-//             View and manage all registered institutes
-//           </p>
-//         </div>
-
-//         <button onClick={()=>navigate("/admin/institute/form")} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
-//           <Plus size={18} /> Add Institute
-//         </button>
-//       </div>
-
-//       {/* Filters */}
-//       <div className="bg-white rounded-lg p-4 shadow mb-6">
-//         <h3 className="text-xl text-start font-semibold mb-3">Filters</h3>
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-//           <input
-//             type="text"
-//             placeholder="Search Institutes..."
-//             className="border rounded-md px-3 py-2 text-sm"
-//           />
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Types</option>
-//           </select>
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Status</option>
-//           </select>
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Plans</option>
-//           </select>
-//         </div>
-//       </div>
-
-//       {/* Table */}
-//       <div className="bg-white rounded-lg shadow overflow-x-auto">
-//         <div className="p-4 text-start font-semibold">
-//           Institutes ({institutes.length})
-//         </div>
-
-//         <table className="w-full text-sm">
-//           <thead className="bg-gray-100 text-left">
-//             <tr>
-//               <th className="p-3">Institute Name</th>
-//               <th>Type</th>
-//               <th>City</th>
-//               <th>State</th>
-//               <th>Subscription Plan</th>
-//               <th>Status</th>
-//               <th>Created Date</th>
-//               <th className="text-center">Actions</th>
-//             </tr>
-//           </thead>
-
-//           <tbody>
-//             {institutes.map((inst, index) => (
-//               <tr key={index} className="border-t hover:bg-gray-50">
-//                 <td className="p-3 font-medium">{inst?.name}</td>
-//                 <td>{inst?.type}</td>
-//                 <td>{inst?.city}</td>
-//                 <td>{inst?.state}</td>
-//                 <td>{inst?.plan}</td>
-//                 <td>
-//                   <span
-//                     className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[inst?.status]}`}
-//                   >
-//                     {inst?.status}
-//                   </span>
-//                 </td>
-//                 <td>{inst?.date}</td>
-//                 <td className="flex justify-center gap-2 py-3">
-//                   <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-//                     <Eye size={16} />
-//                   </button>
-//                   <button className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200">
-//                     <Check size={16} />
-//                   </button>
-//                   <button className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200">
-//                     <X size={16} />
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-// import { Eye, Check, X, Plus } from "lucide-react";
-// import { useNavigate } from "react-router-dom";
-// import { useEffect, useState } from "react";
-
-// const statusStyles = {
-//   Active: "bg-green-500 text-white",
-//   Suspended: "bg-red-500 text-white",
-//   Trial: "bg-indigo-500 text-white",
-// };
-
-// export default function InstituteMasterList() {
-//   const navigate = useNavigate();
-//   const [institutes, setInstitutes] = useState([]);
-
-//   // 🔹 Load institutes from localStorage
-//   useEffect(() => {
-//     const storedInstitutes =
-//       JSON.parse(localStorage.getItem("institutes")) || [];
-//     setInstitutes(storedInstitutes);
-//   }, []);
-
-//   return (
-//     <div className="p-2 bg-gray-50 min-h-screen">
-//       {/* Header */}
-//       <div className="flex justify-between items-center mb-4">
-//         <div>
-//           <h1 className="text-xl text-start font-semibold">
-//             Institute Master List
-//           </h1>
-//           <p className="text-sm text-gray-500">
-//             View and manage all registered institutes
-//           </p>
-//         </div>
-
-//         <button
-//           onClick={() => navigate("/admin/institute/form")}
-//           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-//         >
-//           <Plus size={18} /> Add Institute
-//         </button>
-//       </div>
-
-//       {/* Filters */}
-//       <div className="bg-white rounded-lg p-4 shadow mb-6">
-//         <h3 className="text-xl text-start font-semibold mb-3">Filters</h3>
-//         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-//           <input
-//             type="text"
-//             placeholder="Search Institutes..."
-//             className="border rounded-md px-3 py-2 text-sm"
-//           />
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Types</option>
-//           </select>
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Status</option>
-//           </select>
-//           <select className="border rounded-md px-3 py-2 text-sm">
-//             <option>All Plans</option>
-//           </select>
-//         </div>
-//       </div>
-
-//       {/* Table */}
-//       <div className="bg-white rounded-lg shadow overflow-x-auto">
-//         <div className="p-4 text-start font-semibold">
-//           Institutes ({institutes.length})
-//         </div>
-
-//         <table className="w-full text-sm">
-//           <thead className="bg-gray-100 text-left">
-//             <tr>
-//               <th className="p-3">Institute Name</th>
-//               <th>Type</th>
-//               <th>City</th>
-//               <th>State</th>
-//               <th>Subscription Plan</th>
-//               <th>Status</th>
-//               <th>Created Date</th>
-//               <th className="text-center">Actions</th>
-//             </tr>
-//           </thead>
-
-//           <tbody>
-//             {institutes.length === 0 ? (
-//               <tr>
-//                 <td colSpan="8" className="text-center py-6 text-gray-400">
-//                   No institutes found
-//                 </td>
-//               </tr>
-//             ) : (
-//               institutes.map((inst, index) => (
-//                 <tr key={index} className="border-t hover:bg-gray-50">
-//                   <td className="p-3 font-medium">{inst?.name}</td>
-//                   <td>{inst?.type}</td>
-//                   <td>{inst?.city}</td>
-//                   <td>{inst?.state}</td>
-//                   <td>{inst?.plan}</td>
-//                   <td>
-//                     <span
-//                       className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[inst?.status]}`}
-//                     >
-//                       {inst?.status}
-//                     </span>
-//                   </td>
-//                   <td>{inst?.date}</td>
-//                   <td className="flex justify-center gap-2 py-3">
-//                     <button className="p-2 rounded-full bg-gray-100 hover:bg-gray-200">
-//                       <Eye size={16} />
-//                     </button>
-//                     <button className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200">
-//                       <Check size={16} />
-//                     </button>
-//                     <button className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200">
-//                       <X size={16} />
-//                     </button>
-//                   </td>
-//                 </tr>
-//               ))
-//             )}
-//           </tbody>
-//         </table>
-//       </div>
-//     </div>
-//   );
-// }
-
 import { Eye, Trash2, Plus, CheckCircle, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -368,7 +86,7 @@ export default function Institute() {
             <h1 className="text-2xl md:text-4xl font-bold text-gray-800">
               Institute Master List
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-gray-600 text-xl md:text-base">
               View and manage all registered institutes
             </p>
           </div>
@@ -377,9 +95,31 @@ export default function Institute() {
             onClick={() => navigate("/admin/institute/form")}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold transition shadow-md w-full md:w-auto"
           >
-            <Plus size={20} /> Add Organisation
+            <Plus size={20} /> Add Institute
           </button>
         </div>
+
+        {/* ================= STATS (MOVED TO TOP) ================= */}
+        {institutes.length > 0 && (
+          <div className="grid text-xl grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard title="Total" value={institutes.length} />
+            <StatCard
+              title="Active"
+              value={institutes.filter((i) => i.status === "Active").length}
+              color="text-green-600"
+            />
+            <StatCard
+              title="Suspended"
+              value={institutes.filter((i) => i.status === "Suspended").length}
+              color="text-red-600"
+            />
+            <StatCard
+              title="Trial"
+              value={institutes.filter((i) => i.status === "Trial").length}
+              color="text-blue-600"
+            />
+          </div>
+        )}
 
         {/* ================= FILTERS ================= */}
         <div className="bg-white rounded-xl shadow-sm p-5 mb-8">
@@ -448,7 +188,7 @@ export default function Institute() {
                     <div className="font-semibold">
                       {formatText(inst?.organisation?.name)}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-md text-gray-500">
                       {inst?.organisation?.email}
                     </div>
                   </td>
@@ -468,7 +208,7 @@ export default function Institute() {
 
                   <td className="px-4 py-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[inst?.status]}`}
+                      className={`px-3 py-1 rounded-full text-md font-semibold ${statusStyles[inst?.status]}`}
                     >
                       {inst?.status}
                     </span>
@@ -526,22 +266,22 @@ export default function Institute() {
               <div className="font-semibold text-lg">
                 {formatText(inst?.organisation?.name)}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-md text-gray-500">
                 {inst?.organisation?.email}
               </div>
 
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Type:</strong> {inst?.organisation?.type}
               </div>
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Location:</strong>{" "}
                 {formatText(inst?.organisation?.city)},{" "}
                 {formatText(inst?.organisation?.state)}
               </div>
-              <div className="text-sm">
+              <div className="text-md">
                 <strong>Status:</strong>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${statusStyles[inst?.status]}`}
+                  className={`px-2 py-1 rounded-full text-md ${statusStyles[inst?.status]}`}
                 >
                   {inst?.status}
                 </span>
@@ -578,28 +318,6 @@ export default function Institute() {
             </div>
           ))}
         </div>
-
-        {/* ================= STATS ================= */}
-        {institutes.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            <StatCard title="Total" value={institutes.length} />
-            <StatCard
-              title="Active"
-              value={institutes.filter((i) => i.status === "Active").length}
-              color="text-green-600"
-            />
-            <StatCard
-              title="Suspended"
-              value={institutes.filter((i) => i.status === "Suspended").length}
-              color="text-red-600"
-            />
-            <StatCard
-              title="Trial"
-              value={institutes.filter((i) => i.status === "Trial").length}
-              color="text-blue-600"
-            />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -609,7 +327,7 @@ export default function Institute() {
 function StatCard({ title, value, color = "text-gray-800" }) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-      <div className="text-sm text-gray-500">{title}</div>
+      <div className="text-md text-gray-500">{title}</div>
       <div className={`text-3xl font-bold ${color}`}>{value}</div>
     </div>
   );

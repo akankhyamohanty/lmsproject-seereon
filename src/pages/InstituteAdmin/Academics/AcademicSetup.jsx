@@ -135,14 +135,13 @@
 
 // export default AcademicSetup;
 
-
 import React, { useEffect, useState } from "react";
 import { 
   Plus, Edit, Trash2, BookOpen, Layers, Users, Building2, Search, Filter, X, Save 
 } from "lucide-react";
 
 export default function AcademicSetup() {
-  const [activeTab, setActiveTab] = useState("departments");
+  const [activeTab, setActiveTab] = useState("courses");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // --- DATA STATE ---
@@ -192,12 +191,12 @@ export default function AcademicSetup() {
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">Academic Configuration</h1>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Manage departments, courses & classes</p>
+          <p className="text-md font-bold text-slate-400 uppercase tracking-widest mt-1">Manage departments, courses & classes</p>
         </div>
         
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#0F53D5] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
+          className="bg-[#0F53D5] hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-md uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
         >
           <Plus size={16} /> 
           {activeTab === 'departments' ? "Add Department" : activeTab === 'courses' ? "Add Course" : "Add Class"}
@@ -205,16 +204,16 @@ export default function AcademicSetup() {
       </div>
 
       {/* 2. TABS */}
-      <div className="flex flex-col md:flex-row gap-6 mb-8 border-b border-slate-200 pb-1">
+      <div className="flex text-lg flex-col md:flex-row gap-6 mb-8 border-b border-slate-200 pb-1">
         {[
-            { id: "departments", label: "Departments", icon: Building2 },
             { id: "courses", label: "Courses", icon: BookOpen },
+            { id: "departments", label: "Departments", icon: Building2 },
             { id: "classes", label: "Classes & Sections", icon: Users }
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 pb-3 px-2 text-sm font-bold transition-all relative ${
+            className={`flex items-center gap-2 pb-3 px-2 text-md font-bold transition-all relative ${
               activeTab === tab.id 
                 ? "text-[#0F53D5]" 
                 : "text-slate-400 hover:text-slate-600"
@@ -236,7 +235,7 @@ export default function AcademicSetup() {
         <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
            <div className="relative w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-blue-500" />
+        <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
            </div>
            <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"><Filter size={18} /></button>
         </div>
@@ -247,27 +246,27 @@ export default function AcademicSetup() {
               <tr className="bg-slate-50/80 border-b border-slate-200">
                 {activeTab === 'departments' && (
                     <>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Department Name</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Code</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Head of Dept</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Department Name</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Code</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Head of Dept</th>
                     </>
                 )}
                 {activeTab === 'courses' && (
                     <>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Course Name</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Type</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Duration</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Course Name</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Type</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Duration</th>
                     </>
                 )}
                 {activeTab === 'classes' && (
                     <>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Class Name</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Section</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Class Teacher</th>
-                        <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest">Strength</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Class Name</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Section</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Class Teacher</th>
+                        <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest">Strength</th>
                     </>
                 )}
-                <th className="px-6 py-4 text-[12px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 text-[15px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             
@@ -277,8 +276,8 @@ export default function AcademicSetup() {
               {activeTab === 'departments' && departments.map((dept) => (
                 <tr key={dept.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-6 py-4 font-bold text-slate-700">{dept.name}</td>
-                  <td className="px-6 py-4"><span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold font-mono">{dept.code}</span></td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{dept.head}</td>
+                  <td className="px-6 py-4"><span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-md font-bold font-mono">{dept.code}</span></td>
+                  <td className="px-6 py-4 text-md text-slate-600">{dept.head}</td>
                   <td className="px-6 py-4 text-right">
                     <ActionButtons onDelete={() => handleDelete(dept.id)} />
                   </td>
@@ -295,8 +294,8 @@ export default function AcademicSetup() {
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{course.code}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-4"><span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold">{course.type}</span></td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-600">{course.duration}</td>
+                  <td className="px-6 py-4"><span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-md font-bold">{course.type}</span></td>
+                  <td className="px-6 py-4 text-md font-bold text-slate-600">{course.duration}</td>
                   <td className="px-6 py-4 text-right">
                     <ActionButtons onDelete={() => handleDelete(course.id)} />
                   </td>
@@ -307,9 +306,9 @@ export default function AcademicSetup() {
               {activeTab === 'classes' && classes.map((cls) => (
                 <tr key={cls.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-6 py-4 font-bold text-slate-700">{cls.name}</td>
-                  <td className="px-6 py-4"><span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-xs font-bold">Sec {cls.section}</span></td>
-                  <td className="px-6 py-4 text-sm text-slate-600">{cls.teacher}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-600">{cls.strength} Students</td>
+                  <td className="px-6 py-4"><span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-md font-bold">Sec {cls.section}</span></td>
+                  <td className="px-6 py-4 text-md text-slate-600">{cls.teacher}</td>
+                  <td className="px-6 py-4 text-md font-bold text-slate-600">{cls.strength} Students</td>
                   <td className="px-6 py-4 text-right">
                     <ActionButtons onDelete={() => handleDelete(cls.id)} />
                   </td>
@@ -381,15 +380,15 @@ const AddModal = ({ type, onClose, onSave }) => {
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Department Name</label>
-                <input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. Mechanical Engineering" />
+                <input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. Mechanical Engineering" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Code</label>
-                <input name="code" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. ME" />
+                <input name="code" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. ME" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">HOD Name</label>
-                <input name="head" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. Dr. Alan Smith" />
+                <input name="head" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" placeholder="e.g. Dr. Alan Smith" />
               </div>
             </>
           )}
@@ -399,16 +398,16 @@ const AddModal = ({ type, onClose, onSave }) => {
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Course Name</label>
-                <input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                <input name="name" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Code</label>
-                    <input name="code" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                    <input name="code" required onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
                 </div>
                 <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Type</label>
-                    <select name="type" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500">
+                    <select name="type" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500">
                         <option>UG</option>
                         <option>PG</option>
                         <option>Diploma</option>
@@ -417,7 +416,7 @@ const AddModal = ({ type, onClose, onSave }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Duration</label>
-                <input name="duration" placeholder="e.g. 4 Years" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                <input name="duration" placeholder="e.g. 4 Years" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
               </div>
             </>
           )}
@@ -427,29 +426,29 @@ const AddModal = ({ type, onClose, onSave }) => {
             <>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Class Name</label>
-                <input name="name" required onChange={handleChange} placeholder="e.g. CSE - Year 2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                <input name="name" required onChange={handleChange} placeholder="e.g. CSE - Year 2" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Section</label>
-                    <input name="section" required onChange={handleChange} placeholder="A" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                    <input name="section" required onChange={handleChange} placeholder="A" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
                 </div>
                 <div className="space-y-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Strength</label>
-                    <input name="strength" type="number" onChange={handleChange} placeholder="60" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                    <input name="strength" type="number" onChange={handleChange} placeholder="60" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Class Teacher</label>
-                <input name="teacher" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 outline-none focus:border-blue-500" />
+                <input name="teacher" onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-blue-500" />
               </div>
             </>
           )}
 
           {/* Footer Actions */}
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-xs uppercase tracking-wider text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
+            <button type="button" onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl font-bold text-md uppercase tracking-wider text-slate-500 hover:bg-slate-50 transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex justify-center items-center gap-2">
                 <Save size={16} /> Save
             </button>
           </div>

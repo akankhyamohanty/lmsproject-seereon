@@ -12,7 +12,7 @@ import {
 
 export const StudentDashboard = () => {
   return (
-    <div className="w-full max-w-7xl mx-auto pb-12">
+    <div className="w-full max-w-10xl mx-auto pb-12">
       
       {/* 1. WELCOME HEADER (Handled by Layout usually, but adding title here as per screenshot flow) */}
       {/* Note: The screenshot has 'Hi, Subham' in the top bar, but if you want it in the page body: */}
@@ -44,7 +44,7 @@ export const StudentDashboard = () => {
           </div>
           <div>
             <div className="text-4xl font-black text-slate-900 tracking-tight mb-1">05</div>
-            <p className="text-xs font-bold text-slate-500">task</p>
+            <p className="text-md font-bold text-slate-500">task</p>
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export const StudentDashboard = () => {
           </div>
           <div>
             <div className="text-4xl font-black text-slate-900 tracking-tight mb-1">23</div>
-            <p className="text-xs font-bold text-slate-500">task</p>
+            <p className="text-md font-bold text-slate-500">task</p>
           </div>
         </div>
 
@@ -99,16 +99,16 @@ export const StudentDashboard = () => {
             <div className="p-4 border border-slate-100 rounded-xl flex justify-between items-center bg-slate-50/50">
                <div>
                   <h4 className="font-bold text-slate-700">Advanced Mathematics</h4>
-                  <p className="text-xs text-slate-500 mt-1">09:00 AM - 10:30 AM • Room 301</p>
+                  <p className="text-md text-slate-500 mt-1">09:00 AM - 10:30 AM • Room 301</p>
                </div>
-               <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Ongoing</span>
+               <span className="bg-blue-100 text-blue-700 text-md font-bold px-3 py-1 rounded-full">Ongoing</span>
             </div>
             <div className="p-4 border border-slate-100 rounded-xl flex justify-between items-center">
                <div>
                   <h4 className="font-bold text-slate-700">Data Structures</h4>
-                  <p className="text-xs text-slate-500 mt-1">11:00 AM - 12:30 PM • Lab 2</p>
+                  <p className="text-md text-slate-500 mt-1">11:00 AM - 12:30 PM • Lab 2</p>
                </div>
-               <span className="bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-full">Upcoming</span>
+               <span className="bg-slate-100 text-slate-500 text-md font-bold px-3 py-1 rounded-full">Upcoming</span>
             </div>
           </div>
         </div>
@@ -124,18 +124,18 @@ export const StudentDashboard = () => {
             <div className="p-4 border border-slate-100 rounded-xl flex justify-between items-center">
                <div>
                   <h4 className="font-bold text-slate-700">Physics Lab Report</h4>
-                  <p className="text-xs text-red-500 font-bold mt-1 flex items-center gap-1">
+                  <p className="text-md text-red-500 font-bold mt-1 flex items-center gap-1">
                     <Clock size={12} /> Deadline: Today, 11:59 PM
                   </p>
                </div>
-               <button className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors">Submit</button>
+               <button className="text-md font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors">Submit</button>
             </div>
             <div className="p-4 border border-slate-100 rounded-xl flex justify-between items-center">
                <div>
                   <h4 className="font-bold text-slate-700">Java Project Proposal</h4>
-                  <p className="text-xs text-slate-500 mt-1">Deadline: 12th Feb</p>
+                  <p className="text-md text-slate-500 mt-1">Deadline: 12th Feb</p>
                </div>
-               <button className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors">Submit</button>
+               <button className="text-md font-bold text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors">Submit</button>
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ const QuickActionBtn = ({ icon, label }) => (
     <div className="text-slate-700 group-hover:text-blue-600 transition-colors">
       {icon}
     </div>
-    <span className="text-xs font-bold text-slate-600 uppercase tracking-wide group-hover:text-slate-800">
+    <span className="text-md font-bold text-slate-600 uppercase tracking-wide group-hover:text-slate-800">
       {label}
     </span>
   </button>

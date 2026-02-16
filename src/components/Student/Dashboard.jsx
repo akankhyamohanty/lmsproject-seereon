@@ -59,7 +59,7 @@ export const StudentDashboard = () => {
     <div className="flex-1 overflow-auto p-8 bg-gray-50">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-800">Welcome, {user?.name?.split(' ')[0]}!</h2>
-        <p className="text-sm text-gray-500">Your academic dashboard</p>
+        <p className="text-md text-gray-500">Your academic dashboard</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -69,9 +69,9 @@ export const StudentDashboard = () => {
             <div key={idx} className={`${card.bgColor} rounded-2xl p-6 shadow-sm hover:shadow-lg transition`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-gray-600 text-sm font-medium mb-2">{card.title}</p>
+                  <p className="text-gray-600 text-md font-medium mb-2">{card.title}</p>
                   <p className={`text-3xl font-bold ${card.textColor} mb-2`}>{card.value}</p>
-                  <p className="text-xs text-gray-500">{card.subtitle}</p>
+                  <p className="text-md text-gray-500">{card.subtitle}</p>
                 </div>
                 <Icon className={`${card.textColor} w-6 h-6`} />
               </div>
@@ -101,16 +101,16 @@ export const StudentDashboard = () => {
           <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Announcements</h3>
           <div className="space-y-3">
             <div className="pb-3 border-b border-gray-200">
-              <p className="font-semibold text-sm text-gray-800">Semester Exam Schedule Released</p>
-              <p className="text-xs text-gray-500">2 hours ago</p>
+              <p className="font-semibold text-md text-gray-800">Semester Exam Schedule Released</p>
+              <p className="text-md text-gray-500">2 hours ago</p>
             </div>
             <div className="pb-3 border-b border-gray-200">
-              <p className="font-semibold text-sm text-gray-800">Holiday Notice - 26 Jan</p>
-              <p className="text-xs text-gray-500">1 day ago</p>
+              <p className="font-semibold text-md text-gray-800">Holiday Notice - 26 Jan</p>
+              <p className="text-md text-gray-500">1 day ago</p>
             </div>
             <div>
-              <p className="font-semibold text-sm text-gray-800">Assignment Extension Granted</p>
-              <p className="text-xs text-gray-500">3 days ago</p>
+              <p className="font-semibold text-md text-gray-800">Assignment Extension Granted</p>
+              <p className="text-md text-gray-500">3 days ago</p>
             </div>
           </div>
         </div>

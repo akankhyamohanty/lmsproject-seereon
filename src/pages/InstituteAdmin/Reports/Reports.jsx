@@ -111,7 +111,7 @@ export const Reports = () => {
       {/* HEADER */}
       <div className="mb-8 mt-2">
         <h1 className="text-4xl font-black text-slate-800 mb-2">Reports</h1>
-        <p className="text-slate-400 text-sm">Send reports to students, faculty, and staff</p>
+        <p className="text-slate-400 text-md">Send reports to students, faculty, and staff</p>
       </div>
 
       {/* REPORT CARDS */}
@@ -130,7 +130,7 @@ export const Reports = () => {
             >
               <BarChart3 className={`${isSelected ? "text-blue-600" : "text-slate-300"}`} size={32} />
               <h3 className="font-bold mt-4">{report.title}</h3>
-              <p className="text-xs text-slate-400 mt-2">{report.description}</p>
+              <p className="text-md text-slate-400 mt-2">{report.description}</p>
             </div>
           );
         })}

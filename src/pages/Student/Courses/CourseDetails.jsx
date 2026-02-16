@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom"; // Ensure Link is imported
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { 
   ArrowLeft, 
   User, 
@@ -10,11 +10,13 @@ import {
 
 export const CourseDetails = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Mock data for Modules
   const modulesList = [
     {
-      id: 1,
+      id: 1, 
       title: "Calculas Fundamentals",
       description: "Introduction to Derivative and Integrations",
       items: 5,
@@ -29,6 +31,71 @@ export const CourseDetails = () => {
     }
   ];
 
+  // Load selected course from localStorage on mount
+  useEffect(() => {
+    const storedCourse = localStorage.getItem("selected_course");
+    if (storedCourse) {
+      try {
+        setSelectedCourse(JSON.parse(storedCourse));
+      } catch (error) {
+        console.error("Error parsing stored course:", error);
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  // Load active tab from localStorage
+  useEffect(() => {
+    const storedTab = localStorage.getItem("course_details_tab");
+    if (storedTab) {
+      setActiveTab(storedTab);
+    }
+  }, []);
+
+  // Save active tab to localStorage
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem("course_details_tab", tab);
+  };
+
+  // Store module click in localStorage
+  const handleModuleClick = (moduleId) => {
+    const moduleData = {
+      moduleId,
+      courseId: selectedCourse?.id,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem("selected_module", JSON.stringify(moduleData));
+  };
+
+  // Update course progress and save to localStorage
+  const updateProgress = (newProgress) => {
+    const updatedCourse = { ...selectedCourse, progress: newProgress };
+    setSelectedCourse(updatedCourse);
+    localStorage.setItem("selected_course", JSON.stringify(updatedCourse));
+    
+    // Also update in courses list
+    const storedCourses = localStorage.getItem("student_courses");
+    if (storedCourses) {
+      try {
+        const courses = JSON.parse(storedCourses);
+        const updatedCourses = courses.map(c => 
+          c.id === selectedCourse.id ? updatedCourse : c
+        );
+        localStorage.setItem("student_courses", JSON.stringify(updatedCourses));
+      } catch (error) {
+        console.error("Error updating courses list:", error);
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="w-full max-w-7xl mx-auto pb-12">Loading...</div>;
+  }
+
+  const courseTitle = selectedCourse?.title || "Advanced Mathematics";
+  const courseProgress = selectedCourse?.progress || 65;
+
   return (
     <div className="w-full max-w-7xl mx-auto pb-12">
       
@@ -36,7 +103,7 @@ export const CourseDetails = () => {
       <div className="mb-6 mt-2">
         <Link 
           to="/student/courses" 
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-wide"
+          className="inline-flex items-center gap-2 text-md font-bold text-slate-500 hover:text-blue-600 transition-colors uppercase tracking-wide"
         >
           <ArrowLeft size={16} strokeWidth={3} /> Back to course
         </Link>
@@ -44,15 +111,15 @@ export const CourseDetails = () => {
 
       {/* 2. COURSE TITLE */}
       <h1 className="text-3xl font-black text-[#1e293b] tracking-tight mb-8">
-        Advanced Mathematics
+        {courseTitle}
       </h1>
 
       {/* 3. TABS */}
       <div className="flex gap-4 mb-8">
         <button
-          onClick={() => setActiveTab("overview")}
+          onClick={() => handleTabChange("overview")}
           className={`
-            px-8 py-2.5 rounded-lg text-sm font-bold transition-all border
+            px-8 py-2.5 rounded-lg text-md font-bold transition-all border
             ${activeTab === "overview" 
               ? "bg-[#2563eb] text-white border-blue-600 shadow-lg shadow-blue-500/30" 
               : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -62,9 +129,9 @@ export const CourseDetails = () => {
           Overview
         </button>
         <button
-          onClick={() => setActiveTab("modules")}
+          onClick={() => handleTabChange("modules")}
           className={`
-            px-8 py-2.5 rounded-lg text-sm font-bold transition-all border
+            px-8 py-2.5 rounded-lg text-md font-bold transition-all border
             ${activeTab === "modules" 
               ? "bg-[#2563eb] text-white border-blue-600 shadow-lg shadow-blue-500/30" 
               : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -85,8 +152,8 @@ export const CourseDetails = () => {
           
           {/* Description */}
           <div className="mb-10">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Course Description</h3>
-            <p className="text-sm font-medium text-slate-600 leading-relaxed max-w-3xl">
+            <h3 className="text-md font-bold text-slate-400 uppercase tracking-wide mb-2">Course Description</h3>
+            <p className="text-md font-medium text-slate-600 leading-relaxed max-w-3xl">
               Advance topic in calculus, linear algebra and differential equations. 
               This course covers the fundamental concepts required for engineering mathematics.
             </p>
@@ -97,15 +164,15 @@ export const CourseDetails = () => {
             
             {/* Teacher */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Teacher</span>
+              <span className="text-[15px] text-left font-black text-slate-500 uppercase tracking-widest">Teacher</span>
               <div className="flex items-center gap-2 font-bold text-slate-800">
-                <User size={18} /> Dr Smith
+                <User size={25} /> Dr Smith
               </div>
             </div>
 
             {/* Academic Year */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Year</span>
+              <span className="text-[15px] text-left font-black text-slate-500 uppercase tracking-widest">Academic Year</span>
               <div className="flex items-center gap-2 font-bold text-slate-800">
                 <Calendar size={18} /> 2024-2026
               </div>
@@ -113,7 +180,7 @@ export const CourseDetails = () => {
 
             {/* Total Modules */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Modules</span>
+              <span className="text-[15px] text-left font-black text-slate-500 uppercase tracking-widest">Total Modules</span>
               <div className="flex items-center gap-2 font-bold text-slate-800">
                 <BookOpen size={18} /> 8
               </div>
@@ -122,15 +189,21 @@ export const CourseDetails = () => {
 
           {/* Progress Section */}
           <div className="max-w-2xl">
-            <h3 className="text-sm font-bold text-slate-600 mb-3">Course Complete</h3>
+            <h3 className="text-md font-bold text-slate-600 mb-3">Course Complete</h3>
             
-            {/* Black Progress Bar */}
+            {/* Progress Bar */}
             <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden mb-2">
-              <div className="h-full bg-slate-900 w-[65%] rounded-full"></div>
+              <div 
+                className="h-full bg-slate-900 rounded-full transition-all" 
+                style={{ width: `${courseProgress}%` }}
+              ></div>
             </div>
             
-            <button className="text-xs font-bold text-blue-500 underline decoration-2 underline-offset-4 hover:text-blue-700">
-              65% Complete
+            <button 
+              onClick={() => updateProgress(Math.min(courseProgress + 5, 100))}
+              className="text-md font-bold text-blue-500 underline decoration-2 underline-offset-4 hover:text-blue-700"
+            >
+              {courseProgress}% Complete
             </button>
           </div>
 
@@ -158,25 +231,30 @@ export const CourseDetails = () => {
                   )}
                 </div>
                 
-                {/* --- UPDATE: CHANGED BUTTON TO LINK --- */}
+                {/* Link to Module Content */}
                 <Link 
                   to="/student/courses/module" 
-                  className="hidden sm:flex items-center gap-1 text-xs font-bold text-slate-800 group-hover:gap-2 transition-all"
+                  onClick={() => handleModuleClick(module.id)}
+                  className="hidden sm:flex items-center gap-1 text-md font-bold text-slate-800 group-hover:gap-2 transition-all"
                 >
                   View <ArrowRight size={14} strokeWidth={3} />
                 </Link>
               </div>
 
-              <p className="text-sm font-medium text-slate-400 mb-6">
+              <p className="text-md font-medium text-slate-400 mb-6">
                 {module.description}
               </p>
 
-              <div className="text-xs font-bold text-slate-400">
+              <div className="text-md font-bold text-slate-400">
                 {module.items} content items
               </div>
 
-              {/* Make the whole card clickable via absolute inset link for better UX */}
-              <Link to="/student/courses/module" className="absolute inset-0" />
+              {/* Make the whole card clickable */}
+              <Link 
+                to="/student/courses/module" 
+                onClick={() => handleModuleClick(module.id)}
+                className="absolute inset-0" 
+              />
             </div>
           ))}
 

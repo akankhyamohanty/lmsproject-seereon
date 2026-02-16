@@ -8,7 +8,7 @@ export const StudentProfile = () => {
 
   const [profile, setProfile] = useState({
     fullName: "",
-    studentId: "",
+    studentId: "", 
     email: "",
     mobile: "",
     course: "",
@@ -24,12 +24,12 @@ export const StudentProfile = () => {
       setProfile(JSON.parse(storedData));
     } else {
       const defaultProfile = {
-        fullName: "Subham Biswal",
-        studentId: "STU1234",
-        email: "subham123@gmail.com",
-        mobile: "123456789",
-        course: "MCA",
-        section: "2nd year Section-A",
+        fullName: "",
+        studentId: "",
+        email: "",
+        mobile: "",
+        course: "",
+        section: "",
         photo: "",
       };
 
@@ -83,11 +83,11 @@ export const StudentProfile = () => {
       .toUpperCase() || "SB";
 
   return (
-    <div className="w-full max-w-7xl mx-auto pb-12">
+    <div className="w-full max-w-10xl mx-auto pb-12">
 
       {/* ================= QUICK ACTIONS ================= */}
       <div className="bg-white rounded-2xl p-8 shadow border mb-8">
-        <h3 className="text-lg font-bold mb-6">Quick Actions</h3>
+        <h3 className="text-lg text-left font-bold mb-6">Quick Actions</h3>
 
         <div className="flex items-center gap-6">
           {/* Avatar */}
@@ -107,7 +107,7 @@ export const StudentProfile = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
-            className="flex items-center gap-2 px-6 py-2.5 border rounded-lg text-sm font-bold hover:bg-gray-100"
+            className="flex items-center gap-2 px-6 py-2.5 border rounded-lg text-md font-bold hover:bg-gray-100"
           >
             <Upload size={16} />
             Upload photo
@@ -126,9 +126,9 @@ export const StudentProfile = () => {
 
       {/* ================= PERSONAL DETAILS ================= */}
       <div className="bg-white rounded-2xl p-8 shadow border mb-8">
-        <h3 className="text-lg font-bold mb-8">Personal Details</h3>
+        <h3 className="text-lg text-left font-bold mb-8">Personal Details</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="grid text-left grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <Input
             label="Full Name"
             name="fullName"
@@ -167,9 +167,9 @@ export const StudentProfile = () => {
 
       {/* ================= ACADEMICS DETAILS ================= */}
       <div className="bg-white rounded-2xl p-8 shadow border">
-        <h3 className="text-lg font-bold mb-8">Academics Details</h3>
+        <h3 className="text-lg text-left font-bold mb-8">Academics Details</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid text-left grid-cols-1 md:grid-cols-2 gap-8">
           <Input label="Course / Program" value={profile.course} readOnly />
           <Input label="Class / Section" value={profile.section} readOnly />
         </div>
@@ -181,10 +181,10 @@ export const StudentProfile = () => {
 /* ================= REUSABLE INPUT ================= */
 const Input = ({ label, ...props }) => (
   <div className="space-y-2">
-    <label className="text-xs font-bold ml-1">{label}</label>
+    <label className="text-md font-bold ml-1">{label}</label>
     <input
       {...props}
-      className="w-full bg-gray-200 rounded-lg px-4 py-3.5 font-bold text-sm outline-none"
+      className="w-full bg-gray-200 rounded-lg px-4 py-3.5 font-bold text-md outline-none"
     />
   </div>
 );

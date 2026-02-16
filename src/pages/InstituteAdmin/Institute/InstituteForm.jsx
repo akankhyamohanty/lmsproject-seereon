@@ -1,206 +1,3 @@
-// import React, { useState } from "react";
-// import { useNavigate } from "react-router-dom";
-// import { X } from "lucide-react";
-
-// export default function InstituteForm() {
-//   const navigate = useNavigate();
-
-//   const [form, setForm] = useState({
-//     instituteName: "",
-//     type: "",
-//     address: "",
-//     city: "",
-//     state: "",
-//     country: "",
-//     pincode: "",
-//     email: "",
-//     phone: "",
-//     website: "",
-//   });
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     const storedInstitutes =
-//       JSON.parse(localStorage.getItem("institutes")) || [];
-
-//     const newInstitute = {
-//       name: form.instituteName,
-//       type: form.type,
-//       city: form.city,
-//       state: form.state,
-//       plan: "Premium",
-//       status: "Active",
-//       date: new Date().toLocaleDateString(),
-//     };
-
-//     localStorage.setItem(
-//       "institutes",
-//       JSON.stringify([...storedInstitutes, newInstitute])
-//     );
-
-//     navigate("/admin/institute");
-//   };
-
-//   return (
-//     <div className="fixed inset-0 bg-black/40 flex justify-center items-start overflow-y-auto z-50">
-//       <div className="bg-white w-full max-w-5xl mt-10 rounded-lg shadow-lg p-6">
-
-//         {/* Header */}
-//         <div className="flex justify-between items-center mb-6">
-//           <h2 className="text-lg font-semibold">Add Institute</h2>
-//           <button onClick={() => navigate("/admin/institute")}>
-//             <X />
-//           </button>
-//         </div>
-
-//         <form onSubmit={handleSubmit} className="space-y-8">
-
-//           {/* BASIC DETAILS */}
-//           <div>
-//             <h3 className="font-semibold mb-4">Basic Details</h3>
-
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//               <div>
-//                 <label className="text-sm">Institute Name</label>
-//                 <input
-//                   name="instituteName"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="St. Mary's College"
-//                   required
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">Type</label>
-//                 <input
-//                   name="type"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="College"
-//                   required
-//                 />
-//               </div>
-
-//               <div className="md:col-span-2">
-//                 <label className="text-sm">Address</label>
-//                 <input
-//                   name="address"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="123, Bharatpur, Bhubaneswar"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">City</label>
-//                 <input
-//                   name="city"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="Bhubaneswar"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">State</label>
-//                 <input
-//                   name="state"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="Odisha"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">Country</label>
-//                 <input
-//                   name="country"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="India"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">Pincode</label>
-//                 <input
-//                   name="pincode"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="755001"
-//                 />
-//               </div>
-//             </div>
-//           </div>
-
-//           <hr />
-
-//           {/* CONTACT DETAILS */}
-//           <div>
-//             <h3 className="font-semibold mb-4">Contact Details</h3>
-
-//             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//               <div>
-//                 <label className="text-sm">Email</label>
-//                 <input
-//                   name="email"
-//                   type="email"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="abc@gmail.com"
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="text-sm">Phone no.</label>
-//                 <input
-//                   name="phone"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="8585775744"
-//                 />
-//               </div>
-
-//               <div className="md:col-span-2">
-//                 <label className="text-sm">Website</label>
-//                 <input
-//                   name="website"
-//                   onChange={handleChange}
-//                   className="w-full bg-gray-200 rounded-md px-3 py-2 mt-1"
-//                   placeholder="www.abc.in"
-//                 />
-//               </div>
-//             </div>
-//           </div>
-
-//           {/* ACTIONS */}
-//           <div className="flex justify-end gap-3">
-//             <button
-//               type="button"
-//               onClick={() => navigate("/admin/institute")}
-//               className="px-4 py-2 border rounded-md"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               type="submit"
-//               className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-//             >
-//               Save Institute
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, Trash2, Upload } from "lucide-react";
@@ -281,23 +78,63 @@ export default function InstituteForm() {
       },
     ],
     legal: {
-      tinNo: "",
-      tinDoc: "",
+      // Land & Building Documents
+      propertyDeed: "",
+      propertyDeedDoc: "",
+      buildingApproval: "",
+      buildingApprovalDoc: "",
+      completionCertificate: "",
+      completionCertificateDoc: "",
+      
+      // NOCs
+      fireNOC: "",
+      fireNOCDoc: "",
+      policeNOC: "",
+      policeNOCDoc: "",
+      municipalityNOC: "",
+      municipalityNOCDoc: "",
+      educationDeptNOC: "",
+      educationDeptNOCDoc: "",
+      pollutionNOC: "",
+      pollutionNOCDoc: "",
+      
+      // Infrastructure & Safety
+      waterConnection: "",
+      waterConnectionDoc: "",
+      electricityConnection: "",
+      electricityConnectionDoc: "",
+      safetyAudit: "",
+      safetyAuditDoc: "",
+      drainageSystem: "",
+      drainageSystemDoc: "",
+      
+      // Financial & Administrative
       panNo: "",
       panDoc: "",
-      gstin: "",
+      gstinNo: "",
       gstinDoc: "",
-      etNo: "",
-      etDoc: "",
-      cstNo: "",
-      cstDoc: "",
-      udyamNo: "",
-      udyamDoc: "",
-      msmeNo: "",
-      msmeDoc: "",
-      tradeLicenseNo: "",
-      tradeLicenseDoc: "",
-      startupIndiaDoc: "",
+      bankAccount: "",
+      bankAccountDoc: "",
+      trustDeed: "",
+      trustDeedDoc: "",
+      
+      // Education Registration
+      diseCode: "",
+      disecodeDoc: "",
+      provisionalRecognition: "",
+      provisionalRecognitionDoc: "",
+      affiliation: "",
+      affiliationDoc: "",
+      
+      // Policies
+      childProtectionPolicy: "",
+      childProtectionPolicyDoc: "",
+      harassmentPolicy: "",
+      harassmentPolicyDoc: "",
+      admissionPolicy: "",
+      admissionPolicyDoc: "",
+      feeStructure: "",
+      feeStructureDoc: "",
     },
     branches: [
       {
@@ -475,14 +312,14 @@ export default function InstituteForm() {
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="w-full px-4 m:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="mx-auto w-full max-w-10xl">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-2">
               Add Organisation
             </h1>
-            <p className="text-sm sm:text-base text-gray-600">
+            <p className="text-md sm:text-base text-gray-600">
               Step {step + 1} of {STEPS.length} : {STEPS[step].title}
             </p>
           </div>
@@ -502,7 +339,7 @@ export default function InstituteForm() {
                   className="flex flex-col items-center flex-1 sm:flex-initial"
                 >
                   <div
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-xs sm:text-sm ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-md sm:text-md ${
                       i < step
                         ? "bg-green-500 text-white"
                         : i === step
@@ -512,7 +349,7 @@ export default function InstituteForm() {
                   >
                     {i < step ? "✓" : i + 1}
                   </div>
-                 <span className="text-sm sm:text-base lg:text-lg font-bold text-center ...">
+                  <span className="text-md sm:text-base lg:text-lg font-bold text-center mt-1 sm:mt-2">
                     {s.title}
                   </span>
                 </div>
@@ -526,12 +363,12 @@ export default function InstituteForm() {
             {step === 0 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-4">
                     Basic Details
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block md:w-1/5 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Registered Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -539,17 +376,17 @@ export default function InstituteForm() {
                         value={form.organisation.name}
                         onChange={(e) => updateOrg("name", e.target.value)}
                         placeholder="Enter registered name"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.name ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.name && (
-                        <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.name}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block text-md md:w-1/5 sm:text-base font-medium text-gray-800 mb-1">
                         Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -557,17 +394,17 @@ export default function InstituteForm() {
                         value={form.organisation.phone}
                         onChange={(e) => updateOrg("phone", e.target.value)}
                         placeholder="Enter phone number"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.phone ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.phone && (
-                        <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.phone}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block md:w-1/5 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Alternate Phone <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -575,17 +412,17 @@ export default function InstituteForm() {
                         value={form.organisation.altPhone}
                         onChange={(e) => updateOrg("altPhone", e.target.value)}
                         placeholder="Enter alternate phone"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.altPhone ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.altPhone && (
-                        <p className="text-red-500 text-xs mt-1">{errors.altPhone}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.altPhone}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block md:w-1/5 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -593,17 +430,17 @@ export default function InstituteForm() {
                         value={form.organisation.email}
                         onChange={(e) => updateOrg("email", e.target.value)}
                         placeholder="Enter email address"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.email ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.email && (
-                        <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.email}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block md:w-1/6 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Secondary Email
                       </label>
                       <input
@@ -611,12 +448,12 @@ export default function InstituteForm() {
                         value={form.organisation.secondaryEmail}
                         onChange={(e) => updateOrg("secondaryEmail", e.target.value)}
                         placeholder="Enter secondary email"
-                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block md:w-1/9 text-md sm:text-base font-medium text-gray-800 mb-1">
                         City <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -624,17 +461,17 @@ export default function InstituteForm() {
                         value={form.organisation.city}
                         onChange={(e) => updateOrg("city", e.target.value)}
                         placeholder="Enter city"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.city ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.city && (
-                        <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.city}</p>
                       )}
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/12 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Address Line 1 <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -642,12 +479,12 @@ export default function InstituteForm() {
                         value={form.organisation.address1}
                         onChange={(e) => updateOrg("address1", e.target.value)}
                         placeholder="Enter address line 1"
-                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ringwhite--500 focus:border-transparent text-sm"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md"
                       />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/12 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Address Line 2
                       </label>
                       <input
@@ -655,12 +492,12 @@ export default function InstituteForm() {
                         value={form.organisation.address2}
                         onChange={(e) => updateOrg("address2", e.target.value)}
                         placeholder="Enter address line 2"
-                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/12 text-md sm:text-base font-medium text-gray-800 mb-1">
                         State <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -668,17 +505,17 @@ export default function InstituteForm() {
                         value={form.organisation.state}
                         onChange={(e) => updateOrg("state", e.target.value)}
                         placeholder="Enter state"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.state ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.state && (
-                        <p className="text-red-500 text-xs mt-1">{errors.state}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.state}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/8 text-md sm:text-base font-medium text-gray-800 mb-1">
                         PIN Code <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -686,17 +523,17 @@ export default function InstituteForm() {
                         value={form.organisation.pin}
                         onChange={(e) => updateOrg("pin", e.target.value)}
                         placeholder="Enter PIN code"
-                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm ${
+                        className={`w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md ${
                           errors.pin ? "border-red-500" : "border-gray-300"
                         }`}
                       />
                       {errors.pin && (
-                        <p className="text-red-500 text-xs mt-1">{errors.pin}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.pin}</p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/4 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Head Office Location
                       </label>
                       <input
@@ -704,12 +541,12 @@ export default function InstituteForm() {
                         value={form.organisation.headOffice}
                         onChange={(e) => updateOrg("headOffice", e.target.value)}
                         placeholder="Enter head office location"
-                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-sm"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 focus:border-transparent text-md"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-md md:text-md font-medium text-gray-800 mb-1">
+                      <label className="block w-full md:w-1/4 text-md sm:text-base font-medium text-gray-800 mb-1">
                         Organisation Type <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -726,7 +563,7 @@ export default function InstituteForm() {
                         <option value="University">University</option>
                       </select>
                       {errors.type && (
-                        <p className="text-red-500 text-xs mt-1">{errors.type}</p>
+                        <p className="text-red-500 text-md mt-1">{errors.type}</p>
                       )}
                     </div>
                   </div>
@@ -737,7 +574,7 @@ export default function InstituteForm() {
             {/* STEP 2 – DIRECTORS */}
             {step === 1 && (
               <div className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800">
                   Director Details
                 </h2>
                 {form.directors.map((director, dirIdx) => (
@@ -759,7 +596,7 @@ export default function InstituteForm() {
                     {/* Director Personal Details */}
                     <div className="space-y-6">
                       <div>
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-800 mb-4">
+                        <h4 className="font-semibold w-full md:w-1/10 text-md sm:text-base text-gray-800 mb-4">
                           Personal Details
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -768,14 +605,14 @@ export default function InstituteForm() {
                             placeholder="Director Name *"
                             value={director.name}
                             onChange={(e) => updateDirector(dirIdx, "name", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="email"
                             placeholder="Email"
                             value={director.email}
                             onChange={(e) => updateDirector(dirIdx, "email", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="email"
@@ -784,28 +621,28 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirector(dirIdx, "secondaryEmail", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="tel"
                             placeholder="Contact Number *"
                             value={director.contact}
                             onChange={(e) => updateDirector(dirIdx, "contact", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="tel"
                             placeholder="Mobile Number"
                             value={director.mobile}
                             onChange={(e) => updateDirector(dirIdx, "mobile", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="tel"
                             placeholder="WhatsApp Number"
                             value={director.whatsapp}
                             onChange={(e) => updateDirector(dirIdx, "whatsapp", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <select
                             value={director.gender}
@@ -821,42 +658,42 @@ export default function InstituteForm() {
                             type="date"
                             value={director.dob}
                             onChange={(e) => updateDirector(dirIdx, "dob", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="number"
                             placeholder="% of Interest"
                             value={director.interest}
                             onChange={(e) => updateDirector(dirIdx, "interest", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="Father Name"
                             value={director.father}
                             onChange={(e) => updateDirector(dirIdx, "father", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="Spouse Name"
                             value={director.spouse}
                             onChange={(e) => updateDirector(dirIdx, "spouse", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="number"
                             placeholder="Number of Children"
                             value={director.children}
                             onChange={(e) => updateDirector(dirIdx, "children", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
                       </div>
 
                       {/* Current Address */}
                       <div>
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-700 mb-4">
+                        <h4 className="font-semibold w-full md:w-1/10 text-md sm:text-base text-gray-700 mb-4">
                           Current Address
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -867,7 +704,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "currentAddress", "line1", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
@@ -876,7 +713,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "currentAddress", "line2", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
@@ -885,7 +722,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "currentAddress", "city", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -894,7 +731,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "currentAddress", "state", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -903,7 +740,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "currentAddress", "pin", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
                       </div>
@@ -912,11 +749,11 @@ export default function InstituteForm() {
                       <div>
                         <label className="flex items-center mb-4">
                           <input type="checkbox" className="mr-2" />
-                          <span className="text-xs sm:text-sm text-gray-700">
+                          <span className="text-md sm:text-md text-gray-700">
                             Same as Current Address
                           </span>
                         </label>
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-700 mb-4">
+                        <h4 className="font-semibold w-full md:w-1/9 text-md sm:text-base text-gray-700 mb-4">
                           Permanent Address
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -932,7 +769,7 @@ export default function InstituteForm() {
                                 e.target.value
                               )
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
@@ -946,7 +783,7 @@ export default function InstituteForm() {
                                 e.target.value
                               )
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
@@ -960,7 +797,7 @@ export default function InstituteForm() {
                                 e.target.value
                               )
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -974,7 +811,7 @@ export default function InstituteForm() {
                                 e.target.value
                               )
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -988,17 +825,17 @@ export default function InstituteForm() {
                                 e.target.value
                               )
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
                       </div>
 
                       {/* Documents */}
                       <div>
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-700 mb-4">Documents</h4>
+                        <h4 className="font-semibold w-full md:w-1/12 text-md sm:text-base text-gray-700 mb-4">Documents</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
-                            <label className="text-xs text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
                               PAN Number
                             </label>
                             <input
@@ -1008,11 +845,11 @@ export default function InstituteForm() {
                               onChange={(e) =>
                                 updateDirectorNested(dirIdx, "documents", "panNo", e.target.value)
                               }
-                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
                               Upload PAN
                             </label>
                             <input
@@ -1025,11 +862,11 @@ export default function InstituteForm() {
                                   e.target.files?.[0]?.name
                                 )
                               }
-                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
                               Aadhaar Number
                             </label>
                             <input
@@ -1044,11 +881,11 @@ export default function InstituteForm() {
                                   e.target.value
                                 )
                               }
-                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                       className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
                               Upload Aadhaar
                             </label>
                             <input
@@ -1061,7 +898,7 @@ export default function InstituteForm() {
                                   e.target.files?.[0]?.name
                                 )
                               }
-                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
+                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                             />
                           </div>
                         </div>
@@ -1069,7 +906,7 @@ export default function InstituteForm() {
 
                       {/* Bank Details */}
                       <div>
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-700 mb-4">Bank Details</h4>
+                        <h4 className="font-semibold w-full md:w-1/12 text-md sm:text-base text-gray-700 mb-4">Bank Details</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                           <input
                             type="text"
@@ -1078,7 +915,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "bank", "bankName", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -1087,7 +924,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "bank", "accountNumber", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
@@ -1096,7 +933,7 @@ export default function InstituteForm() {
                             onChange={(e) =>
                               updateDirectorNested(dirIdx, "bank", "ifscCode", e.target.value)
                             }
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
                       </div>
@@ -1106,7 +943,7 @@ export default function InstituteForm() {
 
                 <button
                   onClick={addDirector}
-                  className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-sm sm:text-base"
+                  className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-md sm:text-base"
                 >
                   <Plus size={20} /> Add Director
                 </button>
@@ -1116,200 +953,513 @@ export default function InstituteForm() {
             {/* STEP 3 – LEGAL DETAILS */}
             {step === 2 && (
               <div className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-6">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-6">
                   Legal Details & Documents
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                  {/* TIN */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      TIN No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter TIN"
-                      value={form.legal.tinNo}
-                      onChange={(e) => updateLegal("tinNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload TIN Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("tinDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
+                {/* Land & Building Documents */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/6 sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">
+                     Land & Building Documents
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Property Deed
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Deed reference/number"
+                        value={form.legal.propertyDeed}
+                        onChange={(e) => updateLegal("propertyDeed", e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("propertyDeedDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
 
-                  {/* PAN */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      PAN No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter PAN"
-                      value={form.legal.panNo}
-                      onChange={(e) => updateLegal("panNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload PAN Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("panDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Building Approval
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Approval number"
+                        value={form.legal.buildingApproval}
+                        onChange={(e) => updateLegal("buildingApproval", e.target.value)}
+                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("buildingApprovalDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
 
-                  {/* GSTIN */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      GSTIN
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter GSTIN"
-                      value={form.legal.gstin}
-                      onChange={(e) => updateLegal("gstin", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload GSTIN Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("gstinDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Building Completion Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Certificate number"
+                        value={form.legal.completionCertificate}
+                        onChange={(e) => updateLegal("completionCertificate", e.target.value)}
+                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("completionCertificateDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  {/* ET */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      ET No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter ET No"
-                      value={form.legal.etNo}
-                      onChange={(e) => updateLegal("etNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload ET Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("etDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                {/* NOCs */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/5 sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">
+                    No Objection Certificates (NOCs)
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Fire Department NOC
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NOC number"
+                        value={form.legal.fireNOC}
+                        onChange={(e) => updateLegal("fireNOC", e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("fireNOCDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/8 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Police NOC
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NOC number"
+                        value={form.legal.policeNOC}
+                        onChange={(e) => updateLegal("policeNOC", e.target.value)}
+                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("policeNOCDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Municipality NOC
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NOC number"
+                        value={form.legal.municipalityNOC}
+                        onChange={(e) => updateLegal("municipalityNOC", e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("municipalityNOCDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Education Department NOC
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NOC number"
+                        value={form.legal.educationDeptNOC}
+                        onChange={(e) => updateLegal("educationDeptNOC", e.target.value)}
+                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("educationDeptNOCDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2"> Pollution Control Board NOC
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="NOC number"
+                        value={form.legal.pollutionNOC}
+                        onChange={(e) => updateLegal("pollutionNOC", e.target.value)}
+                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("pollutionNOCDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  {/* CST */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      CST No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter CST No"
-                      value={form.legal.cstNo}
-                      onChange={(e) => updateLegal("cstNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload CST Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("cstDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                {/* Infrastructure & Safety */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/4  sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">Infrastructure & Safety Documents
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3  text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Water Connection Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Reference number"
+                        value={form.legal.waterConnection}
+                 onChange={(e) => updateLegal("waterConnection", e.target.value)}
+               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("waterConnectionDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Electricity Connection Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Consumer number"
+                        value={form.legal.electricityConnection}
+                        onChange={(e) => updateLegal("electricityConnection", e.target.value)}
+                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("electricityConnectionDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Safety Audit Report
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Audit reference"
+                        value={form.legal.safetyAudit}
+                 onChange={(e) => updateLegal("safetyAudit", e.target.value)}
+               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("safetyAuditDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Drainage System Certification
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Certificate number"
+                        value={form.legal.drainageSystem}
+                        onChange={(e) => updateLegal("drainageSystem", e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("drainageSystemDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  {/* Udyam */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Udyam Certificate No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter Udyam No"
-                      value={form.legal.udyamNo}
-                      onChange={(e) => updateLegal("udyamNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload Udyam Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("udyamDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                {/* Financial & Administrative */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/4 sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">
+                   Financial & Administrative Documents
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/6 text-md md:text-md font-medium text-gray-700 pt-2">
+                        PAN Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="PAN"
+                        value={form.legal.panNo}
+                        onChange={(e) => updateLegal("panNo", e.target.value)}
+                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("panDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/6  text-md sm:text-md font-medium text-gray-700 mb-2">
+                        GSTIN Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="GSTIN"
+                        value={form.legal.gstinNo}
+                        onChange={(e) => updateLegal("gstinNo", e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("gstinDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Bank Account Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Account number"
+                        value={form.legal.bankAccount}
+                        onChange={(e) => updateLegal("bankAccount", e.target.value)}
+                     className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("bankAccountDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Trust Deed / Society Registration
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Document number"
+                        value={form.legal.trustDeed}
+                        onChange={(e) => updateLegal("trustDeed", e.target.value)}
+                     className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("trustDeedDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  {/* MSME */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      MSME Certificate No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter MSME No"
-                      value={form.legal.msmeNo}
-                      onChange={(e) => updateLegal("msmeNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload MSME Document</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("msmeDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                {/* Education Registration */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/4 sm:text-lg font-bold text-black-700 border-l-4 border-bl-700 pl-3">
+                     Education Registration & Affiliation
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/7 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        DISE Code
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="DISE Code"
+                        value={form.legal.diseCode}
+                        onChange={(e) => updateLegal("diseCode", e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("disecodeDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Provisional Recognition Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Certificate number"
+                        value={form.legal.provisionalRecognition}
+                        onChange={(e) => updateLegal("provisionalRecognition", e.target.value)}
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("provisionalRecognitionDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Board Affiliation Certificate
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Affiliation number"
+                        value={form.legal.affiliation}
+                        onChange={(e) => updateLegal("affiliation", e.target.value)}
+               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("affiliationDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
+                </div>
 
-                  {/* Trade License */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Trade License No
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter Trade License No"
-                      value={form.legal.tradeLicenseNo}
-                      onChange={(e) => updateLegal("tradeLicenseNo", e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-3 text-sm"
-                    />
-                    <label className="text-xs text-gray-600 block mb-2">Upload Trade License</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("tradeLicenseDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
-                  </div>
+                {/* Mandatory Policies */}
+                <div className="space-y-4">
+                  <h3 className="text-base md:w-1/8 sm:text-lg font-bold text-white-700 border-l-4 border-white-700 pl-3">
+                     Mandatory Policies
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Child Protection Policy
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Policy reference"
+                        value={form.legal.childProtectionPolicy}
+                        onChange={(e) => updateLegal("childProtectionPolicy", e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("childProtectionPolicyDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
 
-                  {/* Startup India */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Startup India Certificate
-                    </label>
-                    <label className="text-xs text-gray-600 block mb-2">Upload Certificate</label>
-                    <input
-                      type="file"
-                      onChange={(e) =>
-                        updateLegal("startupIndiaDoc", e.target.files?.[0]?.name)
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-sm"
-                    />
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Harassment Prevention Policy
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Policy reference"
+                        value={form.legal.harassmentPolicy}
+                        onChange={(e) => updateLegal("harassmentPolicy", e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("harassmentPolicyDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Admission Policy
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Policy reference"
+                        value={form.legal.admissionPolicy}
+                        onChange={(e) => updateLegal("admissionPolicy", e.target.value)}
+                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("admissionPolicyDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
+                        Fee Structure Document
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Document reference"
+                        value={form.legal.feeStructure}
+                        onChange={(e) => updateLegal("feeStructure", e.target.value)}
+                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                      />
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          updateLegal("feeStructureDoc", e.target.files?.[0]?.name)
+                        }
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1318,16 +1468,16 @@ export default function InstituteForm() {
             {/* STEP 4 – BRANCH */}
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-6">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-6">
                   Branch Locations
                 </h2>
 
                 <div className="border-2 border-gray-300 rounded-lg p-4 bg-blue-50">
-                  <label className="flex items-center text-gray-700 font-medium text-sm sm:text-base">
+                  <label className="flex items-center text-gray-700 font-medium text-md sm:text-base">
                     <input type="radio" name="branch-option" className="mr-3" defaultChecked />
                     Is company associated with branch?
                   </label>
-                  <div className="flex gap-4 sm:gap-6 mt-3 ml-6 text-sm sm:text-base">
+                  <div className="flex gap-4 sm:gap-6 mt-3 ml-6 text-md sm:text-base">
                     <label className="flex items-center text-gray-600">
                       <input type="radio" name="branch-assoc" defaultChecked className="mr-2" />
                       Yes
@@ -1363,35 +1513,35 @@ export default function InstituteForm() {
                           maxLength="2"
                           value={branch.shortName}
                           onChange={(e) => updateBranch(branchIdx, "shortName", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                         <input
                           type="text"
                           placeholder="Branch Name"
                           value={branch.name}
                           onChange={(e) => updateBranch(branchIdx, "name", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                         <input
                           type="text"
                           placeholder="City"
                           value={branch.city}
                           onChange={(e) => updateBranch(branchIdx, "city", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                         <input
                           type="text"
                           placeholder="State"
                           value={branch.state}
                           onChange={(e) => updateBranch(branchIdx, "state", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                         <input
                           type="text"
                           placeholder="PIN"
                           value={branch.pin}
                           onChange={(e) => updateBranch(branchIdx, "pin", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                       </div>
 
@@ -1401,26 +1551,26 @@ export default function InstituteForm() {
                           placeholder="Address Line 1"
                           value={branch.address1}
                           onChange={(e) => updateBranch(branchIdx, "address1", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                         />
                         <input
                           type="text"
                           placeholder="Branch GSTIN"
                           value={branch.gstin}
                           onChange={(e) => updateBranch(branchIdx, "gstin", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                         <input
                           type="text"
                           placeholder="Address Line 2"
                           value={branch.address2}
                           onChange={(e) => updateBranch(branchIdx, "address2", e.target.value)}
-                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 lg:col-span-3 text-sm"
+                          className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 lg:col-span-3 text-md"
                         />
                       </div>
 
                       <div className="border-t-2 border-gray-300 pt-4 mt-4">
-                        <h4 className="font-semibold text-sm sm:text-base text-gray-700 mb-4">
+                        <h4 className="font-semibold md:w-1/8 text-md sm:text-base text-gray-700 mb-4">
                           Branch Contact Details
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -1429,21 +1579,21 @@ export default function InstituteForm() {
                             placeholder="Contact Person"
                             value={branch.contactPerson}
                             onChange={(e) => updateBranch(branchIdx, "contactPerson", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="tel"
                             placeholder="Contact No"
                             value={branch.contactNo}
                             onChange={(e) => updateBranch(branchIdx, "contactNo", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="email"
                             placeholder="Email"
                             value={branch.email}
                             onChange={(e) => updateBranch(branchIdx, "email", e.target.value)}
-                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-sm"
+                            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
                       </div>
@@ -1453,7 +1603,7 @@ export default function InstituteForm() {
 
                 <button
                   onClick={addBranch}
-                  className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-sm sm:text-base"
+                  className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-md sm:text-base"
                 >
                   <Plus size={20} /> Add Branch
                 </button>
@@ -1463,16 +1613,16 @@ export default function InstituteForm() {
             {/* STEP 5 – FINALIZE */}
             {step === 4 && (
               <div className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-6">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-6">
                   Review & Finalize
                 </h2>
 
                 <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 sm:p-6 space-y-4">
                   <div className="flex items-start gap-3">
-                    <span className="text-xl sm:text-2xl text-green-600">✓</span>
+                    <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-800">Organisation Details</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">
+                      <h3 className="font-semibold text-md sm:text-base text-gray-800">Organisation Details</h3>
+                      <p className="text-md sm:text-md text-gray-600">
                         {form.organisation.name} - {form.organisation.type} in{" "}
                         {form.organisation.city}, {form.organisation.state}
                       </p>
@@ -1480,30 +1630,30 @@ export default function InstituteForm() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="text-xl sm:text-2xl text-green-600">✓</span>
+                    <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-800">Directors Added</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">
+                      <h3 className="font-semibold text-md sm:text-base text-gray-800">Directors Added</h3>
+                      <p className="text-md sm:text-md text-gray-600">
                         {form.directors.length} director(s) added with contact details
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="text-xl sm:text-2xl text-green-600">✓</span>
+                    <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-800">Legal Documents</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        Tax details and certificates uploaded
+                      <h3 className="font-semibold text-md sm:text-base text-gray-800">Legal Documents</h3>
+                      <p className="text-md sm:text-md text-gray-600">
+                        All legal documents and certifications uploaded
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <span className="text-xl sm:text-2xl text-green-600">✓</span>
+                    <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
-                      <h3 className="font-semibold text-sm sm:text-base text-gray-800">Branches Configured</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">
+                      <h3 className="font-semibold text-md sm:text-base text-gray-800">Branches Configured</h3>
+                      <p className="text-md sm:text-md text-gray-600">
                         {form.branches.length} branch location(s) configured
                       </p>
                     </div>
@@ -1511,8 +1661,8 @@ export default function InstituteForm() {
                 </div>
 
                 <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 sm:p-6">
-                  <h3 className="font-semibold text-sm sm:text-base text-gray-800 mb-3">Next Steps</h3>
-                  <ul className="space-y-2 text-xs sm:text-sm text-gray-700">
+                  <h3 className="font-semibold text-md sm:text-base text-gray-800 mb-3">Next Steps</h3>
+                  <ul className="space-y-2 text-md sm:text-md text-gray-700">
                     <li>✓ Modules & permissions setup (next phase)</li>
                     <li>✓ Team member assignments</li>
                     <li>✓ System configuration</li>
@@ -1528,7 +1678,7 @@ export default function InstituteForm() {
             <button
               onClick={goPrev}
               disabled={step === 0}
-              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 rounded-lg font-semibold text-sm sm:text-base text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 rounded-lg font-semibold text-md sm:text-base text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition w-full sm:w-auto"
             >
               <ChevronLeft size={20} /> Previous
             </button>
@@ -1536,14 +1686,14 @@ export default function InstituteForm() {
             {step < 4 ? (
               <button
                 onClick={goNext}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-sm sm:text-base transition w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold text-md sm:text-base transition w-full sm:w-auto"
               >
                 Next <ChevronLeft size={20} className="rotate-180" />
               </button>
             ) : (
               <button
                 onClick={submit}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm sm:text-base transition w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-md sm:text-base transition w-full sm:w-auto"
               >
                 <Upload size={20} /> Create Organisation
               </button>
