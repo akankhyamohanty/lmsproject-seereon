@@ -7,7 +7,7 @@ import {
 import {
   SALARY_KEY, MONTHS, getFaculty, ensureFaculty,
   getRecords, addRecord, deleteRecord, genTxnId, STATUS_STYLE
-} from "./ExpenseStorage";
+} from "./expensestorage";
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 const SelectField = ({ label, value, onChange, options, error, required, placeholder }) => (

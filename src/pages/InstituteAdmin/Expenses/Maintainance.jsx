@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import {
   MAINTENANCE_KEY, MONTHS, getRecords, addRecord, deleteRecord, genTxnId
-} from "./ExpenseStorage";
+} from "./expensestorage";
 
 const SelectField = ({ label, value, onChange, options, error, required, placeholder }) => (
   <div className="space-y-1.5">
@@ -161,7 +161,7 @@ export const Maintenance = () => {
             {label:"This Month", value:records.filter(r=>r.month===MONTHS[new Date().getMonth()]).length, icon:FileText,color:"emerald"},
           ].map((s,i)=>{
             const Icon=s.icon;
-            const cls={blue:"bg-blue-50 text-blue-600 border-blue-100",blue:"bg-blue-50 text-blue-600 border-blue-100",emerald:"bg-emerald-50 text-emerald-600 border-emerald-100"}[s.color];
+            const cls={blue:"bg-blue-50 text-blue-600 border-blue-100",emerald:"bg-emerald-50 text-emerald-600 border-emerald-100"}[s.color];
             return (
               <div key={s.label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm" style={{animation:`fadeIn 0.3s ease ${i*70}ms both`}}>
                 <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${cls}`}><Icon size={16}/></div>
@@ -202,7 +202,7 @@ export const Maintenance = () => {
 
               <button onClick={handleSubmit} disabled={saving}
                 className={`w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all
-                  ${saving?"bg-blue-600 text-white cursor-wait":"bg-blue-600 hover:bg-blue-600 text-white shadow-lg shadow-blue-200 active:scale-[0.98]"}`}>
+                  ${saving?"bg-blue-600 text-white cursor-wait":"bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 active:scale-[0.98]"}`}>
                 {saving?<><Loader size={15} className="animate-spin"/>Processing...</>:<><CreditCard size={15}/>Submit Payment</>}
               </button>
             </div>
@@ -236,7 +236,7 @@ export const Maintenance = () => {
                       <tr key={r.id} className="hover:bg-slate-50 transition-colors group" style={{animation:`fadeIn 0.3s ease ${i*40}ms both`}}>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-500 flex items-center justify-center text-white"><Wrench size={13}/></div>
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white"><Wrench size={13}/></div>
                             <p className="text-sm font-bold text-slate-800 max-w-[120px] truncate">{r.item}</p>
                           </div>
                         </td>
