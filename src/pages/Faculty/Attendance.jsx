@@ -51,7 +51,7 @@ export const Attendance = () => {
           <p className="text-sm text-slate-500">Record daily attendance for your classes</p>
         </div>
         <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-2 text-slate-600 px-2 border-r border-slate-200">
+           <div className="flex items-center gap-2 text-slate-700 px-2 border-r border-slate-200">
              <Calendar size={18} />
              <input 
                type="date" 
@@ -99,13 +99,13 @@ export const Attendance = () => {
         <div className="flex flex-col justify-center gap-2">
           <button 
             onClick={() => markAll("Present")}
-            className="w-full py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-full py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Mark All Present
           </button>
           <button 
             onClick={() => markAll("Absent")}
-            className="w-full py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-full py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
             Mark All Absent
           </button>
@@ -164,7 +164,7 @@ export const Attendance = () => {
 
       {/* Bottom Save Bar */}
       <div className="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex justify-end gap-4 z-10">
-        <button className="px-6 py-2 border border-slate-300 rounded-lg text-slate-600 font-medium hover:bg-slate-50">
+        <button className="px-6 py-2 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50">
           Cancel
         </button>
         <button className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 flex items-center gap-2">

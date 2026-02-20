@@ -83,9 +83,9 @@ export const FacultyDashboard = () => {
                 
                 <div className="flex-1 border-l-0 sm:border-l-2 border-slate-200 pl-0 sm:pl-4">
                   <h4 className="font-bold text-slate-800 text-lg sm:text-base">{item.subject}</h4>
-                  <p className="text-sm text-slate-600 flex items-center gap-2">
+                  <p className="text-sm text-slate-700 flex items-center gap-2">
                     {item.course} 
-                    <span className="w-1 h-1 bg-slate-400 rounded-full"></span> 
+                    <span className="w-1 h-1 bg-slate-500 rounded-full"></span> 
                     {item.room}
                   </p>
                 </div>
@@ -138,7 +138,7 @@ export const FacultyDashboard = () => {
                </div>
                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                  <p className="text-xs font-bold text-slate-700 mb-1">📅 Staff Meeting</p>
-                 <p className="text-xs text-slate-600 leading-relaxed">Monthly staff meeting scheduled for Saturday at 10 AM in the Conference Hall.</p>
+                 <p className="text-xs text-slate-700 leading-relaxed">Monthly staff meeting scheduled for Saturday at 10 AM in the Conference Hall.</p>
                </div>
              </div>
           </div>
