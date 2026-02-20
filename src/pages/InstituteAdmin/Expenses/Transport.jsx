@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import {
   TRANSPORT_KEY, getRecords, addRecord, deleteRecord, genTxnId
-} from "./ExpenseStorage";
+} from "./expensestorage";
 
 const SelectField = ({ label, value, onChange, options, error, required, placeholder }) => (
   <div className="space-y-1.5">
