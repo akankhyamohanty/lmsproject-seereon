@@ -11,7 +11,7 @@ export const UnauthorizedPage = () => {
         <ShieldAlert size={32} />
       </div>
       <h1 className="text-3xl font-bold text-slate-800 mb-2">Access Denied</h1>
-      <p className="text-slate-500 max-w-md mb-8">
+      <p className="text-slate-700 max-w-md mb-8">
         You do not have permission to view this page. Please contact your administrator if you believe this is an error.
       </p>
       

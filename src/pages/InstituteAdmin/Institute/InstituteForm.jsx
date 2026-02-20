@@ -319,7 +319,7 @@ export default function InstituteForm() {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-2">
               Add Organisation
             </h1>
-            <p className="text-md sm:text-base text-gray-600">
+            <p className="text-md sm:text-base text-gray-700">
               Step {step + 1} of {STEPS.length} : {STEPS[step].title}
             </p>
           </div>
@@ -344,7 +344,7 @@ export default function InstituteForm() {
                         ? "bg-green-500 text-white"
                         : i === step
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-300 text-gray-600"
+                        : "bg-gray-300 text-gray-700"
                     }`}
                   >
                     {i < step ? "✓" : i + 1}
@@ -849,7 +849,7 @@ export default function InstituteForm() {
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
                               Upload PAN
                             </label>
                             <input
@@ -866,7 +866,7 @@ export default function InstituteForm() {
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
                               Aadhaar Number
                             </label>
                             <input
@@ -885,7 +885,7 @@ export default function InstituteForm() {
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-600 mb-2 block">
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
                               Upload Aadhaar
                             </label>
                             <input
@@ -1475,14 +1475,14 @@ export default function InstituteForm() {
                 <div className="border-2 border-gray-300 rounded-lg p-4 bg-blue-50">
                   <label className="flex items-center text-gray-700 font-medium text-md sm:text-base">
                     <input type="radio" name="branch-option" className="mr-3" defaultChecked />
-                    Is company associated with branch?
+                    Is college associated with branch?
                   </label>
                   <div className="flex gap-4 sm:gap-6 mt-3 ml-6 text-md sm:text-base">
-                    <label className="flex items-center text-gray-600">
+                    <label className="flex items-center text-gray-700">
                       <input type="radio" name="branch-assoc" defaultChecked className="mr-2" />
                       Yes
                     </label>
-                    <label className="flex items-center text-gray-600">
+                    <label className="flex items-center text-gray-700">
                       <input type="radio" name="branch-assoc" className="mr-2" />
                       No
                     </label>
@@ -1490,7 +1490,7 @@ export default function InstituteForm() {
                 </div>
 
                 {form.branches.map((branch, branchIdx) => (
-                  <div key={branchIdx} className="border-2 border-white-200 rounded-lg p-4 sm:p-6 bg-yellow-50">
+                  <div key={branchIdx} className="border-2 border-white-200 rounded-lg p-4 sm:p-6 bg-blue-50">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                         Branch {branchIdx + 1}
@@ -1622,7 +1622,7 @@ export default function InstituteForm() {
                     <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
                       <h3 className="font-semibold text-md sm:text-base text-gray-800">Organisation Details</h3>
-                      <p className="text-md sm:text-md text-gray-600">
+                      <p className="text-md sm:text-md text-gray-700">
                         {form.organisation.name} - {form.organisation.type} in{" "}
                         {form.organisation.city}, {form.organisation.state}
                       </p>
@@ -1633,7 +1633,7 @@ export default function InstituteForm() {
                     <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
                       <h3 className="font-semibold text-md sm:text-base text-gray-800">Directors Added</h3>
-                      <p className="text-md sm:text-md text-gray-600">
+                      <p className="text-md sm:text-md text-gray-700">
                         {form.directors.length} director(s) added with contact details
                       </p>
                     </div>
@@ -1643,7 +1643,7 @@ export default function InstituteForm() {
                     <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
                       <h3 className="font-semibold text-md sm:text-base text-gray-800">Legal Documents</h3>
-                      <p className="text-md sm:text-md text-gray-600">
+                      <p className="text-md sm:text-md text-gray-700">
                         All legal documents and certifications uploaded
                       </p>
                     </div>
@@ -1653,7 +1653,7 @@ export default function InstituteForm() {
                     <span className="text-xl sm:text-2xl text-green-600 flex-shrink-0">✓</span>
                     <div>
                       <h3 className="font-semibold text-md sm:text-base text-gray-800">Branches Configured</h3>
-                      <p className="text-md sm:text-md text-gray-600">
+                      <p className="text-md sm:text-md text-gray-700">
                         {form.branches.length} branch location(s) configured
                       </p>
                     </div>
