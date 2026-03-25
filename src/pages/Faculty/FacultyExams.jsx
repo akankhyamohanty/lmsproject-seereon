@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Save, Calculator, Lock, CheckCircle2, AlertCircle, X, Send,
   ClipboardList, UserPlus, Trash2, CalendarPlus, ArrowLeft,
-  Plus, Grip, ChevronDown, Users, User,
+  Plus, Grip, ChevronDown, Users, User, Loader2
 } from "lucide-react";
 
 // ── Shared ─────────────────────────────────────────────────────────────────────
@@ -14,13 +15,14 @@ const getGrade = (total) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SCHEDULE NEW EXAM — full page, matches screenshot
+// SCHEDULE NEW EXAM — Dynamic
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SUBJECTS   = ["Mathematics", "Physics", "Chemistry", "Biology", "English", "Computer Science", "History", "Economics"];
+// Fallback constants just in case the API is empty or fails
+const FALLBACK_SUBJECTS  = ["Mathematics", "Physics", "Chemistry", "Computer Science"];
+const FALLBACK_BATCHES   = ["Batch 2023", "Batch 2024", "Batch 2025"];
 const EXAM_TYPES = ["Mid-Term", "Final Exam", "Unit Test", "Quiz", "Practical", "Viva"];
 const SEMESTERS  = ["Semester 1", "Semester 2", "Semester 3", "Semester 4", "Semester 5", "Semester 6"];
-const BATCHES    = ["Batch 2021", "Batch 2022", "Batch 2023", "Batch 2024", "Batch 2025"];
 const YEARS      = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 const DURATIONS  = ["30 mins", "1 hour", "1.5 hours", "2 hours", "2.5 hours", "3 hours"];
 const FACULTY    = ["Dr. Anita Sharma", "Prof. Rakesh Verma", "Dr. Priya Nair", "Mr. Suresh Kumar"];
@@ -52,6 +54,12 @@ const inputCls = (err) =>
 
 export const ScheduleExam = ({ onBack }) => {
   const [tab, setTab] = useState("details"); // details | builder
+  const [loading, setLoading] = useState(false);
+
+  // 🎯 Dynamic Setup States
+  const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [facultyList, setFacultyList] = useState([]);
 
   // ── Exam details form ──────────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -64,14 +72,35 @@ export const ScheduleExam = ({ onBack }) => {
   });
   const [errors, setErrors] = useState({});
 
+  // ── Question builder ───────────────────────────────────────────────────────
+  const [questions, setQuestions] = useState([]);
+  const [expandedQ, setExpandedQ] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
+
+  // 🎯 Fetch Dynamic Data without localStorage
+  useEffect(() => {
+    const fetchSetupData = async () => {
+      try {
+        const [cRes, bRes, fRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/faculty/courses", { withCredentials: true }).catch(() => ({ data: { data: [] } })),
+          axios.get("http://localhost:5000/api/admin/batches", { withCredentials: true }).catch(() => ({ data: { data: [] } })),
+          axios.get("http://localhost:5000/api/admin/faculty", { withCredentials: true }).catch(() => ({ data: { faculty: [] } }))
+        ]);
+        
+        setCourses(cRes.data?.data || []);
+        setBatches(bRes.data?.data || []);
+        setFacultyList(fRes.data?.faculty || []);
+      } catch (err) {
+        console.error("Failed to load setup data", err);
+      }
+    };
+    fetchSetupData();
+  }, []);
+
   const set = (k, v) => {
     setForm((p) => ({ ...p, [k]: v }));
     setErrors((p) => ({ ...p, [k]: "" }));
   };
-
-  // ── Question builder ───────────────────────────────────────────────────────
-  const [questions, setQuestions] = useState([]);
-  const [expandedQ, setExpandedQ] = useState(null);
 
   const addQuestion = () => {
     const q = newQuestion(questions.length);
@@ -87,7 +116,6 @@ export const ScheduleExam = ({ onBack }) => {
     if (expandedQ === id) setExpandedQ(null);
   };
 
-  // ── Validation ─────────────────────────────────────────────────────────────
   const validate = () => {
     const e = {};
     if (!form.subject)    e.subject    = "Required";
@@ -105,12 +133,25 @@ export const ScheduleExam = ({ onBack }) => {
     return e;
   };
 
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSchedule = () => {
+  // 🎯 Final Submit to DB without localStorage
+  const handleSchedule = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); setTab("details"); return; }
-    setSubmitted(true);
+    
+    setLoading(true);
+    try {
+      await axios.post("http://localhost:5000/api/faculty/exams", {
+        examDetails: form,
+        questions: questions
+      }, { withCredentials: true });
+      
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to schedule exam. Please check server.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Success ────────────────────────────────────────────────────────────────
@@ -138,11 +179,8 @@ export const ScheduleExam = ({ onBack }) => {
 
   return (
     <div className="w-full max-w-8xl mx-auto space-y-0">
-
-      {/* ── Page header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={onBack}
-          className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition flex-shrink-0">
+        <button onClick={onBack} className="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition flex-shrink-0">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
@@ -151,246 +189,157 @@ export const ScheduleExam = ({ onBack }) => {
         </div>
       </div>
 
-      {/* ── Tab pills ───────────────────────────────────────────────────── */}
       <div className="flex items-center gap-0 mb-6">
-        <button
-          onClick={() => setTab("details")}
-          className={`px-5 py-2.5 text-md font-semibold rounded-lg transition ${
-            tab === "details"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-          }`}
-        >
+        <button onClick={() => setTab("details")} className={`px-5 py-2.5 text-md font-semibold rounded-lg transition ${tab === "details" ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
           1. Exam Details
         </button>
-        <button
-          onClick={() => setTab("builder")}
-          className={`ml-2 px-5 py-2.5 text-md font-semibold rounded-lg transition ${
-            tab === "builder"
-              ? "bg-blue-600 text-white shadow-sm"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-          }`}
-        >
+        <button onClick={() => setTab("builder")} className={`ml-2 px-5 py-2.5 text-md font-semibold rounded-lg transition ${tab === "builder" ? "bg-blue-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
           2. Question Builder ({totalQ})
         </button>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          TAB 1 — EXAM DETAILS
-      ══════════════════════════════════════════════════════════════════ */}
       {tab === "details" && (
         <div className="space-y-0 text-left">
-
-          {/* ── EXAM IDENTITY ───────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
             <SectionLabel>Exam Identity</SectionLabel>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-left">
-              {/* Subject */}
               <div>
-                <FieldLabel required>Subject</FieldLabel>
-                <select value={form.subject} onChange={(e) => set("subject", e.target.value)}
-                  className={inputCls(errors.subject)}>
+                <FieldLabel required>Subject (Course)</FieldLabel>
+                <select value={form.subject} onChange={(e) => set("subject", e.target.value)} className={inputCls(errors.subject)}>
                   <option value="">Select Subject</option>
-                  {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
+                  {(courses.length > 0 ? courses.map(c => c.course_name || c.courseTitle || c.id) : FALLBACK_SUBJECTS).map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 {errors.subject && <p className="text-xs text-red-500 mt-1">{errors.subject}</p>}
               </div>
-
-              {/* Exam Type */}
               <div>
                 <FieldLabel required>Exam Type</FieldLabel>
-                <select value={form.examType} onChange={(e) => set("examType", e.target.value)}
-                  className={inputCls(errors.examType)}>
+                <select value={form.examType} onChange={(e) => set("examType", e.target.value)} className={inputCls(errors.examType)}>
                   <option value="">Select Type</option>
-                  {EXAM_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  {EXAM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
                 {errors.examType && <p className="text-xs text-red-500 mt-1">{errors.examType}</p>}
               </div>
             </div>
-
-            {/* Exam Title */}
             <div>
               <FieldLabel required>Exam Title</FieldLabel>
-              <input type="text" value={form.examTitle}
-                placeholder="e.g. Mathematics - Mid-Term Exam"
-                onChange={(e) => set("examTitle", e.target.value)}
-                className={inputCls(errors.examTitle)} />
+              <input type="text" value={form.examTitle} placeholder="e.g. Mathematics - Mid-Term Exam" onChange={(e) => set("examTitle", e.target.value)} className={inputCls(errors.examTitle)} />
               {errors.examTitle && <p className="text-xs text-red-500 mt-1">{errors.examTitle}</p>}
             </div>
           </div>
 
-          {/* ── TARGET & SCHEDULE ───────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
             <SectionLabel>Target & Schedule</SectionLabel>
-
-            {/* Semester / Batch / Year */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
               <div>
                 <FieldLabel required>Semester</FieldLabel>
-                <select value={form.semester} onChange={(e) => set("semester", e.target.value)}
-                  className={inputCls(errors.semester)}>
+                <select value={form.semester} onChange={(e) => set("semester", e.target.value)} className={inputCls(errors.semester)}>
                   <option value="">Select</option>
-                  {SEMESTERS.map((s) => <option key={s}>{s}</option>)}
+                  {SEMESTERS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 {errors.semester && <p className="text-xs text-red-500 mt-1">{errors.semester}</p>}
               </div>
               <div>
                 <FieldLabel required>Batch</FieldLabel>
-                <select value={form.batch} onChange={(e) => set("batch", e.target.value)}
-                  className={inputCls(errors.batch)}>
+                <select value={form.batch} onChange={(e) => set("batch", e.target.value)} className={inputCls(errors.batch)}>
                   <option value="">Select</option>
-                  {BATCHES.map((b) => <option key={b}>{b}</option>)}
+                  {(batches.length > 0 ? batches.map(b => b.batch_name) : FALLBACK_BATCHES).map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
                 {errors.batch && <p className="text-xs text-red-500 mt-1">{errors.batch}</p>}
               </div>
               <div>
                 <FieldLabel required>Year</FieldLabel>
-                <select value={form.year} onChange={(e) => set("year", e.target.value)}
-                  className={inputCls(errors.year)}>
+                <select value={form.year} onChange={(e) => set("year", e.target.value)} className={inputCls(errors.year)}>
                   <option value="">Select</option>
-                  {YEARS.map((y) => <option key={y}>{y}</option>)}
+                  {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                 </select>
                 {errors.year && <p className="text-xs text-red-500 mt-1">{errors.year}</p>}
               </div>
             </div>
-
-            {/* Date / Time / Duration */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
                 <FieldLabel required>Date</FieldLabel>
-                <input type="date" value={form.date} onChange={(e) => set("date", e.target.value)}
-                  className={inputCls(errors.date)} />
+                <input type="date" value={form.date} onChange={(e) => set("date", e.target.value)} className={inputCls(errors.date)} />
                 {errors.date && <p className="text-xs text-red-500 mt-1">{errors.date}</p>}
               </div>
               <div>
                 <FieldLabel required>Time</FieldLabel>
-                <input type="time" value={form.time} onChange={(e) => set("time", e.target.value)}
-                  className={inputCls(errors.time)} />
+                <input type="time" value={form.time} onChange={(e) => set("time", e.target.value)} className={inputCls(errors.time)} />
                 {errors.time && <p className="text-xs text-red-500 mt-1">{errors.time}</p>}
               </div>
               <div>
                 <FieldLabel required>Duration</FieldLabel>
-                <select value={form.duration} onChange={(e) => set("duration", e.target.value)}
-                  className={inputCls(errors.duration)}>
+                <select value={form.duration} onChange={(e) => set("duration", e.target.value)} className={inputCls(errors.duration)}>
                   <option value="">Select</option>
-                  {DURATIONS.map((d) => <option key={d}>{d}</option>)}
+                  {DURATIONS.map((d) => <option key={d} value={d}>{d}</option>)}
                 </select>
                 {errors.duration && <p className="text-xs text-red-500 mt-1">{errors.duration}</p>}
               </div>
             </div>
           </div>
 
-          {/* ── MARKS & VENUE ───────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
             <SectionLabel>Marks & Venue</SectionLabel>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
               <div>
                 <FieldLabel required>Total Marks</FieldLabel>
-                <input type="number" value={form.totalMarks} placeholder="100"
-                  onChange={(e) => set("totalMarks", e.target.value)}
-                  className={inputCls(errors.totalMarks)} />
+                <input type="number" value={form.totalMarks} placeholder="100" onChange={(e) => set("totalMarks", e.target.value)} className={inputCls(errors.totalMarks)} />
                 {errors.totalMarks && <p className="text-xs text-red-500 mt-1">{errors.totalMarks}</p>}
               </div>
               <div>
                 <FieldLabel required>Passing Marks</FieldLabel>
-                <input type="number" value={form.passingMarks} placeholder="40"
-                  onChange={(e) => set("passingMarks", e.target.value)}
-                  className={inputCls(errors.passingMarks)} />
+                <input type="number" value={form.passingMarks} placeholder="40" onChange={(e) => set("passingMarks", e.target.value)} className={inputCls(errors.passingMarks)} />
                 {errors.passingMarks && <p className="text-xs text-red-500 mt-1">{errors.passingMarks}</p>}
               </div>
             </div>
-
             <div>
               <FieldLabel>Venue / Room</FieldLabel>
-              <input type="text" value={form.venue} placeholder="Hall A"
-                onChange={(e) => set("venue", e.target.value)}
-                className={inputCls(false)} />
+              <input type="text" value={form.venue} placeholder="Hall A" onChange={(e) => set("venue", e.target.value)} className={inputCls(false)} />
             </div>
           </div>
 
-          {/* ── FACULTY ASSIGNMENT & PERMISSIONS ────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-4">
             <SectionLabel>Faculty Assignment & Permissions</SectionLabel>
-
-            {/* Delegate toggle */}
             <label className="flex items-center gap-3 cursor-pointer mb-5">
-              <div
-                onClick={() => set("delegateFaculty", !form.delegateFaculty)}
-                className={`w-5 h-5 rounded flex items-center justify-center border-2 transition flex-shrink-0 ${
-                  form.delegateFaculty
-                    ? "bg-blue-600 border-blue-600"
-                    : "border-gray-300 bg-white"
-                }`}
-              >
-                {form.delegateFaculty && (
-                  <svg className="w-3 h-3 text-white" viewBox="0 0 12 10" fill="none">
-                    <path d="M1 5L4.5 8.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
+              <div onClick={() => set("delegateFaculty", !form.delegateFaculty)} className={`w-5 h-5 rounded flex items-center justify-center border-2 transition flex-shrink-0 ${form.delegateFaculty ? "bg-blue-600 border-blue-600" : "border-gray-300 bg-white"}`}>
+                {form.delegateFaculty && (<svg className="w-3 h-3 text-white" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>)}
               </div>
-              <span className="text-md text-gray-700 font-medium">
-                Delegate Question Paper creation to a specific Faculty?
-              </span>
+              <span className="text-md text-gray-700 font-medium">Delegate Question Paper creation to a specific Faculty?</span>
             </label>
-
-            {/* Assign Faculty */}
             {form.delegateFaculty && (
               <div>
                 <FieldLabel required>Assign Faculty</FieldLabel>
-                <select value={form.assignedFaculty}
-                  onChange={(e) => set("assignedFaculty", e.target.value)}
-                  className={inputCls(errors.assignedFaculty)}>
+                {/* 🎯 Updated dynamic faculty dropdown */}
+                <select value={form.assignedFaculty} onChange={(e) => set("assignedFaculty", e.target.value)} className={inputCls(errors.assignedFaculty)}>
                   <option value="">Select Faculty</option>
-                  {FACULTY.map((f) => <option key={f}>{f}</option>)}
+                  {facultyList.length > 0 
+                    ? facultyList.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)
+                    : FACULTY.map((f) => <option key={f} value={f}>{f}</option>)
+                  }
                 </select>
-                {errors.assignedFaculty && (
-                  <p className="text-xs text-red-500 mt-1">{errors.assignedFaculty}</p>
-                )}
+                {errors.assignedFaculty && (<p className="text-xs text-red-500 mt-1">{errors.assignedFaculty}</p>)}
               </div>
             )}
           </div>
 
-          {/* ── INSTRUCTIONS ────────────────────────────────────────────── */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
             <SectionLabel>Exam Instructions (Optional)</SectionLabel>
-            <textarea
-              value={form.instructions}
-              onChange={(e) => set("instructions", e.target.value)}
-              rows={4}
-              placeholder="e.g. Calculators are not allowed. Attempt all sections. Write clearly using blue/black ink..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition resize-none bg-white"
-            />
+            <textarea value={form.instructions} onChange={(e) => set("instructions", e.target.value)} rows={4} placeholder="e.g. Calculators are not allowed..." className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition resize-none bg-white" />
           </div>
 
-          {/* ── Actions ─────────────────────────────────────────────────── */}
           <div className="flex items-center justify-between gap-3 pb-8">
-            <button onClick={onBack}
-              className="flex items-center gap-2 border border-gray-300 text-gray-600 text-md font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition">
-              <ArrowLeft className="w-4 h-4" /> Cancel
-            </button>
+            <button onClick={onBack} className="flex items-center gap-2 border border-gray-300 text-gray-600 text-md font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition"><ArrowLeft className="w-4 h-4" /> Cancel</button>
             <div className="flex items-center gap-3">
-              <button onClick={() => setTab("builder")}
-                className="flex items-center gap-2 border border-blue-300 text-blue-600 text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-50 transition">
-                Next: Question Builder →
-              </button>
-              <button onClick={handleSchedule}
-                className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
-                <CalendarPlus className="w-4 h-4" /> Schedule Exam
+              <button onClick={() => setTab("builder")} className="flex items-center gap-2 border border-blue-300 text-blue-600 text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-50 transition">Next: Question Builder →</button>
+              <button disabled={loading} onClick={handleSchedule} className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm disabled:opacity-60">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />} Schedule Exam
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════
-          TAB 2 — QUESTION BUILDER
-      ══════════════════════════════════════════════════════════════════ */}
       {tab === "builder" && (
         <div className="space-y-4">
-
-          {/* Stats strip */}
           {questions.length > 0 && (
             <div className="flex items-center gap-5 p-4 bg-white border border-gray-200 rounded-xl text-md">
               <span className="text-gray-500">Questions: <strong className="text-gray-900">{totalQ}</strong></span>
@@ -399,143 +348,75 @@ export const ScheduleExam = ({ onBack }) => {
               {form.totalMarks && (
                 <>
                   <div className="w-px h-4 bg-gray-200" />
-                  <span className={`font-semibold text-xs px-2.5 py-1 rounded-full ${
-                    totalQMks === +form.totalMarks
-                      ? "bg-green-50 text-green-700"
-                      : totalQMks > +form.totalMarks
-                      ? "bg-red-50 text-red-600"
-                      : "bg-amber-50 text-amber-600"
-                  }`}>
-                    {totalQMks === +form.totalMarks
-                      ? "✓ Marks balanced"
-                      : totalQMks > +form.totalMarks
-                      ? `⚠ ${totalQMks - +form.totalMarks} marks over`
-                      : `${+form.totalMarks - totalQMks} marks remaining`}
+                  <span className={`font-semibold text-xs px-2.5 py-1 rounded-full ${totalQMks === +form.totalMarks ? "bg-green-50 text-green-700" : totalQMks > +form.totalMarks ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}>
+                    {totalQMks === +form.totalMarks ? "✓ Marks balanced" : totalQMks > +form.totalMarks ? `⚠ ${totalQMks - +form.totalMarks} marks over` : `${+form.totalMarks - totalQMks} marks remaining`}
                   </span>
                 </>
               )}
             </div>
           )}
 
-          {/* Empty state */}
           {questions.length === 0 && (
-  <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl py-16 px-10 flex flex-col gap-4 justify-center items-start">
-    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
-      <ClipboardList className="w-7 h-7 text-gray-300" />
-    </div>
-    <div>
-      <p className="text-md font-semibold text-gray-600">No questions yet</p>
-      <p className="text-xs text-gray-400 mt-1">Click "Add Question" to start building your paper</p>
-    </div>
-    <button onClick={addQuestion}
-      className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition">
-      <Plus className="w-4 h-4" /> Add First Question
-    </button>
-  </div>
-)}
+            <div className="bg-white border-2 border-dashed border-gray-200 rounded-xl py-16 px-10 flex flex-col gap-4 justify-center items-start">
+              <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center"><ClipboardList className="w-7 h-7 text-gray-300" /></div>
+              <div><p className="text-md font-semibold text-gray-600">No questions yet</p><p className="text-xs text-gray-400 mt-1">Click "Add Question" to start building your paper</p></div>
+              <button onClick={addQuestion} className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition"><Plus className="w-4 h-4" /> Add First Question</button>
+            </div>
+          )}
 
-          {/* Question cards */}
           {questions.map((q, idx) => {
             const isOpen = expandedQ === q.id;
             return (
               <div key={q.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                {/* Card header */}
-                <div
-                  className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition select-none"
-                  onClick={() => setExpandedQ(isOpen ? null : q.id)}
-                >
+                <div className="flex items-center gap-3 px-5 py-4 cursor-pointer hover:bg-gray-50 transition select-none" onClick={() => setExpandedQ(isOpen ? null : q.id)}>
                   <Grip className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                    {idx + 1}
-                  </div>
+                  <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center flex-shrink-0">{idx + 1}</div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-md truncate ${q.text ? "font-medium text-gray-800" : "text-gray-400 italic"}`}>
-                      {q.text || "Untitled question..."}
-                    </p>
+                    <p className={`text-md truncate ${q.text ? "font-medium text-gray-800" : "text-gray-400 italic"}`}>{q.text || "Untitled question..."}</p>
                     <div className="flex items-center gap-3 mt-0.5">
                       <span className="text-xs text-gray-400">{q.type}</span>
                       {q.marks && <span className="text-xs text-blue-500 font-medium">{q.marks} marks</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); removeQ(q.id); }}
-                      className="text-gray-300 hover:text-red-500 transition p-1">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); removeQ(q.id); }} className="text-gray-300 hover:text-red-500 transition p-1"><Trash2 className="w-4 h-4" /></button>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </div>
                 </div>
-
-                {/* Card body */}
                 {isOpen && (
                   <div className="px-5 pb-5 border-t border-gray-100 space-y-4 pt-4 text-left">
-
-                    {/* Question text */}
                     <div>
                       <FieldLabel required>Question Text</FieldLabel>
-                      <textarea rows={3} value={q.text} placeholder="Enter the question..."
-                        onChange={(e) => updateQ(q.id, { text: e.target.value })}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition resize-none bg-white" />
+                      <textarea rows={3} value={q.text} placeholder="Enter the question..." onChange={(e) => updateQ(q.id, { text: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition resize-none bg-white" />
                     </div>
-
-                    {/* Type + Marks */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <FieldLabel>Question Type</FieldLabel>
-                        <select value={q.type} onChange={(e) => updateQ(q.id, { type: e.target.value })}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition bg-white">
-                          {Q_TYPES.map((t) => <option key={t}>{t}</option>)}
-                        </select>
+                        <select value={q.type} onChange={(e) => updateQ(q.id, { type: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition bg-white">{Q_TYPES.map((t) => <option key={t}>{t}</option>)}</select>
                       </div>
                       <div>
                         <FieldLabel>Marks</FieldLabel>
-                        <input type="number" value={q.marks} placeholder="e.g. 5"
-                          onChange={(e) => updateQ(q.id, { marks: e.target.value })}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition bg-white" />
+                        <input type="number" value={q.marks} placeholder="e.g. 5" onChange={(e) => updateQ(q.id, { marks: e.target.value })} className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-500 transition bg-white" />
                       </div>
                     </div>
-
-                    {/* MCQ options */}
                     {(q.type === "Multiple Choice" || q.type === "True / False") && (
                       <div>
-                        <FieldLabel>
-                          {q.type === "True / False" ? "Options" : "Answer Options"}
-                        </FieldLabel>
+                        <FieldLabel>{q.type === "True / False" ? "Options" : "Answer Options"}</FieldLabel>
                         <div className="space-y-2">
                           {(q.type === "True / False" ? ["True", "False"] : q.options).map((opt, oi) => (
                             <div key={oi} className="flex items-center gap-2">
-                              <input type="radio" name={`correct-${q.id}`}
-                                checked={q.answer === String(oi)}
-                                onChange={() => updateQ(q.id, { answer: String(oi) })}
-                                className="accent-blue-600 flex-shrink-0" />
-                              {q.type === "True / False" ? (
-                                <span className="text-md text-gray-700">{opt}</span>
-                              ) : (
-                                <input type="text" value={opt}
-                                  placeholder={`Option ${oi + 1}`}
-                                  onChange={(e) => {
-                                    const opts = [...q.options];
-                                    opts[oi] = e.target.value;
-                                    updateQ(q.id, { options: opts });
-                                  }}
-                                  className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-md outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50" />
-                              )}
+                              <input type="radio" name={`correct-${q.id}`} checked={q.answer === String(oi)} onChange={() => updateQ(q.id, { answer: String(oi) })} className="accent-blue-600 flex-shrink-0" />
+                              {q.type === "True / False" ? (<span className="text-md text-gray-700">{opt}</span>) : (<input type="text" value={opt} placeholder={`Option ${oi + 1}`} onChange={(e) => { const opts = [...q.options]; opts[oi] = e.target.value; updateQ(q.id, { options: opts }); }} className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-md outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50" />)}
                             </div>
                           ))}
                         </div>
                         <p className="text-xs text-gray-400 mt-1.5">Select the radio button to mark the correct answer</p>
                       </div>
                     )}
-
-                    {/* Short / Long answer */}
                     {(q.type === "Short Answer" || q.type === "Long Answer" || q.type === "Fill in the Blank") && (
                       <div>
                         <FieldLabel>Model Answer / Key (optional)</FieldLabel>
-                        <textarea rows={q.type === "Long Answer" ? 4 : 2}
-                          value={q.answer}
-                          placeholder="Enter model answer..."
-                          onChange={(e) => updateQ(q.id, { answer: e.target.value })}
-                          className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-400 transition resize-none" />
+                        <textarea rows={q.type === "Long Answer" ? 4 : 2} value={q.answer} placeholder="Enter model answer..." onChange={(e) => updateQ(q.id, { answer: e.target.value })} className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2.5 text-md outline-none focus:ring-2 focus:ring-blue-400 transition resize-none" />
                       </div>
                     )}
                   </div>
@@ -544,23 +425,14 @@ export const ScheduleExam = ({ onBack }) => {
             );
           })}
 
-          {/* Add question button */}
           {questions.length > 0 && (
-            <button onClick={addQuestion}
-              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl py-4 text-md text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition">
-              <Plus className="w-4 h-4" /> Add New Question
-            </button>
+            <button onClick={addQuestion} className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-gray-300 rounded-xl py-4 text-md text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition"><Plus className="w-4 h-4" /> Add New Question</button>
           )}
 
-          {/* Actions */}
           <div className="flex items-center justify-between gap-3 pb-8">
-            <button onClick={() => setTab("details")}
-              className="flex items-center gap-2 border border-gray-300 text-gray-600 text-md font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition">
-              <ArrowLeft className="w-4 h-4" /> Back to Details
-            </button>
-            <button onClick={handleSchedule}
-              className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
-              <CalendarPlus className="w-4 h-4" /> Schedule Exam
+            <button onClick={() => setTab("details")} className="flex items-center gap-2 border border-gray-300 text-gray-600 text-md font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition"><ArrowLeft className="w-4 h-4" /> Back to Details</button>
+            <button disabled={loading} onClick={handleSchedule} className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm disabled:opacity-60">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarPlus className="w-4 h-4" />} Schedule Exam
             </button>
           </div>
         </div>
@@ -570,7 +442,7 @@ export const ScheduleExam = ({ onBack }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MARKS ENTRY (unchanged)
+// MARKS ENTRY — Dynamic
 // ─────────────────────────────────────────────────────────────────────────────
 
 const AddStudentModal = ({ onAdd, onCancel, existingRolls }) => {
@@ -610,9 +482,7 @@ const AddStudentModal = ({ onAdd, onCancel, existingRolls }) => {
     </div>
   );
 
-  const previewTotal =
-    form.theory !== "" && form.practical !== "" && !isNaN(+form.theory) && !isNaN(+form.practical)
-      ? +form.theory + +form.practical : null;
+  const previewTotal = form.theory !== "" && form.practical !== "" && !isNaN(+form.theory) && !isNaN(+form.practical) ? +form.theory + +form.practical : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -627,26 +497,17 @@ const AddStudentModal = ({ onAdd, onCancel, existingRolls }) => {
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 transition"><X className="w-5 h-5" /></button>
         </div>
         <div className="px-6 pb-6 space-y-4 text-left">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Roll No"      fieldKey="roll"      placeholder="e.g. 05" />
-            <Field label="Student Name" fieldKey="name"      placeholder="Full name" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Theory"    fieldKey="theory"    placeholder="0 – 60" extra="(Max 60)" />
-            <Field label="Practical" fieldKey="practical" placeholder="0 – 20" extra="(Max 20)" />
-          </div>
+          <div className="grid grid-cols-2 gap-3"><Field label="Roll No"      fieldKey="roll"      placeholder="e.g. 05" /><Field label="Student Name" fieldKey="name"      placeholder="Full name" /></div>
+          <div className="grid grid-cols-2 gap-3"><Field label="Theory"    fieldKey="theory"    placeholder="0 – 60" extra="(Max 60)" /><Field label="Practical" fieldKey="practical" placeholder="0 – 20" extra="(Max 20)" /></div>
           {previewTotal !== null && (
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-              <span className="text-xs text-gray-500">Preview:</span>
-              <span className="text-md font-bold text-gray-800">Total: {previewTotal}/80</span>
+              <span className="text-xs text-gray-500">Preview:</span><span className="text-md font-bold text-gray-800">Total: {previewTotal}/80</span>
               {(() => { const g = getGrade(previewTotal); return <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${g.color}`}>{g.label}</span>; })()}
             </div>
           )}
           <div className="flex gap-3 pt-1">
             <button onClick={onCancel} className="flex-1 border border-gray-300 text-gray-700 text-md font-medium py-2.5 rounded-lg hover:bg-gray-50 transition">Cancel</button>
-            <button onClick={handleSubmit} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white text-md font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">
-              <UserPlus className="w-4 h-4" /> Add Student
-            </button>
+            <button onClick={handleSubmit} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white text-md font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition"><UserPlus className="w-4 h-4" /> Add Student</button>
           </div>
         </div>
       </div>
@@ -654,7 +515,7 @@ const AddStudentModal = ({ onAdd, onCancel, existingRolls }) => {
   );
 };
 
-const ConfirmModal = ({ exam, classLabel, students, onConfirm, onCancel }) => (
+const ConfirmModal = ({ exam, classLabel, students, onConfirm, onCancel, submitting }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
     <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 overflow-hidden">
@@ -668,27 +529,15 @@ const ConfirmModal = ({ exam, classLabel, students, onConfirm, onCancel }) => (
       </div>
       <div className="mx-6 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center gap-6 text-xs text-gray-600">
         <span><span className="font-semibold text-gray-800">Exam:</span> {exam}</span>
-        <span><span className="font-semibold text-gray-800">Class:</span> {classLabel}</span>
+        <span><span className="font-semibold text-gray-800">Class/Batch:</span> {classLabel}</span>
         <span><span className="font-semibold text-gray-800">Students:</span> {students.length}</span>
       </div>
-      <div className="mx-6 mb-5 rounded-xl border border-gray-200 overflow-hidden">
+      <div className="mx-6 mb-5 rounded-xl border border-gray-200 overflow-hidden max-h-48 overflow-y-auto">
         <table className="w-full text-md">
-          <thead><tr className="bg-gray-50 border-b border-gray-100">
-            <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">Student</th>
-            <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Theory</th>
-            <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Practical</th>
-            <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Total</th>
-            <th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Grade</th>
-          </tr></thead>
+          <thead className="sticky top-0 bg-gray-50"><tr className="border-b border-gray-100"><th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">Student</th><th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Theory</th><th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Practical</th><th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Total</th><th className="px-4 py-2.5 text-center text-xs font-semibold text-gray-500">Grade</th></tr></thead>
           <tbody className="divide-y divide-gray-50">
             {students.map((s) => { const total = s.theory + s.practical; const g = getGrade(total); return (
-              <tr key={s.id} className="hover:bg-gray-50/60 transition">
-                <td className="px-4 py-2.5 font-medium text-gray-800 text-xs">{s.name}</td>
-                <td className="px-4 py-2.5 text-center text-gray-600 text-xs">{s.theory}</td>
-                <td className="px-4 py-2.5 text-center text-gray-600 text-xs">{s.practical}</td>
-                <td className="px-4 py-2.5 text-center font-bold text-gray-900 text-xs">{total}</td>
-                <td className="px-4 py-2.5 text-center"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${g.color}`}>{g.label}</span></td>
-              </tr>
+              <tr key={s.id} className="hover:bg-gray-50/60 transition"><td className="px-4 py-2.5 font-medium text-gray-800 text-xs">{s.name}</td><td className="px-4 py-2.5 text-center text-gray-600 text-xs">{s.theory}</td><td className="px-4 py-2.5 text-center text-gray-600 text-xs">{s.practical}</td><td className="px-4 py-2.5 text-center font-bold text-gray-900 text-xs">{total}</td><td className="px-4 py-2.5 text-center"><span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${g.color}`}>{g.label}</span></td></tr>
             ); })}
           </tbody>
         </table>
@@ -699,8 +548,8 @@ const ConfirmModal = ({ exam, classLabel, students, onConfirm, onCancel }) => (
       </div>
       <div className="flex items-center justify-end gap-3 px-6 pb-6">
         <button onClick={onCancel} className="border border-gray-300 text-gray-700 text-md font-medium px-5 py-2.5 rounded-lg hover:bg-gray-50 transition">Cancel</button>
-        <button onClick={onConfirm} className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md">
-          <Send className="w-4 h-4" /> Confirm & Submit
+        <button disabled={submitting} onClick={onConfirm} className="flex items-center gap-2 bg-blue-600 text-white text-md font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-md disabled:opacity-60">
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Confirm & Submit
         </button>
       </div>
     </div>
@@ -709,71 +558,114 @@ const ConfirmModal = ({ exam, classLabel, students, onConfirm, onCancel }) => (
 
 const SuccessScreen = ({ exam, classLabel, students, onReset }) => (
   <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-5 ring-8 ring-green-50/60">
-      <CheckCircle2 className="w-10 h-10 text-green-500" />
-    </div>
+    <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-5 ring-8 ring-green-50/60"><CheckCircle2 className="w-10 h-10 text-green-500" /></div>
     <h2 className="text-2xl font-bold text-gray-900 mb-1">Scores Submitted!</h2>
-    <p className="text-md text-gray-500 mb-6 max-w-xs">
-      Marks for <span className="font-semibold text-gray-700">{exam}</span> — {classLabel} have been successfully submitted.
-    </p>
+    <p className="text-md text-gray-500 mb-6 max-w-xs">Marks for <span className="font-semibold text-gray-700">{exam}</span> — {classLabel} have been successfully submitted.</p>
     <div className="flex flex-wrap justify-center gap-3 mb-8">
       {students.map((s) => { const total = s.theory + s.practical; const g = getGrade(total); return (
-        <div key={s.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm">
-          <span className="text-md font-medium text-gray-800">{s.name}</span>
-          <span className="text-xs text-gray-400">{total}/80</span>
-          <span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${g.color}`}>{g.label}</span>
-        </div>
+        <div key={s.id} className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm"><span className="text-md font-medium text-gray-800">{s.name}</span><span className="text-xs text-gray-400">{total}/80</span><span className={`text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ${g.color}`}>{g.label}</span></div>
       ); })}
     </div>
-    <button onClick={onReset} className="flex items-center gap-2 border border-gray-300 text-gray-700 text-md font-medium px-6 py-2.5 rounded-lg hover:bg-gray-50 transition">
-      <ClipboardList className="w-4 h-4" /> Enter Another Exam
-    </button>
+    <button onClick={onReset} className="flex items-center gap-2 border border-gray-300 text-gray-700 text-md font-medium px-6 py-2.5 rounded-lg hover:bg-gray-50 transition"><ClipboardList className="w-4 h-4" /> Enter Another Exam</button>
   </div>
 );
 
-const INITIAL_STUDENTS = [
-  { id: 1, roll: "01", name: "Amit Sharma",  theory: 45, practical: 18, maxTheory: 60, maxPractical: 20 },
-  { id: 2, roll: "02", name: "Anjali Gupta", theory: 55, practical: 19, maxTheory: 60, maxPractical: 20 },
-  { id: 3, roll: "03", name: "Rahul Verma",  theory: 32, practical: 15, maxTheory: 60, maxPractical: 20 },
-  { id: 4, roll: "04", name: "Sneha Roy",    theory: 58, practical: 20, maxTheory: 60, maxPractical: 20 },
-];
-
 const MarksEntry = () => {
-  const [selectedExam,  setSelectedExam]  = useState("Mid-Term 2024");
-  const [selectedClass, setSelectedClass] = useState("B.Tech CS - Year 2");
-  const [students,      setStudents]      = useState(INITIAL_STUDENTS);
+  // 🎯 Dynamic State for Marks Entry
+  const [scheduledExams, setScheduledExams] = useState([]);
+  const [selectedExamId, setSelectedExamId] = useState("");
+  const [students, setStudents] = useState([]);
+  const [loadingExams, setLoadingExams] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const [showAddModal,  setShowAddModal]  = useState(false);
   const [showConfirm,   setShowConfirm]   = useState(false);
   const [submitted,     setSubmitted]     = useState(false);
   const [draftSaved,    setDraftSaved]    = useState(false);
 
+  // 🎯 Fetch Scheduled Exams without localStorage
+  useEffect(() => {
+    const fetchExams = async () => {
+      setLoadingExams(true);
+      try {
+        const res = await axios.get("http://localhost:5000/api/faculty/exams", {
+          withCredentials: true 
+        });
+        const examsData = res.data?.data || [];
+        setScheduledExams(examsData);
+        if (examsData.length > 0) setSelectedExamId(examsData[0].id);
+      } catch (err) {
+        console.error("Failed to fetch exams:", err);
+      } finally {
+        setLoadingExams(false);
+      }
+    };
+    fetchExams();
+  }, []);
+
+  // 🎯 Fetch Students when Exam changes without localStorage
+  useEffect(() => {
+    if (!selectedExamId) return;
+    const fetchStudents = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/faculty/exams/${selectedExamId}/students`, {
+          withCredentials: true 
+        });
+        // Assuming API returns { roll, name, theory, practical }
+        setStudents(res.data?.data || []);
+      } catch (err) {
+        // If API doesn't exist yet, just clear the table so user can use "Add Student"
+        setStudents([]); 
+      }
+    };
+    fetchStudents();
+  }, [selectedExamId]);
+
   const handleMarkChange = (id, field, value) => {
     const val = parseInt(value) || 0;
     setStudents((prev) => prev.map((s) => {
       if (s.id !== id) return s;
-      const max = field === "theory" ? s.maxTheory : s.maxPractical;
+      const max = field === "theory" ? (s.maxTheory || 60) : (s.maxPractical || 20);
       return { ...s, [field]: val > max ? max : val < 0 ? 0 : val };
     }));
   };
 
-  const handleSaveDraft = () => { setDraftSaved(true); setTimeout(() => setDraftSaved(false), 2500); };
-  const handleReset = () => { setSubmitted(false); setStudents(INITIAL_STUDENTS.map((s) => ({ ...s, theory: 0, practical: 0 }))); };
+  // 🎯 Real Submit Logic without localStorage
+  const handleFinalSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await axios.post(`http://localhost:5000/api/faculty/exams/${selectedExamId}/marks`, { students }, {
+        withCredentials: true 
+      });
+      setShowConfirm(false);
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit marks.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  if (submitted) return <SuccessScreen exam={selectedExam} classLabel={selectedClass} students={students} onReset={handleReset} />;
+  const handleSaveDraft = () => { setDraftSaved(true); setTimeout(() => setDraftSaved(false), 2500); };
+  const handleReset = () => { setSubmitted(false); setStudents([]); };
+
+  const activeExamObj = scheduledExams.find(e => e.id == selectedExamId) || {};
+  const displayExamTitle = activeExamObj.title || "Selected Exam";
+  const displayBatch = activeExamObj.batch || "Selected Batch";
+
+  if (submitted) return <SuccessScreen exam={displayExamTitle} classLabel={displayBatch} students={students} onReset={handleReset} />;
 
   return (
     <>
       {showAddModal && <AddStudentModal existingRolls={students.map((s) => s.roll)} onAdd={(s) => { setStudents((p) => [...p, s]); setShowAddModal(false); }} onCancel={() => setShowAddModal(false)} />}
-      {showConfirm  && <ConfirmModal exam={selectedExam} classLabel={selectedClass} students={students} onConfirm={() => { setShowConfirm(false); setSubmitted(true); }} onCancel={() => setShowConfirm(false)} />}
+      {showConfirm  && <ConfirmModal exam={displayExamTitle} classLabel={displayBatch} students={students} submitting={submitting} onConfirm={handleFinalSubmit} onCancel={() => setShowConfirm(false)} />}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div><h1 className="text-2xl font-bold text-slate-800">Marks Entry</h1><p className="text-md text-slate-500">Manage exam scores and grading</p></div>
         <div className="flex flex-wrap gap-3">
-          <select value={selectedExam} onChange={(e) => setSelectedExam(e.target.value)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Mid-Term 2024</option><option>Final Sem 2024</option><option>Unit Test 1</option>
-          </select>
-          <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500">
-            <option>B.Tech CS - Year 2</option><option>MBA - Year 1</option>
+          <select value={selectedExamId} onChange={(e) => setSelectedExamId(e.target.value)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500 min-w-[200px]">
+            {loadingExams ? <option>Loading exams...</option> : scheduledExams.length === 0 ? <option>No exams scheduled</option> : scheduledExams.map(ex => <option key={ex.id} value={ex.id}>{ex.title} ({ex.batch})</option>)}
           </select>
         </div>
       </div>
@@ -784,7 +676,7 @@ const MarksEntry = () => {
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
           <p className="text-md font-semibold text-slate-700">{students.length} {students.length === 1 ? "Student" : "Students"}</p>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 bg-blue-600 text-white text-md font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
+          <button onClick={() => setShowAddModal(true)} disabled={!selectedExamId} className="flex items-center gap-1.5 bg-blue-600 text-white text-md font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
             <UserPlus className="w-4 h-4" /> Add Student
           </button>
         </div>
@@ -806,19 +698,19 @@ const MarksEntry = () => {
                 <tr><td colSpan={7} className="px-6 py-14 text-center">
                   <div className="flex flex-col items-center gap-2 text-slate-400">
                     <UserPlus className="w-8 h-8 opacity-40" />
-                    <p className="text-md">No students yet. Click <span className="text-blue-500 font-semibold">Add Student</span> to begin.</p>
+                    <p className="text-md">No students found. Click <span className="text-blue-500 font-semibold">Add Student</span> to begin.</p>
                   </div>
                 </td></tr>
               )}
               {students.map((student) => {
-                const total = student.theory + student.practical;
+                const total = (student.theory || 0) + (student.practical || 0);
                 const grade = getGrade(total);
                 return (
                   <tr key={student.id} className="hover:bg-slate-50/50 group">
-                    <td className="px-6 py-4 text-md font-mono text-slate-500">{student.roll}</td>
-                    <td className="px-6 py-4 text-md font-medium text-slate-900">{student.name}</td>
-                    <td className="px-6 py-4 text-center"><input type="number" min={0} max={60} value={student.theory} onChange={(e) => handleMarkChange(student.id, "theory", e.target.value)} className="w-20 p-2 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-md font-medium" /></td>
-                    <td className="px-6 py-4 text-center"><input type="number" min={0} max={20} value={student.practical} onChange={(e) => handleMarkChange(student.id, "practical", e.target.value)} className="w-20 p-2 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-md font-medium" /></td>
+                    <td className="px-6 py-4 text-md font-mono text-slate-500">{student.roll || student.roll_no}</td>
+                    <td className="px-6 py-4 text-md font-medium text-slate-900">{student.name || student.student_name}</td>
+                    <td className="px-6 py-4 text-center"><input type="number" min={0} max={60} value={student.theory || ""} onChange={(e) => handleMarkChange(student.id, "theory", e.target.value)} className="w-20 p-2 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-md font-medium" /></td>
+                    <td className="px-6 py-4 text-center"><input type="number" min={0} max={20} value={student.practical || ""} onChange={(e) => handleMarkChange(student.id, "practical", e.target.value)} className="w-20 p-2 text-center border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-md font-medium" /></td>
                     <td className="px-6 py-4 text-center"><span className="text-md font-bold text-slate-800">{total}</span></td>
                     <td className="px-6 py-4 text-center"><span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${grade.color}`}>{grade.label}</span></td>
                     <td className="px-6 py-4 text-center"><button onClick={() => setStudents((p) => p.filter((s) => s.id !== student.id))} className="text-slate-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100" title="Remove student"><Trash2 className="w-4 h-4" /></button></td>
@@ -832,7 +724,7 @@ const MarksEntry = () => {
           <button onClick={handleSaveDraft} className={`px-4 py-2 border rounded-lg font-medium text-md flex items-center gap-2 transition ${draftSaved ? "border-green-400 text-green-600 bg-green-50" : "border-slate-300 text-slate-600 hover:bg-white"}`}>
             {draftSaved ? <><CheckCircle2 size={16} /> Draft Saved!</> : <><Lock size={16} /> Save Draft</>}
           </button>
-          <button onClick={() => students.length > 0 && setShowConfirm(true)} disabled={students.length === 0}
+          <button onClick={() => students.length > 0 && setShowConfirm(true)} disabled={students.length === 0 || submitting}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-md flex items-center gap-2 shadow-sm transition">
             <Send size={16} /> Submit Scores
           </button>
@@ -853,7 +745,6 @@ export const FacultyExams = () => {
     <div className="w-full max-w-8xl mx-auto p-6 space-y-6">
       {view === "marks" && (
         <>
-          {/* Top action bar */}
           <div className="flex items-center justify-between">
             <div />
             <button

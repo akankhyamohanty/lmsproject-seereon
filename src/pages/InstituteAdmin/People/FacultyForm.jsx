@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../../../services/api"; // 👈 USING YOUR NEW API INTERCEPTOR
 import {
   Save, Upload, CheckCircle, AlertCircle, Eye, EyeOff,
   Loader, X, RotateCcw, User, Lock, FileText, GraduationCap,
@@ -10,77 +11,10 @@ import {
 // Safe File check — handles bundler/SSR contexts where File may not be the real constructor
 const isFile = (val) => {
   if (!val || typeof val !== "object") return false;
-  // If it has name + size + type, it's File-like enough for our purposes
   return typeof val.name === "string" && typeof val.size === "number";
 };
 
 const LS_DRAFT_KEY   = "faculty_form_draft";
-const LS_FACULTY_KEY = "faculty_list";
-
-const saveFacultyToList = (formData) => {
-  try {
-    // Safely parse existing list — reset to [] if corrupted
-    let existing = [];
-    try {
-      const raw = localStorage.getItem(LS_FACULTY_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        existing = Array.isArray(parsed) ? parsed : [];
-      }
-    } catch {
-      existing = [];
-    }
-
-    // Serialize education — strip File objects to filenames
-    const education = {};
-    Object.keys(formData.education || {}).forEach((k) => {
-      const edu = formData.education[k] || {};
-      education[k] = {
-        board:      edu.board      || "",
-        university: edu.university || "",
-        degree:     edu.degree     || "",
-        marks:      edu.marks      || "",
-        year:       edu.year       || "",
-        file:       isFile(edu.file) ? edu.file.name : (typeof edu.file === "string" ? edu.file : null),
-      };
-    });
-
-    // Build new faculty entry — all values are plain JSON-safe types
-    const newEntry = {
-      id:                     Date.now(),
-      first_name:             String(formData.first_name  || ""),
-      last_name:              String(formData.last_name   || ""),
-      email:                  String(formData.email       || ""),
-      phone:                  String(formData.phone       || ""),
-      dob:                    String(formData.dob         || ""),
-      gender:                 String(formData.gender      || ""),
-      institute_code:         String(formData.institute_code || ""),
-      aadhar_no:              String(formData.aadhar_no   || ""),
-      aadhar_file:            isFile(formData.aadhar_file) ? formData.aadhar_file.name : null,
-      pan_no:                 String(formData.pan_no      || ""),
-      pan_file:               isFile(formData.pan_file)   ? formData.pan_file.name    : null,
-      bank_name:              String(formData.bank_name   || ""),
-      account_holder_name:    String(formData.account_holder_name || ""),
-      account_number:         String(formData.account_number      || ""),
-      confirm_account_number: String(formData.confirm_account_number || ""),
-      branch_name:            String(formData.branch_name || ""),
-      ifsc_code:              String(formData.ifsc_code   || ""),
-      department:             String(formData.department  || ""),
-      designation:            String(formData.designation || ""),
-      experience:             String(formData.experience  || ""),
-      education,
-      status:                 "pending",
-      created_at:             new Date().toISOString(),
-    };
-
-    existing.push(newEntry);
-    localStorage.setItem(LS_FACULTY_KEY, JSON.stringify(existing));
-    return true;
-  } catch (err) {
-    console.error("saveFacultyToList failed:", err);
-    return false;
-  }
-};
 
 const defaultForm = {
   first_name: "", last_name: "", email: "", phone: "", dob: "", gender: "",
@@ -110,9 +44,9 @@ const STEPS = [
 ];
 
 const EDU_LEVELS = [
-  { key: "tenth",   label: "10th Grade",         emoji: "📗", hasBoard: true,  hasDegree: false },
-  { key: "twelfth", label: "12th Grade",          emoji: "📘", hasBoard: true,  hasDegree: false },
-  { key: "bed",     label: "B.Ed",                emoji: "🎓", hasBoard: false, hasDegree: false },
+  { key: "tenth",   label: "10th Grade",        emoji: "📗", hasBoard: true,  hasDegree: false },
+  { key: "twelfth", label: "12th Grade",        emoji: "📘", hasBoard: true,  hasDegree: false },
+  { key: "bed",     label: "B.Ed",              emoji: "🎓", hasBoard: false, hasDegree: false },
   { key: "ug",      label: "Under Graduate (UG)", emoji: "🎓", hasBoard: false, hasDegree: true  },
   { key: "pg",      label: "Post Graduate (PG)",  emoji: "👨‍🎓", hasBoard: false, hasDegree: true  },
   { key: "other",   label: "Other Certificate",   emoji: "📄", hasBoard: false, hasDegree: true  },
@@ -261,7 +195,7 @@ const StepIndicator = ({ steps, current, completed }) => (
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT — renders as a STANDALONE PAGE (not a modal)
+// MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
 const FacultyForm = () => {
   const navigate  = useNavigate();
@@ -404,24 +338,48 @@ const FacultyForm = () => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSubmit = () => {
+  // 🚀 DYNAMIC SUBMIT TO BACKEND (Cleaned up!) 🚀
+  const handleSubmit = async () => {
     if (submitted || loading) return;
-    // Clear any previous save error before re-attempting
+    
     setErrors(prev => { const n = { ...prev }; delete n._general; return n; });
     const e = validateStep(5);
     if (Object.keys(e).length > 0) { setErrors(e); return; }
+    
     setLoading(true);
-    // Save synchronously — no setTimeout needed, avoids double-click race
-    const ok = saveFacultyToList(form);
-    if (ok) {
-      localStorage.removeItem(LS_DRAFT_KEY);
+
+    try {
+      // 1. Clean the education payload to stringify the file names (if you aren't using FormData yet)
+      const cleanEducation = {};
+      Object.keys(form.education).forEach(k => {
+         cleanEducation[k] = { ...form.education[k], file: form.education[k].file?.name || null };
+      });
+
+      // 2. Map form data to backend expectations
+      const payload = {
+        ...form,
+        education: cleanEducation,
+        aadhar_file: form.aadhar_file?.name || null,
+        pan_file: form.pan_file?.name || null,
+        name: `${form.first_name} ${form.last_name}`.trim(),
+        dept: form.department,
+        empId: `FAC${Math.floor(Math.random() * 90000) + 10000}` 
+      };
+
+      // 3. Send to Node.js Backend via API Interceptor
+      const response = await api.post("/admin/faculty", payload);
+
+      if (response.data.success) {
+        localStorage.removeItem(LS_DRAFT_KEY);
+        setLoading(false);
+        setSubmitted(true);
+        setSuccessMsg(`${form.first_name} ${form.last_name} registered successfully!`);
+        setTimeout(() => navigate("/admin/faculty"), 1200);
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
       setLoading(false);
-      setSubmitted(true);
-      setSuccessMsg(`${form.first_name} ${form.last_name} registered successfully!`);
-      setTimeout(() => navigate("/admin/faculty"), 1200);
-    } else {
-      setLoading(false);
-      setErrors({ _general: "Could not save to storage. Check browser console for details, then try again." });
+      setErrors({ _general: err.response?.data?.message || "Failed to save to database. Please check connection." });
     }
   };
 

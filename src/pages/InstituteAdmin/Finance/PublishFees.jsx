@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  Send, Search, Layers, CheckCircle, AlertCircle,
-  ChevronDown, Check, Calendar, BookOpen, DollarSign,
-  Hash, RefreshCw, Megaphone, Clock
+  Send, Search, Layers, CheckCircle,
+  ChevronDown, Check, BookOpen, 
+  RefreshCw, Megaphone, Clock, Hash
 } from "lucide-react";
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
@@ -28,19 +28,29 @@ const CLASSES = [
 
 const YEARS = ["2024-25","2025-26","2026-27"];
 
-// ══════════════════════════════════════════════════════════════════════════════
+// ✅ HELPER FOR DYNAMIC STYLES
+const getStatusStyles = (color) => {
+    const styles = {
+        emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+        amber: "bg-amber-50 text-amber-600 border-amber-100",
+        blue: "bg-blue-50 text-blue-600 border-blue-100",
+    };
+    return styles[color] || styles.blue;
+};
+
 export const PublishFees = () => {
-  const [structures,     setStructures]     = useState([]);
-  const [selectedFees,   setSelectedFees]   = useState([]);
-  const [selectedClass,  setSelectedClass]  = useState("");
-  const [selectedYear,   setSelectedYear]   = useState("");
-  const [searchQuery,    setSearchQuery]    = useState("");
-  const [filterStatus,   setFilterStatus]   = useState("all"); // all | Draft | Published
-  const [publishing,     setPublishing]     = useState(false);
-  const [published,      setPublished]      = useState(false);
-  const [pubHistory,     setPubHistory]     = useState([]);
-  const [tab,            setTab]            = useState("publish"); // publish | history
-  const [tick,           setTick]           = useState(0);
+  const [structures,      setStructures]      = useState([]);
+  const [selectedFees,    setSelectedFees]    = useState([]);
+  const [selectedClass,   setSelectedClass]   = useState("");
+  const [selectedYear,    setSelectedYear]    = useState("");
+  const [searchQuery,     setSearchQuery]     = useState("");
+  const [filterStatus,    setFilterStatus]    = useState("all"); 
+  const [publishing,      setPublishing]      = useState(false);
+  const [published,       setPublished]       = useState(false);
+  const [pubHistory,      setPubHistory]      = useState([]);
+  const [tab,             setTab]             = useState("publish"); 
+  const [tick,            setTick]            = useState(0);
+  
   const reload = () => setTick(t => t + 1);
 
   useEffect(() => {
@@ -67,13 +77,11 @@ export const PublishFees = () => {
     setPublishing(true);
 
     setTimeout(() => {
-      // Mark selected fees as Published
       const updatedFS = getFS().map(f =>
         selectedFees.includes(f.id) ? { ...f, status: "Published" } : f
       );
       saveFS(updatedFS);
 
-      // Save publish record
       const record = {
         id: Date.now(),
         fees: selectedFees.map(id => {
@@ -98,14 +106,13 @@ export const PublishFees = () => {
   };
 
   const totalPublished  = structures.filter(s => s.status === "Published").length;
-  const totalDraft      = structures.filter(s => s.status === "Draft").length;
+  const totalDraft       = structures.filter(s => s.status === "Draft").length;
 
   return (
     <>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       <div className="w-full font-sans text-left pb-12">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Publish Fees</h1>
@@ -128,34 +135,26 @@ export const PublishFees = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total Structures", value: structures.length, color: "indigo",  Icon: Layers      },
+            { label: "Total Structures", value: structures.length, color: "blue",  Icon: Layers      },
             { label: "Published",        value: totalPublished,    color: "emerald", Icon: CheckCircle },
             { label: "Draft",            value: totalDraft,        color: "amber",   Icon: Clock       },
             { label: "Publish Records",  value: pubHistory.length, color: "blue",    Icon: Megaphone   },
-          ].map(({ label, value, color, Icon }, i) => {
-            const cls = {
-              indigo:  "bg-indigo-50 text-indigo-600 border-indigo-100",
-              emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-              amber:   "bg-amber-50 text-amber-600 border-amber-100",
-              blue:    "bg-blue-50 text-blue-600 border-blue-100",
-            }[color];
-            return (
+          ].map(({ label, value, color, Icon }, i) => (
               <div key={label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"
                 style={{ animation: `fadeIn 0.3s ease ${i * 70}ms both` }}>
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${cls}`}><Icon size={16} /></div>
+                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${getStatusStyles(color)}`}>
+                    <Icon size={16} />
+                </div>
                 <p className="text-2xl font-black text-slate-900">{value}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{label}</p>
               </div>
-            );
-          })}
+          ))}
         </div>
 
         {tab === "publish" ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left — Fee Selection */}
             <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
                 <div className="flex items-center justify-between mb-4">
@@ -185,7 +184,6 @@ export const PublishFees = () => {
                 </div>
               </div>
 
-              {/* Select All */}
               {filtered.length > 0 && (
                 <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-3">
                   <button onClick={toggleAll}
@@ -198,7 +196,6 @@ export const PublishFees = () => {
                 </div>
               )}
 
-              {/* Fees List */}
               <div className="divide-y divide-slate-50">
                 {structures.length === 0 ? (
                   <div className="py-20 text-center">
@@ -253,12 +250,9 @@ export const PublishFees = () => {
               </div>
             </div>
 
-            {/* Right — Publish Options */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-fit sticky top-6">
               <h2 className="font-black text-slate-900 text-lg mb-6">Publish To</h2>
               <div className="space-y-5">
-
-                {/* Class */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                     Class / Section <span className="text-red-500">*</span>
@@ -273,7 +267,6 @@ export const PublishFees = () => {
                   </div>
                 </div>
 
-                {/* Year */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                     Academic Year <span className="text-red-500">*</span>
@@ -288,7 +281,6 @@ export const PublishFees = () => {
                   </div>
                 </div>
 
-                {/* Summary */}
                 {selectedFees.length > 0 && selectedClass && selectedYear ? (
                   <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 space-y-3">
                     <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Ready to Publish</p>
@@ -324,31 +316,22 @@ export const PublishFees = () => {
                   </div>
                 )}
 
-                {/* Publish Button */}
                 <button onClick={handlePublish}
                   disabled={selectedFees.length === 0 || !selectedClass || !selectedYear || publishing || published}
                   className={`w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all
-                    ${published  ? "bg-emerald-500 text-white"
+                    ${published   ? "bg-emerald-500 text-white"
                     : publishing ? "bg-blue-400 text-white cursor-wait"
                     : selectedFees.length === 0 || !selectedClass || !selectedYear
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 active:scale-[0.98]"}`}>
-                  {published  ? <><CheckCircle size={16} /> Published!</>
+                  {published   ? <><CheckCircle size={16} /> Published!</>
                   : publishing ? "Publishing..."
                   : <><Send size={16} /> Publish {selectedFees.length > 0 ? `(${selectedFees.length})` : ""} Fees</>}
                 </button>
-
-                <div className="p-4 bg-slate-50 rounded-xl text-xs text-slate-500 space-y-1.5 border border-slate-100">
-                  <p className="font-black text-slate-600">Publishing Info</p>
-                  <p>• Fees become visible to selected class</p>
-                  <p>• Status changes from Draft → Published</p>
-                  <p>• Published fees cannot be reverted</p>
-                </div>
               </div>
             </div>
           </div>
         ) : (
-          /* History Tab */
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100">
               <h3 className="font-black text-slate-800">Publish History</h3>
@@ -377,7 +360,7 @@ export const PublishFees = () => {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {(p.fees || []).map(f => (
-                            <span key={f.id} className="text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded-lg">
+                            <span key={f.id} className="text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-lg">
                               {f.feeTitle} — ₹{Number(f.amount).toLocaleString()}
                             </span>
                           ))}

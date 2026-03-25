@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -345,10 +346,24 @@ export const CourseModules = () => {
   const addModule = () =>
     setModules((prev) => [...prev, initialModule(prev.length)]);
 
-  const handleSave = () => {
-    console.log("Saving modules:", modules);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      // 🎯 FIXED: Removed local storage token and added withCredentials: true
+      const response = await axios.post(
+        `http://localhost:5000/api/faculty/courses/${course.id}/modules`,
+        { modules }, 
+        { withCredentials: true } // 🎯 Automatically sends the HTTP-Only cookie!
+      );
+
+      if (response.data.success) {
+        console.log("✅ Data saved to MySQL!");
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (err) {
+      console.error("❌ Save Failed:", err.response?.data || err.message);
+      alert("Could not save to database. Check if backend is running.");
+    }
   };
 
   return (

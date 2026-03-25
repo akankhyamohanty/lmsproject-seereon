@@ -140,7 +140,7 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
 
         {step === 1 ? (
           <>
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-6 py-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-xl"><CreditCard size={18} className="text-white" /></div>
                 <div>
@@ -479,7 +479,7 @@ export const FeeCollection = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-black text-xs uppercase flex-shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-black text-xs uppercase flex-shrink-0">
                             {txn.student?.[0]}
                           </div>
                           <div>

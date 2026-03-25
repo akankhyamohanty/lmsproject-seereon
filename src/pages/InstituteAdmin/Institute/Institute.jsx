@@ -3,7 +3,7 @@ import {
   Building2, Users, FileText, GitBranch,
   MapPin, Phone, Mail, Landmark, ShieldCheck, Zap,
   CreditCard, BookOpen, ScrollText, BadgeCheck, Calendar,
-  ChevronRight,
+  ChevronRight
 } from "lucide-react";
 
 const fmt = (text = "") =>
@@ -55,7 +55,7 @@ const SectionTitle = ({ title, subtitle }) => (
   </div>
 );
 
-// ─── MENU ─────────────────────────────────────────────────────────────────────
+// ─── MENU ITEMS ───────────────────────────────────────────────────────────────
 
 const MENU = [
   { id: "organisation", label: "Organisation",   icon: Building2, subtitle: "Basic details"          },
@@ -63,6 +63,40 @@ const MENU = [
   { id: "legal",        label: "Legal Documents", icon: FileText,  subtitle: "Certificates & docs"    },
   { id: "branches",     label: "Branches",        icon: GitBranch, subtitle: "Branch locations"       },
 ];
+
+// ─── HORIZONTAL HEADER TABS ───────────────────────────────────────────────────
+
+const HeaderSections = ({ activeMenu, setActiveMenu, counts }) => (
+  <div className="flex items-center gap-2 overflow-x-auto no-scrollbar border-t border-gray-100 mt-6 pt-4 pb-1">
+    {MENU.map((item) => {
+      const Icon = item.icon;
+      const isActive = activeMenu === item.id;
+      const count = counts[item.id];
+      
+      return (
+        <button
+          key={item.id}
+          onClick={() => setActiveMenu(item.id)}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
+            isActive 
+              ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
+              : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <Icon size={16} />
+          {item.label}
+          {count > 0 && (
+            <span className={`ml-1 px-1.5 py-0.5 rounded-md text-[10px] ${
+              isActive ? "bg-white/20 text-white" : "bg-gray-200 text-gray-600"
+            }`}>
+              {count}
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+);
 
 // ─── PANELS ───────────────────────────────────────────────────────────────────
 
@@ -83,18 +117,18 @@ const OrganisationPanel = ({ org, institute }) => (
     <InfoRow label="Head Office"       value={fmt(org.headOffice)} />
     <InfoRow
       label="Member Since"
-      value={institute.createdAt ? new Date(institute.createdAt).toLocaleDateString() : "—"}
+      value={institute.createdAt || "—"}
     />
   </div>
 );
 
 const DirectorsPanel = ({ directors }) => {
-  if (!directors.length) return (
+  if (!directors || !directors.length) return (
     <div>
       <SectionTitle title="Directors / Partners" subtitle="People associated with this institute" />
-      <div className="text-center py-16">
-        <Users size={40} className="mx-auto mb-3 text-gray-200" />
-        <p className="text-gray-400 font-medium">No directors added yet.</p>
+      <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        <Users size={40} className="mx-auto mb-3 text-gray-300" />
+        <p className="text-gray-500 font-medium">No directors added yet.</p>
       </div>
     </div>
   );
@@ -165,50 +199,51 @@ const DirectorsPanel = ({ directors }) => {
 const LegalPanel = ({ legal }) => (
   <div>
     <SectionTitle title="Legal Documents" subtitle="Certificates, NOCs and compliance documents" />
+
     <LegalCat icon={Landmark}    label="Land & Building" />
-    <DocRow label="Property Deed"                   value={legal.propertyDeed}         doc={legal.propertyDeedDoc} />
-    <DocRow label="Building Approval"               value={legal.buildingApproval}      doc={legal.buildingApprovalDoc} />
-    <DocRow label="Building Completion Certificate" value={legal.completionCertificate} doc={legal.completionCertificateDoc} />
+    <DocRow label="Property Deed"                   value={legal?.propertyDeed}         doc={legal?.propertyDeedDoc} />
+    <DocRow label="Building Approval"               value={legal?.buildingApproval}      doc={legal?.buildingApprovalDoc} />
+    <DocRow label="Building Completion Certificate" value={legal?.completionCertificate} doc={legal?.completionCertificateDoc} />
 
     <LegalCat icon={ShieldCheck} label="No Objection Certificates" />
-    <DocRow label="Fire Department NOC"      value={legal.fireNOC}          doc={legal.fireNOCDoc} />
-    <DocRow label="Police NOC"               value={legal.policeNOC}         doc={legal.policeNOCDoc} />
-    <DocRow label="Municipality NOC"         value={legal.municipalityNOC}   doc={legal.municipalityNOCDoc} />
-    <DocRow label="Education Department NOC" value={legal.educationDeptNOC}  doc={legal.educationDeptNOCDoc} />
-    <DocRow label="Pollution Control NOC"    value={legal.pollutionNOC}      doc={legal.pollutionNOCDoc} />
+    <DocRow label="Fire Department NOC"      value={legal?.fireNOC}          doc={legal?.fireNOCDoc} />
+    <DocRow label="Police NOC"               value={legal?.policeNOC}         doc={legal?.policeNOCDoc} />
+    <DocRow label="Municipality NOC"         value={legal?.municipalityNOC}   doc={legal?.municipalityNOCDoc} />
+    <DocRow label="Education Department NOC" value={legal?.educationDeptNOC}  doc={legal?.educationDeptNOCDoc} />
+    <DocRow label="Pollution Control NOC"    value={legal?.pollutionNOC}      doc={legal?.pollutionNOCDoc} />
 
     <LegalCat icon={Zap}         label="Infrastructure & Safety" />
-    <DocRow label="Water Connection"       value={legal.waterConnection}       doc={legal.waterConnectionDoc} />
-    <DocRow label="Electricity Connection" value={legal.electricityConnection} doc={legal.electricityConnectionDoc} />
-    <DocRow label="Safety Audit Report"    value={legal.safetyAudit}           doc={legal.safetyAuditDoc} />
-    <DocRow label="Drainage System"        value={legal.drainageSystem}        doc={legal.drainageSystemDoc} />
+    <DocRow label="Water Connection"       value={legal?.waterConnection}       doc={legal?.waterConnectionDoc} />
+    <DocRow label="Electricity Connection" value={legal?.electricityConnection} doc={legal?.electricityConnectionDoc} />
+    <DocRow label="Safety Audit Report"    value={legal?.safetyAudit}           doc={legal?.safetyAuditDoc} />
+    <DocRow label="Drainage System"        value={legal?.drainageSystem}        doc={legal?.drainageSystemDoc} />
 
     <LegalCat icon={CreditCard}  label="Financial & Administrative" />
-    <DocRow label="PAN Number"                value={legal.panNo}       doc={legal.panDoc} />
-    <DocRow label="GSTIN"                     value={legal.gstinNo}     doc={legal.gstinDoc} />
-    <DocRow label="Bank Account"              value={legal.bankAccount} doc={legal.bankAccountDoc} />
-    <DocRow label="Trust Deed / Society Reg." value={legal.trustDeed}   doc={legal.trustDeedDoc} />
+    <DocRow label="PAN Number"                value={legal?.panNo}       doc={legal?.panDoc} />
+    <DocRow label="GSTIN"                     value={legal?.gstinNo}     doc={legal?.gstinDoc} />
+    <DocRow label="Bank Account"              value={legal?.bankAccount} doc={legal?.bankAccountDoc} />
+    <DocRow label="Trust Deed / Society Reg." value={legal?.trustDeed}   doc={legal?.trustDeedDoc} />
 
     <LegalCat icon={BookOpen}    label="Education Registration & Affiliation" />
-    <DocRow label="DISE Code"                     value={legal.diseCode}               doc={legal.disecodeDoc} />
-    <DocRow label="Provisional Recognition"       value={legal.provisionalRecognition}  doc={legal.provisionalRecognitionDoc} />
-    <DocRow label="Board Affiliation Certificate" value={legal.affiliation}             doc={legal.affiliationDoc} />
+    <DocRow label="DISE Code"                     value={legal?.diseCode}               doc={legal?.disecodeDoc} />
+    <DocRow label="Provisional Recognition"       value={legal?.provisionalRecognition}  doc={legal?.provisionalRecognitionDoc} />
+    <DocRow label="Board Affiliation Certificate" value={legal?.affiliation}             doc={legal?.affiliationDoc} />
 
     <LegalCat icon={ScrollText}  label="Mandatory Policies" />
-    <DocRow label="Child Protection Policy" value={legal.childProtectionPolicy} doc={legal.childProtectionPolicyDoc} />
-    <DocRow label="Harassment Prevention"   value={legal.harassmentPolicy}       doc={legal.harassmentPolicyDoc} />
-    <DocRow label="Admission Policy"        value={legal.admissionPolicy}        doc={legal.admissionPolicyDoc} />
-    <DocRow label="Fee Structure Document"  value={legal.feeStructure}           doc={legal.feeStructureDoc} />
+    <DocRow label="Child Protection Policy" value={legal?.childProtectionPolicy} doc={legal?.childProtectionPolicyDoc} />
+    <DocRow label="Harassment Prevention"   value={legal?.harassmentPolicy}       doc={legal?.harassmentPolicyDoc} />
+    <DocRow label="Admission Policy"        value={legal?.admissionPolicy}        doc={legal?.admissionPolicyDoc} />
+    <DocRow label="Fee Structure Document"  value={legal?.feeStructure}           doc={legal?.feeStructureDoc} />
   </div>
 );
 
 const BranchesPanel = ({ branches }) => {
-  if (!branches.length) return (
+  if (!branches || !branches.length) return (
     <div>
       <SectionTitle title="Branch Locations" subtitle="All registered branch offices" />
-      <div className="text-center py-16">
-        <GitBranch size={40} className="mx-auto mb-3 text-gray-200" />
-        <p className="text-gray-400 font-medium">No branches added yet.</p>
+      <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+        <GitBranch size={40} className="mx-auto mb-3 text-gray-300" />
+        <p className="text-gray-500 font-medium">No branches added yet.</p>
       </div>
     </div>
   );
@@ -265,7 +300,7 @@ const BranchesPanel = ({ branches }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MAIN — Faculty/Institute Admin view (reads from localStorage automatically)
+// MAIN PAGE
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function Institute() {
@@ -274,38 +309,51 @@ export default function Institute() {
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
-    // ✅ FIX: Load the FIRST institute from localStorage (works without user.instituteId)
-    const all   = JSON.parse(localStorage.getItem("institutes")) || [];
-    const found = all[0] || null;   // always picks the first available institute
-    setInstitute(found);
+    // Read the logged-in user from storage
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+
+    if (loggedInUser) {
+      // Map user data to Institute layout
+      const activeInstitute = {
+        id: loggedInUser.code,
+        status: "Active",
+        plan: "Premium",
+        createdAt: new Date().toLocaleDateString(),
+        organisation: {
+          name: loggedInUser.name,
+          type: "Institute",
+          email: loggedInUser.email || "", 
+          phone: "",
+          city: "",
+          state: ""
+        },
+        directors: [],
+        legal: {},
+        branches: []
+      };
+      setInstitute(activeInstitute);
+    }
+    
     setLoading(false);
   }, []);
 
   /* ── Loading ── */
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center text-gray-400">
         <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm font-medium">Loading institute details...</p>
+        <p className="text-sm font-medium">Loading details...</p>
       </div>
     </div>
   );
 
   /* ── Empty state ── */
   if (!institute) return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center text-gray-400 max-w-sm">
         <Building2 size={48} className="mx-auto mb-4 opacity-30" />
         <p className="text-lg font-semibold text-gray-500 mb-2">No institute details found.</p>
-        <p className="text-sm text-gray-400 mb-6">
-          No institute has been registered yet. Please ask your Super Admin to add one from the Institute Master List.
-        </p>
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-left">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">How to fix this</p>
-          <p className="text-sm text-blue-700">
-            Go to <strong>Admin → Institute</strong> and click <strong>"Add Institute"</strong> to register your first institute.
-          </p>
-        </div>
+        <p className="text-sm text-gray-400">Please re-login or contact Support.</p>
       </div>
     </div>
   );
@@ -316,39 +364,44 @@ export default function Institute() {
   const branches  = institute.branches     || [];
 
   const counts = {
-    organisation: null,
+    organisation: 0,
     directors:    directors.length,
-    legal:        null,
+    legal:        0,
     branches:     branches.length,
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="mx-auto w-full max-w-8xl space-y-6">
 
-        {/* ── HEADER CARD ── */}
-        <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow font-bold text-xl">
-              {org.name?.[0]?.toUpperCase() || <Building2 size={26} />}
+        {/* ── HEADER CARD WITH HORIZONTAL MENU ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 pb-0">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-lg font-bold text-2xl">
+                  {org.name?.[0]?.toUpperCase() || <Building2 size={26} />}
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black text-gray-900 leading-tight">
+                    {fmt(org.name) || "—"}
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1 font-medium">
+                    {org.type} Dashboard &nbsp;·&nbsp; Code: <span className="text-blue-600 font-bold">{institute.id}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest ${statusStyles[institute.status] || "bg-gray-100 text-gray-600"}`}>
+                  {institute.status || "Unknown"}
+                </span>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
-                {fmt(org.name) || "—"}
-              </h1>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {org.type}&nbsp;&nbsp;·&nbsp;&nbsp;
-                {fmt(org.city)}{org.state ? `, ${fmt(org.state)}` : ""}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${statusStyles[institute.status] || "bg-gray-100 text-gray-600"}`}>
-              {institute.status || "Unknown"}
-            </span>
-            <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-100 text-purple-700 border border-purple-300">
-              {institute.plan || "Premium"}
-            </span>
+
+            {/* INTEGRATED HORIZONTAL TABS */}
+            <HeaderSections activeMenu={activeMenu} setActiveMenu={setActiveMenu} counts={counts} />
+
           </div>
         </div>
 
@@ -357,90 +410,32 @@ export default function Institute() {
           {[
             { label: "Directors",    value: directors.length,     icon: Users     },
             { label: "Branches",     value: branches.length,       icon: GitBranch },
-            { label: "City",         value: fmt(org.city) || "—", icon: MapPin    },
+            { label: "Code",         value: institute.id || "—", icon: MapPin    },
             {
               label: "Member Since",
-              value: institute.createdAt
-                ? new Date(institute.createdAt).toLocaleDateString()
-                : "—",
+              value: institute.createdAt || "—",
               icon: Calendar,
             },
           ].map((stat) => (
-            <div key={stat.label} className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                <stat.icon size={16} className="text-blue-600" />
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                <stat.icon size={18} className="text-blue-600" />
               </div>
               <div>
-                <p className="text-base font-bold text-gray-800 leading-tight">{stat.value}</p>
-                <p className="text-xs text-gray-400">{stat.label}</p>
+                <p className="text-lg font-black text-gray-800 leading-tight">{stat.value}</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase">{stat.label}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── MAIN LAYOUT: LEFT SIDEBAR + RIGHT CONTENT ── */}
-        <div className="flex gap-6 items-start">
-
-          {/* ── LEFT SIDEBAR ── */}
-          <div className="w-60 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden sticky top-6">
-            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-              <p className="text-xs text-left font-bold uppercase tracking-widest text-gray-400">Sections</p>
-            </div>
-            <nav className="py-2 grid-cols-1">
-              {MENU.map((item) => {
-                const Icon     = item.icon;
-                const isActive = activeMenu === item.id;
-                const count    = counts[item.id];
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveMenu(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all group ${
-                      isActive
-                        ? "bg-blue-50 border-r-2 border-blue-600"
-                        : "hover:bg-gray-50 border-r-2 border-transparent"
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                      isActive ? "bg-blue-600" : "bg-gray-100 group-hover:bg-gray-200"
-                    }`}>
-                      <Icon size={15} className={isActive ? "text-white" : "text-gray-500"} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold leading-tight ${isActive ? "text-blue-600" : "text-gray-700"}`}>
-                        {item.label}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>
-                    </div>
-                    {count !== null ? (
-                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                        isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
-                      }`}>
-                        {count}
-                      </span>
-                    ) : (
-                      <ChevronRight size={14} className={`shrink-0 ${isActive ? "text-blue-400" : "text-gray-300"}`} />
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* ── RIGHT CONTENT PANEL ── */}
-          <div className="flex-1 min-w-0 bg-white rounded-xl shadow-sm p-6">
-            {activeMenu === "organisation" && <OrganisationPanel org={org} institute={institute} />}
-            {activeMenu === "directors"    && <DirectorsPanel    directors={directors} />}
-            {activeMenu === "legal"        && <LegalPanel        legal={legal} />}
-            {activeMenu === "branches"     && <BranchesPanel     branches={branches} />}
-          </div>
-
+        {/* ── MAIN CONTENT PANEL (FULL WIDTH) ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          {activeMenu === "organisation" && <OrganisationPanel org={org} institute={institute} />}
+          {activeMenu === "directors"    && <DirectorsPanel    directors={directors} />}
+          {activeMenu === "legal"        && <LegalPanel        legal={legal} />}
+          {activeMenu === "branches"     && <BranchesPanel     branches={branches} />}
         </div>
-
-        {/* ── FOOTER ── */}
-        <p className="text-center text-xs text-gray-400 pb-4">
-          Institute ID: {institute.id}&nbsp;·&nbsp;Created: {institute.createdAt || "—"}
-        </p>
 
       </div>
     </div>

@@ -1,15 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: 'http://localhost:5000/api',
+  withCredentials: true, 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add token to requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,14 +19,24 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle responses
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    const isLoginRequest = error.config.url.includes('/auth/login');
+
+    // 🕵️‍♂️ LOUD LOGGING
+    if (error.response && error.response.status === 401) {
+      console.error("🚨 401 UNAUTHORIZED DETECTED!");
+      console.error("🔗 Failed URL:", error.config.url);
+      console.error("🛡️ Role in Storage:", localStorage.getItem('role'));
+      
+      if (!isLoginRequest) {
+        console.warn("🧹 401 Interceptor: Wiping data and bouncing to login...");
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

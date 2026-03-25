@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import {
   Send,
   ChevronDown,
@@ -7,9 +8,18 @@ import {
   MailCheck,
   Clock,
   MessageSquareX,
+  User
 } from "lucide-react";
 
-const STORAGE_KEY = "notifications";
+// --- AUTH TOKEN HELPER ---
+const getToken = () => {
+  let token = localStorage.getItem('token');
+  if (!token) {
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    token = storedUser?.token || storedUser?.data?.token;
+  }
+  return token;
+};
 
 export const Notifications = () => {
   const [loading, setLoading] = useState(false);
@@ -29,19 +39,35 @@ export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
 
   /* ----------------------------------
-      Load notifications from localStorage
+     🚀 DYNAMIC: FETCH NOTIFICATIONS
    ---------------------------------- */
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-    setNotifications(stored);
-  }, []);
+  const fetchNotifications = async () => {
+    try {
+      const token = getToken();
+      if (!token) return;
 
-  /* ----------------------------------
-      Save notifications to localStorage
-   ---------------------------------- */
+      const response = await axios.get("http://localhost:5000/api/admin/notifications", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Map data and parse JSON arrays from MySQL
+        const formattedData = response.data.notifications.map(n => ({
+          ...n,
+          targetRoles: typeof n.targetRoles === 'string' ? JSON.parse(n.targetRoles) : (n.targetRoles || []),
+          channels: typeof n.channels === 'string' ? JSON.parse(n.channels) : (n.channels || []),
+        }));
+        setNotifications(formattedData);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    }
+  };
+
+  // Load data on mount
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-  }, [notifications]);
+    fetchNotifications();
+  }, []);
 
   /* ----------------------------------
       Helpers
@@ -63,9 +89,9 @@ export const Notifications = () => {
   };
 
   /* ----------------------------------
-      Submit Handler
+     🚀 DYNAMIC: SUBMIT HANDLER
    ---------------------------------- */
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
 
     if (!title || !message || !course) {
@@ -75,21 +101,24 @@ export const Notifications = () => {
 
     setLoading(true);
 
-    const newNotification = {
-      id: Date.now(),
-      course,
-      title,
-      message,
-      targetRoles,
-      channels,
-      scheduleDate,
-      scheduleTime,
-      status: scheduleDate || scheduleTime ? "pending" : "delivered",
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const token = getToken();
+      if (!token) return;
 
-    setTimeout(() => {
-      setNotifications((prev) => [newNotification, ...prev]);
+      const payload = {
+        course,
+        title,
+        message,
+        targetRoles: JSON.stringify(targetRoles),
+        channels: JSON.stringify(channels),
+        scheduleDate: scheduleDate || null,
+        scheduleTime: scheduleTime || null,
+        status: scheduleDate || scheduleTime ? "pending" : "delivered",
+      };
+
+      await axios.post("http://localhost:5000/api/admin/notifications", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       // Reset form
       setCourse("");
@@ -100,13 +129,20 @@ export const Notifications = () => {
       setTargetRoles(["Students"]);
       setChannels(["SMS"]);
 
-      setLoading(false);
+      // Refresh list from DB
+      fetchNotifications();
       alert("Notification Broadcasted Successfully!");
-    }, 1000);
+
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert(err.response?.data?.message || "Failed to broadcast notification.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ----------------------------------
-      Stats
+      Stats Calculation
    ---------------------------------- */
   const deliveredCount = notifications.filter(
     (n) => n.status === "delivered"
@@ -187,8 +223,7 @@ export const Notifications = () => {
                 Target Roles
               </p>
               <div className="flex flex-wrap gap-2">
-                {/* ✅ Added "Institute" option here */}
-                {["Students", "Faculty", "Staff"].map((role) => (
+                {["Students", "Faculty", "Staff", "Institute"].map((role) => (
                   <button
                     key={role}
                     type="button"
@@ -292,6 +327,62 @@ export const Notifications = () => {
           />
         </div>
       </div>
+
+      {/* 📜 NOTIFICATION HISTORY */}
+      <div className="mt-12 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 bg-slate-50">
+          <h3 className="text-lg font-black text-slate-800">Recent Notifications</h3>
+        </div>
+        
+        <div className="divide-y divide-slate-100">
+          {notifications.length === 0 ? (
+            <div className="p-12 text-center text-slate-400 font-bold">
+              No notifications have been broadcasted yet.
+            </div>
+          ) : (
+            notifications.map((n) => (
+              <div key={n.id} className="p-6 hover:bg-slate-50/80 transition-colors">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                  <div>
+                    <h4 className="text-lg font-bold text-slate-800">{n.title}</h4>
+                    <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mt-1">
+                      {n.course}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border ${
+                    n.status === 'delivered' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                    n.status === 'pending' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                    'bg-red-50 text-red-700 border-red-200'
+                  }`}>
+                    {n.status}
+                  </span>
+                </div>
+                
+                <p className="text-sm text-slate-600 mt-4 leading-relaxed bg-white border border-slate-100 p-4 rounded-xl">
+                  {n.message}
+                </p>
+                
+                <div className="mt-4 flex flex-wrap gap-6 text-xs font-bold text-slate-400">
+                  <div className="flex items-center gap-1.5">
+                    <User size={14} className="text-slate-300" /> 
+                    {n.targetRoles?.join(", ") || "All"}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Mail size={14} className="text-slate-300" /> 
+                    {n.channels?.join(", ") || "N/A"}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock size={14} className="text-slate-300" /> 
+                    {new Date(n.created_at).toLocaleString('en-IN', {
+                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 };
@@ -300,7 +391,6 @@ export const Notifications = () => {
    Stats Card Component
 ---------------------------------- */
 const StatCard = ({ label, count, icon, color }) => {
-    
   const colorStyles = {
       blue: "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white",
       orange: "bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white",

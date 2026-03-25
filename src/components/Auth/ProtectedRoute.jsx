@@ -1,19 +1,39 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) return null; // or loader
+  // 🕵️‍♂️ DEBUG LOGS
+  console.log("🛡️ [Guard Check] Path:", location.pathname);
+  console.log("🛡️ [Guard Check] User:", user);
+  console.log("🛡️ [Guard Check] Role:", user?.role);
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  // 🎯 DOOR 1: No User Found
+  if (!user) {
+    console.warn("❌ Guard: No user object found. Bouncing to /login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // 🎯 DOOR 2: Role Check (Case-Insensitive)
+  const userRole = user.role?.toLowerCase();
+  const isAllowed = allowedRoles?.map(r => r.toLowerCase()).includes(userRole);
+
+  if (allowedRoles && !isAllowed) {
+    console.error(`🚫 Guard: Role '${user.role}' not in allowed list [${allowedRoles}]`);
     return <Navigate to="/unauthorized" replace />;
   }
 
+  console.log("✅ Guard: Access Granted!");
   return children;
 };
 

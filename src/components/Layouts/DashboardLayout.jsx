@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../Common/Sidebar"; 
-import { useAuth } from "../../hooks/useAuth"; // ✅ Import Auth Hook
+import { useAuth } from "../../hooks/useAuth"; 
 import { Search, Bell } from 'lucide-react';
 
 export const DashboardLayout = () => {
@@ -22,7 +22,8 @@ export const DashboardLayout = () => {
           {/* LEFT: Dynamic Greeting */}
           <div>
             <h2 className="text-xl font-black text-slate-800 tracking-tight">
-              Hi, {user?.name || "User"}
+              {/* 🎯 FIXED: Added fallback to fullName */}
+              Hi, {user?.name || user?.fullName || "Faculty"}
             </h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden md:block">
               {user?.role?.replace("_", " ") || "Welcome"}
@@ -51,8 +52,9 @@ export const DashboardLayout = () => {
             {/* Profile Avatar */}
             <div className="w-10 h-10 rounded-full bg-orange-100 overflow-hidden border border-slate-200 cursor-pointer hover:ring-2 hover:ring-blue-500/20 transition-all">
               <img 
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || "User"}`} 
-                alt="User" 
+                /* 🎯 FIXED: Avatar now also uses the fullName fallback so the image matches the user */
+                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || user?.fullName || "Faculty"}`} 
+                alt="User Avatar" 
               />
             </div>
           </div>

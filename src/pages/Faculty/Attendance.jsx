@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Calendar, Clock, LogIn, LogOut, 
   AlertCircle, GraduationCap, HourglassIcon, 
-  CheckCircle, XCircle, Briefcase, ChevronLeft, ChevronRight
+  CheckCircle, XCircle, Briefcase, ChevronLeft, ChevronRight,
+  Loader2
 } from "lucide-react";
 
 // --- CONFIGURATION ---
 const SHIFT_START = { h: 9, m: 30 };
 const SHIFT_END   = { h: 18, m: 30 };
-
-// Logged-in User Context
-const ME = { id: 1, name: "Dr. Arjun Mehta", designation: "Professor", dept: "Computer Science" };
 
 // --- HELPERS ---
 const toMin = (h, m) => h * 60 + m;
@@ -29,7 +28,6 @@ const isShiftActive = () => {
   return n >= toMin(SHIFT_START.h, SHIFT_START.m) && n <= toMin(SHIFT_END.h, SHIFT_END.m);
 };
 
-// Calculate duration in decimal hours for easier math
 const getDurationData = (punchIn, punchOut) => {
   if (!punchIn || !punchOut) return 0;
   const [ih, im] = punchIn.split(":").map(Number);
@@ -45,33 +43,41 @@ const formatDuration = (hours) => {
 };
 
 export default function MyAttendancePortal() {
-  const getToday = () => new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(getToday());
   const [clockNow, setClockNow] = useState(getCurrentTime());
   const [history, setHistory] = useState([]);
   const [currentRecord, setCurrentRecord] = useState({ punchIn: null, punchOut: null, status: "Absent" });
+  const [profile, setProfile] = useState({ name: "Loading...", designation: "", dept: "" });
+  const [loading, setLoading] = useState(true);
 
-  // 1. Fetch History from LocalStorage (Simulating a DB)
-  useEffect(() => {
-    const allRecords = [];
-    const today = new Date();
-    
-    // Look back 30 days
-    for (let i = 0; i < 30; i++) {
-      const d = new Date();
-      d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split("T")[0];
-      const saved = localStorage.getItem(`faculty_attendance_${ME.id}_${dateStr}`);
-      if (saved) {
-        allRecords.push({ date: dateStr, ...JSON.parse(saved) });
+  // 🎯 REMOVED: token and headers variables from here
+
+  // 1. Fetch Dynamic Data from Backend
+  const fetchAttendanceData = async () => {
+    try {
+      // 🎯 FIXED: Replaced { headers } with { withCredentials: true } for all 3 requests
+      const [profRes, historyRes, todayRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/faculty/profile", { withCredentials: true }),
+        axios.get("http://localhost:5000/api/faculty/attendance/history", { withCredentials: true }),
+        axios.get("http://localhost:5000/api/faculty/attendance/today", { withCredentials: true })
+      ]);
+
+      if (profRes.data.success) setProfile(profRes.data.data);
+      if (historyRes.data.success) setHistory(historyRes.data.data);
+      if (todayRes.data.success && todayRes.data.data) {
+        setCurrentRecord(todayRes.data.data);
+      } else {
+        setCurrentRecord({ punchIn: null, punchOut: null, status: "Absent" });
       }
+    } catch (err) {
+      console.error("Error fetching portal data:", err);
+    } finally {
+      setLoading(false);
     }
-    setHistory(allRecords);
+  };
 
-    // Set today's specific record
-    const todaySaved = localStorage.getItem(`faculty_attendance_${ME.id}_${date}`);
-    setCurrentRecord(todaySaved ? JSON.parse(todaySaved) : { punchIn: null, punchOut: null, status: "Absent" });
-  }, [date]);
+  useEffect(() => {
+    fetchAttendanceData();
+  }, []);
 
   // 2. Real-time Clock
   useEffect(() => {
@@ -79,7 +85,7 @@ export default function MyAttendancePortal() {
     return () => clearInterval(t);
   }, []);
 
-  // 3. Stats Logic
+  // 3. Stats Logic (Dynamic based on API history)
   const stats = history.reduce((acc, rec) => {
     if (rec.status === "Present" || rec.status === "Late") acc.present++;
     if (rec.status === "Absent") acc.absent++;
@@ -87,18 +93,34 @@ export default function MyAttendancePortal() {
     return acc;
   }, { present: 0, absent: 0, hours: 0 });
 
-  // 4. Handlers
-  const handlePunch = (type) => {
-    const newRec = { ...currentRecord };
-    if (type === 'in') {
-      newRec.punchIn = getCurrentTime();
-      newRec.status = "Pending";
-    } else {
-      newRec.punchOut = getCurrentTime();
+  // 4. Punch Handlers (Axios POST)
+  const handlePunch = async (type) => {
+    try {
+      // 🎯 FIXED: Replaced { headers } with { withCredentials: true }
+      const res = await axios.post(
+        "http://localhost:5000/api/faculty/attendance/punch",
+        { type },
+        { withCredentials: true }
+      );
+
+      if (res.data.success) {
+        fetchAttendanceData();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Punch action failed");
     }
-    setCurrentRecord(newRec);
-    localStorage.setItem(`faculty_attendance_${ME.id}_${date}`, JSON.stringify(newRec));
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+          <p className="font-bold text-slate-400">Loading Attendance Portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
@@ -110,9 +132,9 @@ export default function MyAttendancePortal() {
             <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200">
               <GraduationCap size={28} />
             </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight">{ME.name}</h1>
-              <p className="text-slate-500 font-medium text-md">{ME.designation} • {ME.dept}</p>
+            <div className="text-left">
+              <h1 className="text-2xl font-black tracking-tight">{profile.name}</h1>
+              <p className="text-slate-500 font-medium text-md">{profile.designation} • {profile.dept}</p>
             </div>
           </div>
           <div className="bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
@@ -122,7 +144,7 @@ export default function MyAttendancePortal() {
         </div>
 
         {/* STATS OVERVIEW */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-left">
           {[
             { label: "Days Present", val: stats.present, color: "text-emerald-600", bg: "bg-emerald-50" },
             { label: "Total Hours", val: formatDuration(stats.hours), color: "text-indigo-600", bg: "bg-indigo-50" },
@@ -160,14 +182,14 @@ export default function MyAttendancePortal() {
                   <button 
                     onClick={() => handlePunch('in')}
                     disabled={!isShiftActive()}
-                    className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <LogIn size={18} /> Punch In
                   </button>
                 ) : (
                   <button 
                     onClick={() => handlePunch('out')}
-                    disabled={!!currentRecord.punchOut || currentRecord.status === "Pending"}
+                    disabled={!!currentRecord.punchOut}
                     className="w-full py-4 bg-white border-2 border-slate-100 text-slate-600 rounded-2xl font-bold hover:border-rose-200 hover:text-rose-600 transition-all flex items-center justify-center gap-2 disabled:opacity-30"
                   >
                     <LogOut size={18} /> Punch Out
@@ -182,7 +204,7 @@ export default function MyAttendancePortal() {
               </div>
             </div>
 
-            <div className="bg-blue-600 p-6 rounded-[2.5rem] text-white shadow-xl shadow-indigo-100">
+            <div className="bg-blue-600 p-6 rounded-[2.5rem] text-white shadow-xl shadow-indigo-100 text-left">
                <div className="flex items-center gap-3 mb-2">
                   <AlertCircle size={18} className="text-indigo-300" />
                   <p className="font-bold text-md">Shift Policy</p>
@@ -209,7 +231,7 @@ export default function MyAttendancePortal() {
                   const duration = getDurationData(rec.punchIn, rec.punchOut);
                   return (
                     <div key={i} className="px-8 py-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 text-left">
                         <div className="text-center min-w-[50px]">
                           <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(rec.date).toLocaleString('default', { month: 'short' })}</p>
                           <p className="text-xl font-black leading-none">{new Date(rec.date).getDate()}</p>

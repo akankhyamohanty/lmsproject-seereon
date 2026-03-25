@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   ChevronRight, ChevronLeft, Plus, Eye, Pencil, Trash2,
   BookOpen, Building2, Layers, Users, Hash, UserCheck,
   ShieldCheck, Calendar, Search, X, CheckCircle, Loader,
   AlertTriangle, RefreshCw, Home, ArrowRight, GraduationCap
 } from "lucide-react";
-import { getBatches, saveBatches, DEPARTMENTS } from "./BatchStorage.jsx";
+import { DEPARTMENTS } from "./BatchStorage.jsx";
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const B6    = "#2563eb";
@@ -45,103 +46,6 @@ const PROGRAM_ICONS = {
   "BA LLB": "⚖️",  "BBA LLB":"⚖️",
 };
 
-// ─── Seed dummy batches ───────────────────────────────────────────────────────
-const seedBatches = async () => {
-  const existing = await getBatches();
-  if (existing.length > 0) return;
-  const dummy = [
-    // B.Tech CSE
-    {
-      id: 1, name: "B.Tech CSE 2024-25 Batch A", academic_year: "2024-25",
-      start_year: "2024", end_year: "2028", max_strength: "120",
-      department_id: "cs", department_name: "Computer Science", course: "B.Tech CSE",
-      sections: [{ name: "A", strength: "60" }, { name: "B", strength: "60" }],
-      proctor: { id: 1, first_name: "Anjali", last_name: "Sharma", designation: "Senior Professor", department: "Computer Science" },
-      hod: { id: 3, first_name: "Priya", last_name: "Nair", designation: "Professor", department: "Computer Science" },
-      student_count: 85, status: "active", created_at: new Date("2024-01-15").toISOString(),
-    },
-    {
-      id: 2, name: "B.Tech CSE 2023-24 Batch", academic_year: "2023-24",
-      start_year: "2023", end_year: "2027", max_strength: "120",
-      department_id: "cs", department_name: "Computer Science", course: "B.Tech CSE",
-      sections: [{ name: "A", strength: "60" }, { name: "B", strength: "60" }],
-      proctor: { id: 2, first_name: "Rohan", last_name: "Verma", designation: "Assistant Professor", department: "Computer Science" },
-      hod: null,
-      student_count: 110, status: "active", created_at: new Date("2023-07-10").toISOString(),
-    },
-    // B.Tech Civil
-    {
-      id: 3, name: "B.Tech Civil 2024-25 Batch", academic_year: "2024-25",
-      start_year: "2024", end_year: "2028", max_strength: "80",
-      department_id: "civil", department_name: "Civil Engineering", course: "B.Tech Civil",
-      sections: [{ name: "A", strength: "40" }, { name: "B", strength: "40" }],
-      proctor: { id: 4, first_name: "Suresh", last_name: "Kumar", designation: "Professor", department: "Civil Engineering" },
-      hod: null,
-      student_count: 68, status: "active", created_at: new Date("2024-07-01").toISOString(),
-    },
-    {
-      id: 4, name: "B.Tech Civil 2023-24 Batch", academic_year: "2023-24",
-      start_year: "2023", end_year: "2027", max_strength: "80",
-      department_id: "civil", department_name: "Civil Engineering", course: "B.Tech Civil",
-      sections: [{ name: "A", strength: "80" }],
-      proctor: { id: 4, first_name: "Suresh", last_name: "Kumar", designation: "Professor", department: "Civil Engineering" },
-      hod: null,
-      student_count: 72, status: "active", created_at: new Date("2023-07-05").toISOString(),
-    },
-    // B.Tech Mechanical
-    {
-      id: 5, name: "B.Tech Mech 2024-25 Batch", academic_year: "2024-25",
-      start_year: "2024", end_year: "2028", max_strength: "80",
-      department_id: "mech", department_name: "Mechanical Engineering", course: "B.Tech Mechanical",
-      sections: [{ name: "A", strength: "40" }, { name: "B", strength: "40" }],
-      proctor: { id: 5, first_name: "Vikram", last_name: "Rao", designation: "Professor", department: "Mechanical Engineering" },
-      hod: null,
-      student_count: 55, status: "active", created_at: new Date("2024-07-10").toISOString(),
-    },
-    // B.Tech Electrical
-    {
-      id: 6, name: "B.Tech Electrical 2024-25", academic_year: "2024-25",
-      start_year: "2024", end_year: "2028", max_strength: "60",
-      department_id: "elec", department_name: "Electrical Engineering", course: "B.Tech Electrical",
-      sections: [{ name: "A", strength: "60" }],
-      proctor: { id: 6, first_name: "Meena", last_name: "Pillai", designation: "Associate Professor", department: "Electrical Engineering" },
-      hod: null,
-      student_count: 48, status: "active", created_at: new Date("2024-07-15").toISOString(),
-    },
-    // MCA
-    {
-      id: 7, name: "MCA 2024-25 Batch", academic_year: "2024-25",
-      start_year: "2024", end_year: "2026", max_strength: "60",
-      department_id: "cs", department_name: "Computer Science", course: "MCA",
-      sections: [{ name: "A", strength: "60" }],
-      proctor: { id: 1, first_name: "Anjali", last_name: "Sharma", designation: "Senior Professor", department: "Computer Science" },
-      hod: null,
-      student_count: 42, status: "active", created_at: new Date("2024-07-20").toISOString(),
-    },
-    // B.Sc Mathematics
-    {
-      id: 8, name: "B.Sc Math 2024-25 Batch", academic_year: "2024-25",
-      start_year: "2024", end_year: "2027", max_strength: "60",
-      department_id: "math", department_name: "Mathematics", course: "B.Sc Mathematics",
-      sections: [{ name: "A", strength: "60" }],
-      proctor: { id: 7, first_name: "Kiran", last_name: "Das", designation: "Professor", department: "Mathematics" },
-      hod: null,
-      student_count: 35, status: "active", created_at: new Date("2024-06-01").toISOString(),
-    },
-    // B.Sc Physics
-    {
-      id: 9, name: "B.Sc Physics 2022-23 Batch", academic_year: "2022-23",
-      start_year: "2022", end_year: "2026", max_strength: "80",
-      department_id: "phys", department_name: "Physics", course: "B.Sc Physics",
-      sections: [{ name: "A", strength: "40" }, { name: "B", strength: "40" }],
-      proctor: { id: 8, first_name: "Priya", last_name: "Nair", designation: "Professor", department: "Physics" },
-      hod: { id: 8, first_name: "Priya", last_name: "Nair", designation: "Professor", department: "Physics" },
-      student_count: 75, status: "archived", created_at: new Date("2022-08-01").toISOString(),
-    },
-  ];
-  await saveBatches(dummy);
-};
-
 // ─── Delete Modal ─────────────────────────────────────────────────────────────
 const DeleteModal = ({ batch, onClose, onConfirm }) => {
   const [confirm, setConfirm] = useState("");
@@ -169,7 +73,8 @@ const DeleteModal = ({ batch, onClose, onConfirm }) => {
             <Layers size={20} color={B6} className="flex-shrink-0"/>
             <div>
               <p className="font-black text-blue-600">{batch.name}</p>
-              <p className="text-sm" style={{ color: "rgba(37,99,235,0.5)" }}>{batch.course} · {batch.student_count} students</p>
+              {/* FIXED: b.course to b.course_name */}
+              <p className="text-sm" style={{ color: "rgba(37,99,235,0.5)" }}>{batch.course_name} · {batch.student_count || 0} students</p>
             </div>
           </div>
           <div>
@@ -186,7 +91,7 @@ const DeleteModal = ({ batch, onClose, onConfirm }) => {
             <button onClick={onClose} disabled={loading}
               className="flex-1 py-3 rounded-xl text-blue-600 font-bold text-sm hover:bg-blue-600/5 transition-all"
               style={{ border: `1px solid ${B6_20}` }}>Cancel</button>
-            <button onClick={() => { if (!isMatch) return; setLoading(true); setTimeout(() => onConfirm(batch.id), 700); }}
+            <button onClick={() => { if (!isMatch) return; setLoading(true); onConfirm(batch.id); }}
               disabled={!isMatch || loading}
               className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
               style={{ background: isMatch && !loading ? B6 : B6_10, color: isMatch && !loading ? "white" : "rgba(37,99,235,0.35)", cursor: isMatch && !loading ? "pointer" : "not-allowed", boxShadow: isMatch && !loading ? "0 4px 14px rgba(37,99,235,0.35)" : "none" }}>
@@ -203,7 +108,7 @@ const DeleteModal = ({ batch, onClose, onConfirm }) => {
 const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
   if (!batch) return null;
   const fillPct = batch.max_strength
-    ? Math.min(100, Math.round((batch.student_count / parseInt(batch.max_strength)) * 100))
+    ? Math.min(100, Math.round(((batch.student_count || 0) / parseInt(batch.max_strength)) * 100))
     : 0;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -220,7 +125,8 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
               </div>
               <div>
                 <h2 className="text-xl font-black text-white">{batch.name}</h2>
-                <p className="text-white/65 text-sm mt-0.5">{batch.course} · {batch.department_name}</p>
+                {/* FIXED: b.course to b.course_name */}
+                <p className="text-white/65 text-sm mt-0.5">{batch.course_name} · {batch.department_name}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-blue-600">{batch.status}</span>
                   <span className="text-white/50 text-xs font-medium">{batch.academic_year}</span>
@@ -250,7 +156,7 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
           <div className="p-4 rounded-2xl" style={{ background: B6_05, border: `1px solid ${B6_12}` }}>
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-black uppercase tracking-widest" style={{ color: "rgba(37,99,235,0.5)" }}>Batch Capacity</span>
-              <span className="text-xs font-bold text-blue-600">{batch.student_count} / {batch.max_strength} students</span>
+              <span className="text-xs font-bold text-blue-600">{batch.student_count || 0} / {batch.max_strength} students</span>
             </div>
             <div className="h-2.5 rounded-full overflow-hidden" style={{ background: B6_10 }}>
               <div className="h-full rounded-full bg-blue-600 transition-all duration-700" style={{ width: `${fillPct}%` }}/>
@@ -261,7 +167,7 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
               <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(37,99,235,0.45)" }}>Batch Details</p>
               {[
                 { label: "Academic Year", value: batch.academic_year,  icon: Calendar  },
-                { label: "Course",        value: batch.course,          icon: BookOpen  },
+                { label: "Course",        value: batch.course_name,    icon: BookOpen  },
                 { label: "Department",    value: batch.department_name, icon: Building2 },
                 { label: "Duration",      value: batch.start_year && batch.end_year ? `${batch.start_year} – ${batch.end_year}` : "—", icon: Calendar },
               ].map(row => (
@@ -293,19 +199,18 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { label: "Proctor", person: batch.proctor, icon: UserCheck   },
-              { label: "HOD",     person: batch.hod,     icon: ShieldCheck },
-            ].map(({ label, person, icon: Icon }) => (
+              { label: "Proctor", fname: batch.proctor_fname, lname: batch.proctor_lname, icon: UserCheck   },
+              { label: "HOD",     fname: batch.hod_fname,     lname: batch.hod_lname,     icon: ShieldCheck },
+            ].map(({ label, fname, lname, icon: Icon }) => (
               <div key={label} className="bg-white rounded-2xl p-4" style={{ border: `1px solid ${B6_12}` }}>
                 <p className="text-[10px] font-black uppercase tracking-widest mb-3" style={{ color: "rgba(37,99,235,0.45)" }}>{label}</p>
-                {person ? (
+                {fname || lname ? (
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black uppercase text-sm">
-                      {person.first_name?.[0]}{person.last_name?.[0]}
+                      {fname?.[0] || 'F'}
                     </div>
                     <div>
-                      <p className="font-bold text-blue-600 text-sm">{person.first_name} {person.last_name}</p>
-                      <p className="text-xs" style={{ color: "rgba(37,99,235,0.45)" }}>{person.designation}</p>
+                      <p className="font-bold text-blue-600 text-sm">{fname} {lname}</p>
                     </div>
                   </div>
                 ) : (
@@ -393,13 +298,23 @@ const BatchBrowser = () => {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
-  // ── load is now async ─────────────────────────────────────────────────────
-  const load = async () => {
+ const load = async () => {
     setLoading(true);
-    await seedBatches();
-    const data = await getBatches();
-    setBatches(data);
-    setLoading(false);
+    try {
+      const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user') || '{}')?.token;
+      
+      const response = await axios.get("http://localhost:5000/api/admin/batches", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setBatches(response.data.batches);
+      }
+    } catch (error) {
+      console.error("Error loading batches:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -408,7 +323,8 @@ const BatchBrowser = () => {
   const programGroups = useMemo(() => {
     const map = {};
     batches.forEach(b => {
-      const { program } = parseCourse(b.course);
+      // FIXED: b.course_name instead of b.course
+      const { program } = parseCourse(b.course_name || "");
       if (!map[program]) map[program] = { program, icon: PROGRAM_ICONS[program] || "🎓", batches: [] };
       map[program].batches.push(b);
     });
@@ -419,8 +335,9 @@ const BatchBrowser = () => {
     programGroups.filter(g =>
       g.program.toLowerCase().includes(search.toLowerCase()) ||
       g.batches.some(b =>
-        b.course?.toLowerCase().includes(search.toLowerCase()) ||
-        b.department_name?.toLowerCase().includes(search.toLowerCase())
+        // FIXED: b.course_name instead of b.course
+        (b.course_name || "").toLowerCase().includes(search.toLowerCase()) ||
+        (b.department_name || "").toLowerCase().includes(search.toLowerCase())
       )
     ), [programGroups, search]);
 
@@ -431,13 +348,14 @@ const BatchBrowser = () => {
     if (!pg) return [];
     const map = {};
     pg.batches.forEach(b => {
-      const { specialization } = parseCourse(b.course);
+      // FIXED: b.course_name instead of b.course
+      const { specialization } = parseCourse(b.course_name || "");
       const dept = DEPARTMENTS.find(d => d.id === b.department_id);
       if (!map[specialization]) {
         map[specialization] = {
           specialization,
-          fullCourse: b.course,
-          department_name: b.department_name,
+          fullCourse: b.course_name, // FIXED
+          department_name: b.department_name || dept?.name,
           department_id: b.department_id,
           icon: dept?.icon || "📚",
           batches: [],
@@ -451,17 +369,26 @@ const BatchBrowser = () => {
   // ── Level 3: batches for selected specialization ──────────────────────────
   const batchesForSpec = useMemo(() => {
     if (!selectedSpecialization) return [];
-    return batches.filter(b => b.course === selectedSpecialization.fullCourse);
+    // FIXED: b.course_name instead of b.course
+    return batches.filter(b => b.course_name === selectedSpecialization.fullCourse);
   }, [batches, selectedSpecialization]);
 
   // ── handleDelete is now async ─────────────────────────────────────────────
-  const handleDelete = async (id) => {
-    const removed = batches.find(b => b.id === id);
-    const updated = batches.filter(b => b.id !== id);
-    setBatches(updated);
-    await saveBatches(updated);
-    setDeleteBatch(null);
-    showToast(`"${removed?.name}" deleted`);
+ const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user') || '{}')?.token;
+      
+      await axios.delete(`http://localhost:5000/api/admin/batches/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setBatches(batches.filter(b => b.id !== id));
+      setDeleteBatch(null);
+      showToast(`Batch deleted successfully`);
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Failed to delete batch");
+    }
   };
 
   const handleBack = () => {
@@ -610,7 +537,7 @@ const BatchBrowser = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {filteredPrograms.map((pg, idx) => {
                       const totalStudents = pg.batches.reduce((s, b) => s + (b.student_count || 0), 0);
-                      const specs = [...new Set(pg.batches.map(b => parseCourse(b.course).specialization))];
+                      const specs = [...new Set(pg.batches.map(b => parseCourse(b.course_name).specialization))];
                       return (
                         <button key={pg.program} type="button"
                           onClick={() => { setSelectedProgram(pg.program); setSelectedSpecialization(null); }}
@@ -870,7 +797,7 @@ const BatchBrowser = () => {
                             <div className="flex items-center gap-2">
                               <UserCheck size={12} style={{ color: "rgba(37,99,235,0.35)", flexShrink: 0 }}/>
                               <span className="text-xs font-medium text-blue-600 truncate">
-                                {batch.proctor ? `${batch.proctor.first_name} ${batch.proctor.last_name}` : "No proctor assigned"}
+                                {batch.proctor_fname ? `${batch.proctor_fname} ${batch.proctor_lname || ''}` : "No proctor assigned"}
                               </span>
                             </div>
                           </div>

@@ -1,15 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 import {
   ChevronRight, ChevronLeft, Check, X, Plus, Trash2,
-  Search, Users, BookOpen, Building2, User, GraduationCap,
+  Search, Users, BookOpen, Building2,
   ShieldCheck, UserCheck, AlertCircle, Loader, CheckCircle,
-  Layers, Hash, Calendar, ChevronDown, Minus
+  Layers, Hash, Calendar
 } from "lucide-react";
 import {
-  DEPARTMENTS, COURSES_BY_DEPT, ACADEMIC_YEARS, COLOR_MAP,
-  getFaculty, getStudents, addBatch, BATCH_KEY
+  DEPARTMENTS, COURSES_BY_DEPT, ACADEMIC_YEARS
 } from "./BatchStorage.jsx";
+
+// ─── Token Helper (Prevents 403 Errors) ───────────────────────────────────────
+const getToken = () => {
+  let token = localStorage.getItem('token');
+  if (!token) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    token = user?.token || user?.data?.token;
+  }
+  return token;
+};
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
@@ -33,7 +44,6 @@ const defaultForm = {
   students: [],
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const SECTION_NAMES = ["A","B","C","D","E","F","G","H"];
 
 const B6   = "#2563eb";
@@ -45,20 +55,6 @@ const B6_15 = "rgba(37,99,235,0.15)";
 const B6_20 = "rgba(37,99,235,0.20)";
 const B6_30 = "rgba(37,99,235,0.30)";
 
-const ensureMockStudents = () => {
-  if (localStorage.getItem("student_list")) return;
-  const mock = Array.from({ length: 20 }, (_, i) => ({
-    id: i + 1,
-    first_name: ["Arjun","Sneha","Rahul","Divya","Karan","Priya","Amit","Neha","Rohit","Sanya","Vikram","Pooja","Aakash","Ritika","Suresh","Kavya","Manish","Deepa","Tarun","Meera"][i],
-    last_name:  ["Kumar","Patel","Sharma","Singh","Verma","Nair","Gupta","Joshi","Mehta","Reddy","Rao","Desai","Malhotra","Iyer","Pillai","Agarwal","Mishra","Shah","Saxena","Pandey"][i],
-    email: `student${i+1}@example.com`,
-    roll_no: `ROLL-${String(i+1).padStart(3,"0")}`,
-    department: DEPARTMENTS[i % DEPARTMENTS.length].name,
-  }));
-  localStorage.setItem("student_list", JSON.stringify(mock));
-};
-
-// ─── Shared input ─────────────────────────────────────────────────────────────
 const inputBase = {
   padding: "10px 14px",
   borderRadius: "12px",
@@ -118,15 +114,6 @@ const StepBatchInfo = ({ form, setForm, errors }) => {
         <Input label="Start Year" name="start_year" type="number" value={form.start_year} onChange={h} placeholder="2024" />
         <Input label="End Year"   name="end_year"   type="number" value={form.end_year}   onChange={h} placeholder="2028" />
       </div>
-      {form.name && form.academic_year && (
-        <div style={{ padding: "16px", background: B6_05, border: `1px solid ${B6_12}`, borderRadius: "16px", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ padding: 8, background: B6, borderRadius: 12 }}><Layers size={16} color="white"/></div>
-          <div>
-            <p style={{ fontWeight: 900, color: B6, fontSize: 14 }}>{form.name}</p>
-            <p style={{ fontSize: 13, color: "rgba(37,99,235,0.6)" }}>{form.academic_year} · Max {form.max_strength || "—"} students</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -155,16 +142,10 @@ const StepDepartment = ({ form, setForm, errors }) => (
               border: `2px solid ${isActive ? B6 : B6_20}`,
               boxShadow: isActive ? "0 8px 24px rgba(37,99,235,0.25)" : "none",
               cursor: "pointer",
-            }}
-            onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = B6; }}
-            onMouseLeave={e => { if (!isActive) e.currentTarget.style.borderColor = B6_20; }}>
-            <div style={{ fontSize: 24, marginBottom: 8 }}>{dept.icon}</div>
+            }}>
+            <div style={{ fontSize: 24, mb: 8 }}>{dept.icon}</div>
             <p style={{ fontSize: 13, fontWeight: 900, color: isActive ? "white" : B6, lineHeight: 1.3 }}>{dept.name}</p>
-            {isActive && (
-              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.8)", fontSize: 12 }}>
-                <Check size={11}/>Selected
-              </div>
-            )}
+            {isActive && <div style={{ mt: 8, display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.8)", fontSize: 12 }}><Check size={11}/>Selected</div>}
           </button>
         );
       })}
@@ -174,52 +155,57 @@ const StepDepartment = ({ form, setForm, errors }) => (
 
 // ─── STEP 3: Course ───────────────────────────────────────────────────────────
 const StepCourse = ({ form, setForm, errors }) => {
-  const courses = COURSES_BY_DEPT[form.department_id] || [];
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get("http://localhost:5000/api/admin/courses", {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+
+        let loadedCourses = [];
+        if (response.data.success && response.data.courses) {
+          const deptCourses = response.data.courses.filter(c => c.department_id === form.department_id);
+          if (deptCourses.length > 0) loadedCourses = deptCourses.map(c => c.name || c.course_name);
+        }
+        if (loadedCourses.length === 0) loadedCourses = COURSES_BY_DEPT[form.department_id] || [];
+        setCourses(loadedCourses);
+      } catch (error) {
+        setCourses(COURSES_BY_DEPT[form.department_id] || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (form.department_id) fetchCourses();
+  }, [form.department_id]);
+
   return (
     <div className="space-y-5">
       <div>
         <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Select Course</h3>
-        <p style={{ fontSize: "14px", color: "rgba(37,99,235,0.5)", marginTop: 4 }}>
-          Courses available under <span style={{ fontWeight: 700, color: B6 }}>{form.department_name}</span>
-        </p>
       </div>
-      {errors.course && (
-        <p style={{ fontSize: 13, color: B6, display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-          <AlertCircle size={14}/>Please select a course
-        </p>
+      {loading ? (
+         <div style={{ padding: "48px 0", textAlign: "center", color: "rgba(37,99,235,0.4)" }}><Loader size={40} className="animate-spin" style={{ margin: "0 auto 12px", color: B6_20 }}/><p>Loading courses...</p></div>
+      ) : courses.length === 0 ? (
+        <div style={{ padding: "48px 0", textAlign: "center", color: "rgba(37,99,235,0.4)" }}><BookOpen size={40} style={{ margin: "0 auto 12px", color: B6_20 }}/><p>No courses found</p></div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {courses.map((course, i) => {
+            const isActive = form.course === course;
+            return (
+              <button key={course} type="button" onClick={() => setForm(p => ({ ...p, course }))}
+                style={{ padding: 16, borderRadius: 16, textAlign: "left", display: "flex", alignItems: "center", gap: 16, background: isActive ? B6 : "white", border: `2px solid ${isActive ? B6 : B6_20}` }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 14, background: isActive ? "rgba(255,255,255,0.2)" : B6_08, color: isActive ? "white" : B6 }}>{String.fromCharCode(65 + i)}</div>
+                <div><p style={{ fontWeight: 700, fontSize: 14, color: isActive ? "white" : B6 }}>{course}</p></div>
+                {isActive && <Check size={16} color="white" style={{ marginLeft: "auto" }} />}
+              </button>
+            );
+          })}
+        </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {courses.map((course, i) => {
-          const isActive = form.course === course;
-          return (
-            <button key={course} type="button"
-              onClick={() => setForm(p => ({ ...p, course }))}
-              style={{
-                padding: 16, borderRadius: 16, textAlign: "left", display: "flex", alignItems: "center", gap: 16,
-                transition: "all 0.2s", cursor: "pointer",
-                background: isActive ? B6 : "white",
-                border: `2px solid ${isActive ? B6 : B6_20}`,
-                boxShadow: isActive ? "0 8px 24px rgba(37,99,235,0.25)" : "none",
-              }}
-              onMouseEnter={e => { if (!isActive) e.currentTarget.style.borderColor = B6; }}
-              onMouseLeave={e => { if (!isActive) e.currentTarget.style.borderColor = B6_20; }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 900, fontSize: 14, flexShrink: 0,
-                background: isActive ? "rgba(255,255,255,0.2)" : B6_08,
-                color: isActive ? "white" : B6,
-              }}>
-                {String.fromCharCode(65 + i)}
-              </div>
-              <div>
-                <p style={{ fontWeight: 700, fontSize: 14, color: isActive ? "white" : B6 }}>{course}</p>
-                <p style={{ fontSize: 12, marginTop: 2, color: isActive ? "rgba(255,255,255,0.7)" : "rgba(37,99,235,0.5)" }}>{form.department_name}</p>
-              </div>
-              {isActive && <Check size={16} color="white" style={{ marginLeft: "auto" }} />}
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 };
@@ -228,8 +214,7 @@ const StepCourse = ({ form, setForm, errors }) => {
 const StepSections = ({ form, setForm, errors }) => {
   const addSection = () => {
     if (form.sections.length >= 8) return;
-    const nextName = SECTION_NAMES[form.sections.length];
-    setForm(p => ({ ...p, sections: [...p.sections, { name: nextName, strength: "60" }] }));
+    setForm(p => ({ ...p, sections: [...p.sections, { name: SECTION_NAMES[p.sections.length], strength: "60" }] }));
   };
   const removeSection = (idx) => {
     if (form.sections.length <= 1) return;
@@ -238,95 +223,25 @@ const StepSections = ({ form, setForm, errors }) => {
   const updateSection = (idx, field, val) => {
     setForm(p => ({ ...p, sections: p.sections.map((s, i) => i === idx ? { ...s, [field]: val } : s) }));
   };
-  const totalStrength = form.sections.reduce((sum, s) => sum + (parseInt(s.strength) || 0), 0);
-
+  
   return (
     <div className="space-y-5 text-left">
       <div className="flex items-start justify-between">
-        <div>
-          <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Create Sections</h3>
-          <p style={{ fontSize: "14px", color: "rgba(37,99,235,0.5)", marginTop: 4 }}>Divide the batch into sections with student capacity.</p>
-        </div>
-        <button type="button" onClick={addSection} disabled={form.sections.length >= 8}
-          style={{
-            display: "flex", alignItems: "center", gap: 8, padding: "8px 16px",
-            background: B6, color: "white", fontWeight: 700, fontSize: 13,
-            borderRadius: 12, border: "none", cursor: "pointer", opacity: form.sections.length >= 8 ? 0.4 : 1,
-            boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
-          }}>
-          <Plus size={15}/> Add Section
-        </button>
+        <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Create Sections</h3>
+        <button type="button" onClick={addSection} disabled={form.sections.length >= 8} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm disabled:opacity-50"><Plus size={15}/> Add Section</button>
       </div>
-
-      {errors.sections && (
-        <p style={{ fontSize: 13, color: B6, display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-          <AlertCircle size={14}/>{errors.sections}
-        </p>
-      )}
-
       <div className="space-y-3">
         {form.sections.map((section, idx) => (
-          <div key={idx}
-            style={{
-              display: "flex", alignItems: "center", gap: 16, padding: 16,
-              background: "white", border: `1px solid ${B6_12}`, borderRadius: 16,
-              animation: `fadeIn 0.2s ease ${idx * 60}ms both`,
-            }}>
-            <div style={{
-              width: 48, height: 48, borderRadius: 12, background: B6,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "white", fontWeight: 900, fontSize: 18, flexShrink: 0,
-            }}>
-              {section.name}
+          <div key={idx} className="flex items-center gap-4 p-4 bg-white border border-blue-100 rounded-2xl">
+            <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xl">{section.name}</div>
+            <div className="flex-1 grid grid-cols-2 gap-4">
+              <Input label="Section Name" value={section.name} onChange={e => updateSection(idx, "name", e.target.value)} />
+              <Input label="Strength" type="number" value={section.strength} onChange={e => updateSection(idx, "strength", e.target.value)} />
             </div>
-            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className="space-y-1">
-                <label style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)" }}>Section Name</label>
-                <input value={section.name} onChange={e => updateSection(idx, "name", e.target.value)}
-                  style={{ ...inputBase }}
-                  onFocus={e => e.target.style.borderColor = B6}
-                  onBlur={e => e.target.style.borderColor = B6_20}/>
-              </div>
-              <div className="space-y-1">
-                <label style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)" }}>Strength</label>
-                <input type="number" value={section.strength} onChange={e => updateSection(idx, "strength", e.target.value)}
-                  style={{ ...inputBase }}
-                  onFocus={e => e.target.style.borderColor = B6}
-                  onBlur={e => e.target.style.borderColor = B6_20}/>
-              </div>
-            </div>
-            <button type="button" onClick={() => removeSection(idx)} disabled={form.sections.length <= 1}
-              style={{
-                padding: 8, borderRadius: 10, border: "none", cursor: form.sections.length <= 1 ? "not-allowed" : "pointer",
-                background: B6_05, color: "rgba(37,99,235,0.4)", opacity: form.sections.length <= 1 ? 0.3 : 1, transition: "all 0.15s",
-              }}
-              onMouseEnter={e => { if (form.sections.length > 1) { e.currentTarget.style.background = B6_12; e.currentTarget.style.color = B6; }}}
-              onMouseLeave={e => { e.currentTarget.style.background = B6_05; e.currentTarget.style.color = "rgba(37,99,235,0.4)"; }}>
-              <Trash2 size={16}/>
-            </button>
+            <button type="button" onClick={() => removeSection(idx)} disabled={form.sections.length <= 1} className="p-3 bg-red-50 text-red-500 rounded-xl disabled:opacity-30"><Trash2 size={16}/></button>
           </div>
         ))}
       </div>
-
-      {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-        {[
-          { label: "Sections",       value: form.sections.length },
-          { label: "Total Capacity", value: totalStrength },
-          { label: "Max Strength",   value: form.max_strength || "—" },
-        ].map(stat => (
-          <div key={stat.label} style={{ padding: 12, borderRadius: 16, textAlign: "center", background: B6_05, border: `1px solid ${B6_12}` }}>
-            <p style={{ fontSize: 24, fontWeight: 900, color: B6 }}>{stat.value}</p>
-            <p style={{ fontSize: 10, fontWeight: 700, color: "rgba(37,99,235,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: 2 }}>{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {parseInt(form.max_strength) > 0 && totalStrength > parseInt(form.max_strength) && (
-        <div style={{ padding: 12, background: B6_05, border: `1px solid ${B6_20}`, borderRadius: 16, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: B6, fontWeight: 600 }}>
-          <AlertCircle size={15}/> Total capacity ({totalStrength}) exceeds max strength ({form.max_strength})
-        </div>
-      )}
     </div>
   );
 };
@@ -334,82 +249,62 @@ const StepSections = ({ form, setForm, errors }) => {
 // ─── STEP 5 & 6: Assign Person ────────────────────────────────────────────────
 const StepAssignPerson = ({ form, setForm, field, title, subtitle, icon: Icon }) => {
   const [search, setSearch] = useState("");
-  const faculty = getFaculty();
+  const [faculty, setFaculty] = useState([]);
+  const [loading, setLoading] = useState(true);
   const selected = form[field];
 
+  useEffect(() => {
+    const fetchFaculty = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/admin/faculty", {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (response.data.success) setFaculty(response.data.faculty || []);
+      } catch (error) {
+        setFaculty([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFaculty();
+  }, []);
+
   const filtered = faculty.filter(f => {
-    const name = `${f.first_name} ${f.last_name}`.toLowerCase();
-    return (name.includes(search.toLowerCase()) || (f.email||"").toLowerCase().includes(search.toLowerCase()) || (f.department||"").toLowerCase().includes(search.toLowerCase()))
-      && ["active","approved"].includes(f.status?.toLowerCase());
+    // Safely handles either single `name` or split `first_name`/`last_name`
+    const fullName = (f.name || `${f.first_name || ""} ${f.last_name || ""}`).toLowerCase();
+    const status = (f.status || 'active').toLowerCase();
+    return (fullName.includes(search.toLowerCase()) || (f.email||"").toLowerCase().includes(search.toLowerCase())) && ["active","approved"].includes(status);
   });
 
   return (
     <div className="space-y-5">
-      <div>
-        <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>{title}</h3>
-        <p style={{ fontSize: "14px", color: "rgba(37,99,235,0.5)", marginTop: 4 }}>{subtitle}</p>
-      </div>
-
-      {selected && (
-        <div style={{ padding: 16, borderRadius: 16, border: `2px solid ${B6}`, background: "white", display: "flex", alignItems: "center", gap: 16, boxShadow: "0 8px 24px rgba(37,99,235,0.12)" }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: B6, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: 18, textTransform: "uppercase", flexShrink: 0 }}>
-            {selected.first_name?.[0]}{selected.last_name?.[0]}
+      <div><h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>{title}</h3></div>
+      {selected ? (
+        <div className="p-4 border-2 border-blue-600 rounded-2xl flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg uppercase">
+             {selected.first_name?.[0] || selected.name?.[0]}
           </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontWeight: 900, color: B6 }}>{selected.first_name} {selected.last_name}</p>
-            <p style={{ fontSize: 13, color: "rgba(37,99,235,0.55)" }}>{selected.designation} · {selected.department}</p>
-            <p style={{ fontSize: 12, color: "rgba(37,99,235,0.4)", marginTop: 2 }}>{selected.email}</p>
+          <div className="flex-1">
+            <p className="font-bold text-blue-600">{selected.first_name || selected.name} {selected.last_name}</p>
+            <p className="text-xs text-gray-500">{selected.designation || "Faculty"}</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: B6, color: "white" }}>Assigned</span>
-            <button type="button" onClick={() => setForm(p => ({ ...p, [field]: null }))}
-              style={{ fontSize: 12, fontWeight: 700, color: "rgba(37,99,235,0.5)", background: "none", border: "none", cursor: "pointer" }}>
-              Change
-            </button>
-          </div>
+          <button type="button" onClick={() => setForm(p => ({ ...p, [field]: null }))} className="text-xs font-bold text-gray-400">Change</button>
         </div>
-      )}
-
-      {!selected && (
+      ) : (
         <>
-          <div style={{ position: "relative" }}>
-            <Search style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(37,99,235,0.4)" }} size={16}/>
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search faculty by name, email, department..."
-              style={{ ...inputBase, paddingLeft: 40 }}
-              onFocus={e => e.target.style.borderColor = B6}
-              onBlur={e => e.target.style.borderColor = B6_20}/>
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search faculty..." className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600" />
           </div>
-
-          {faculty.length === 0 ? (
-            <div style={{ padding: "48px 0", textAlign: "center", color: "rgba(37,99,235,0.4)" }}>
-              <Users size={40} style={{ margin: "0 auto 12px", color: B6_20 }}/>
-              <p style={{ fontWeight: 700, color: "rgba(37,99,235,0.5)" }}>No active faculty found</p>
-              <p style={{ fontSize: 13, marginTop: 4 }}>Add faculty members first from the Faculty module.</p>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 288, overflowY: "auto", paddingRight: 4 }}>
-              {filtered.length === 0 ? (
-                <p style={{ textAlign: "center", fontSize: 13, color: "rgba(37,99,235,0.4)", padding: "32px 0" }}>No faculty match your search</p>
-              ) : filtered.map((f, i) => (
-                <button key={f.id} type="button"
-                  onClick={() => setForm(p => ({ ...p, [field]: f }))}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 14, padding: 14,
-                    background: "white", border: `1px solid ${B6_12}`, borderRadius: 16,
-                    textAlign: "left", cursor: "pointer", transition: "all 0.15s",
-                    animation: `fadeIn 0.2s ease ${i * 40}ms both`,
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = B6; e.currentTarget.style.boxShadow = `0 4px 16px ${B6_12}`; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = B6_12; e.currentTarget.style.boxShadow = "none"; }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: B6, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: 13, textTransform: "uppercase", flexShrink: 0 }}>
-                    {f.first_name?.[0]}{f.last_name?.[0]}
+          {loading ? <div className="text-center p-8 text-gray-400"><Loader className="animate-spin mx-auto mb-2"/> Loading...</div> : (
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {filtered.map(f => (
+                <button key={f.id} type="button" onClick={() => setForm(p => ({ ...p, [field]: f }))} className="w-full p-3 flex items-center gap-4 bg-white border border-gray-100 rounded-xl hover:border-blue-600 text-left">
+                  <div className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold uppercase">{f.name?.[0] || f.first_name?.[0]}</div>
+                  <div>
+                    <p className="font-bold text-blue-600 text-sm">{f.name || `${f.first_name} ${f.last_name}`}</p>
+                    <p className="text-xs text-gray-400">{f.email || f.designation}</p>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 700, color: B6, fontSize: 14 }}>{f.first_name} {f.last_name}</p>
-                    <p style={{ fontSize: 12, color: "rgba(37,99,235,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.designation} · {f.department}</p>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: B6, opacity: 0 }} className="select-arrow">Select →</span>
                 </button>
               ))}
             </div>
@@ -425,14 +320,29 @@ const StepStudents = ({ form, setForm }) => {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState("existing");
   const [manual, setManual] = useState({ name: "", email: "", roll_no: "" });
+  const [allStudents, setAllStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { ensureMockStudents(); }, []);
-  const allStudents = getStudents();
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/admin/students", {
+          headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        if (response.data.success) setAllStudents(response.data.students || []);
+      } catch (error) {
+        setAllStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const available = allStudents.filter(s => {
-    const name = `${s.first_name} ${s.last_name}`.toLowerCase();
+    const fullName = (s.name || `${s.first_name || ""} ${s.last_name || ""}`).toLowerCase();
     const isAdded = form.students.some(fs => fs.id === s.id);
-    return !isAdded && (name.includes(search.toLowerCase()) || (s.roll_no||"").toLowerCase().includes(search.toLowerCase()));
+    return !isAdded && (fullName.includes(search.toLowerCase()) || (s.roll_no||"").toLowerCase().includes(search.toLowerCase()));
   });
 
   const toggleStudent = (s) => {
@@ -440,165 +350,59 @@ const StepStudents = ({ form, setForm }) => {
     setForm(p => ({ ...p, students: already ? p.students.filter(fs => fs.id !== s.id) : [...p.students, s] }));
   };
 
-  const addManual = () => {
-    if (!manual.name.trim()) return;
-    const newS = { id: Date.now(), first_name: manual.name.split(" ")[0], last_name: manual.name.split(" ").slice(1).join(" ") || "", email: manual.email, roll_no: manual.roll_no };
-    setForm(p => ({ ...p, students: [...p.students, newS] }));
-    setManual({ name: "", email: "", roll_no: "" });
-  };
-
   return (
     <div className="space-y-5">
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Add Students</h3>
-          <p style={{ fontSize: "14px", color: "rgba(37,99,235,0.5)", marginTop: 4 }}>Assign students to this batch.</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, background: B6_08, padding: 4, borderRadius: 12 }}>
-          {[{id:"existing",label:"From List"},{id:"manual",label:"Manual"}].map(t => (
-            <button key={t.id} type="button" onClick={() => setTab(t.id)}
-              style={{
-                padding: "6px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", transition: "all 0.15s",
-                background: tab === t.id ? "white" : "transparent",
-                color: tab === t.id ? B6 : "rgba(37,99,235,0.5)",
-                boxShadow: tab === t.id ? "0 1px 4px rgba(37,99,235,0.1)" : "none",
-              }}>
-              {t.label}
-            </button>
-          ))}
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-black text-blue-600">Add Students</h3>
+        <div className="flex bg-blue-50 p-1 rounded-lg">
+          <button type="button" onClick={() => setTab("existing")} className={`px-3 py-1.5 text-xs font-bold rounded-md ${tab === 'existing' ? 'bg-white text-blue-600 shadow' : 'text-gray-400'}`}>From List</button>
+          <button type="button" onClick={() => setTab("manual")} className={`px-3 py-1.5 text-xs font-bold rounded-md ${tab === 'manual' ? 'bg-white text-blue-600 shadow' : 'text-gray-400'}`}>Manual</button>
         </div>
       </div>
 
       {form.students.length > 0 && (
-        <div style={{ padding: 12, background: B6_05, border: `1px solid ${B6_12}`, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ display: "flex", marginRight: 4 }}>
-              {form.students.slice(0,4).map((s,i) => (
-                <div key={s.id} style={{ width: 32, height: 32, borderRadius: "50%", background: B6, border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: 12, textTransform: "uppercase", marginLeft: i > 0 ? -8 : 0 }}>
-                  {s.first_name?.[0]}
-                </div>
-              ))}
-              {form.students.length > 4 && (
-                <div style={{ width: 32, height: 32, borderRadius: "50%", background: B6_15, border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", color: B6, fontWeight: 900, fontSize: 11, marginLeft: -8 }}>
-                  +{form.students.length - 4}
-                </div>
-              )}
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: B6 }}>{form.students.length} student{form.students.length > 1 ? "s" : ""} added</span>
-          </div>
-          <button type="button" onClick={() => setForm(p => ({ ...p, students: [] }))}
-            style={{ fontSize: 12, fontWeight: 700, color: B6, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
-            Clear all
-          </button>
+        <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex justify-between items-center">
+          <span className="text-sm font-bold text-blue-600">{form.students.length} Students Selected</span>
+          <button type="button" onClick={() => setForm(p => ({ ...p, students: [] }))} className="text-xs font-bold text-red-500">Clear All</button>
         </div>
       )}
 
       {tab === "existing" ? (
         <div className="space-y-3">
-          <div style={{ position: "relative" }}>
-            <Search style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(37,99,235,0.4)" }} size={16}/>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students..."
-              style={{ ...inputBase, paddingLeft: 40 }}
-              onFocus={e => e.target.style.borderColor = B6}
-              onBlur={e => e.target.style.borderColor = B6_20}/>
-          </div>
-          <div style={{ maxHeight: 288, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, paddingRight: 4 }}>
-            {available.length === 0 ? (
-              <div style={{ padding: "40px 0", textAlign: "center", color: "rgba(37,99,235,0.4)" }}>
-                <GraduationCap size={36} style={{ margin: "0 auto 8px" }}/>
-                <p style={{ fontSize: 13, fontWeight: 500 }}>{search ? "No students match search" : "All students already added"}</p>
-              </div>
-            ) : available.map((s, i) => (
-              <button key={s.id} type="button" onClick={() => toggleStudent(s)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: 12,
-                  background: "white", border: `1px solid ${B6_12}`, borderRadius: 14,
-                  textAlign: "left", cursor: "pointer", transition: "all 0.15s",
-                  animation: `fadeIn 0.2s ease ${i * 30}ms both`,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = B6; e.currentTarget.style.background = B6_05; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = B6_12; e.currentTarget.style.background = "white"; }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: B6, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 900, fontSize: 13, textTransform: "uppercase", flexShrink: 0 }}>
-                  {s.first_name?.[0]}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontWeight: 700, color: B6, fontSize: 13 }}>{s.first_name} {s.last_name}</p>
-                  <p style={{ fontSize: 12, color: "rgba(37,99,235,0.45)" }}>{s.roll_no} · {s.department}</p>
-                </div>
-                <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${B6_30}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Plus size={10} color={B6_30}/>
-                </div>
-              </button>
-            ))}
-          </div>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students..." className="w-full p-3 rounded-xl border border-gray-200 outline-none focus:border-blue-600" />
+          {loading ? <div className="text-center p-8 text-gray-400"><Loader className="animate-spin mx-auto"/></div> : (
+            <div className="max-h-60 overflow-y-auto space-y-2">
+              {available.map(s => (
+                <button key={s.id} type="button" onClick={() => toggleStudent(s)} className="w-full p-3 flex items-center justify-between bg-white border border-gray-100 rounded-xl hover:border-blue-600">
+                  <div className="text-left">
+                    <p className="font-bold text-blue-600 text-sm">{s.name || `${s.first_name} ${s.last_name}`}</p>
+                    <p className="text-xs text-gray-400">{s.roll_no}</p>
+                  </div>
+                  <Plus size={16} className="text-gray-300"/>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
-        <div style={{ padding: 16, background: B6_05, borderRadius: 16, border: `1px solid ${B6_12}` }} className="space-y-4">
-          <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)" }}>Add Student Manually</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {[
-              { label: "Full Name", key: "name", placeholder: "Student name", required: true },
-              { label: "Email",     key: "email", placeholder: "email@example.com" },
-              { label: "Roll Number", key: "roll_no", placeholder: "ROLL-001" },
-            ].map(f => (
-              <div key={f.key} className="space-y-1.5">
-                <label style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)" }}>{f.label}{f.required && <span style={{ color: B6 }}>*</span>}</label>
-                <input value={manual[f.key]} onChange={e => setManual(p => ({...p, [f.key]: e.target.value}))} placeholder={f.placeholder}
-                  style={{ ...inputBase }}
-                  onFocus={e => e.target.style.borderColor = B6}
-                  onBlur={e => e.target.style.borderColor = B6_20}/>
-              </div>
-            ))}
-          </div>
-          <button type="button" onClick={addManual} disabled={!manual.name.trim()}
-            style={{
-              display: "flex", alignItems: "center", gap: 8, padding: "10px 20px",
-              background: B6, color: "white", fontWeight: 700, fontSize: 13,
-              borderRadius: 12, border: "none", cursor: !manual.name.trim() ? "not-allowed" : "pointer",
-              opacity: !manual.name.trim() ? 0.4 : 1,
-              boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
-            }}>
-            <Plus size={15}/> Add Student
-          </button>
-        </div>
-      )}
-
-      {form.students.length > 0 && (
-        <div>
-          <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)", marginBottom: 8 }}>Added ({form.students.length})</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {form.students.map(s => (
-              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, paddingLeft: 10, paddingRight: 4, paddingTop: 4, paddingBottom: 4, background: B6, borderRadius: 999, color: "white", fontSize: 12, fontWeight: 700 }}>
-                <span>{s.first_name} {s.last_name}</span>
-                <button type="button" onClick={() => toggleStudent(s)}
-                  style={{ width: 16, height: 16, borderRadius: "50%", background: "rgba(255,255,255,0.2)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <X size={9} color="white"/>
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="p-4 bg-gray-50 rounded-xl space-y-4">
+           <Input label="Full Name" value={manual.name} onChange={e => setManual({...manual, name: e.target.value})} />
+           <button type="button" disabled={!manual.name} onClick={() => {
+              setForm(p => ({...p, students: [...p.students, {id: Date.now(), first_name: manual.name}]}));
+              setManual({name:'', email:'', roll_no:''});
+           }} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl disabled:opacity-50">Add Student</button>
         </div>
       )}
     </div>
   );
 };
 
-// ─── Review Card ──────────────────────────────────────────────────────────────
-const ReviewCard = ({ label, value, icon: Icon }) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${B6_08}` }}>
-    <div style={{ padding: 6, background: B6_08, borderRadius: 8 }}><Icon size={13} color={B6}/></div>
-    <div style={{ flex: 1 }}>
-      <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)" }}>{label}</p>
-      <p style={{ fontSize: 13, fontWeight: 600, color: B6, marginTop: 2 }}>{value || "—"}</p>
-    </div>
-  </div>
-);
-
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN BatchForm
 // ══════════════════════════════════════════════════════════════════════════════
 const BatchForm = () => {
   const navigate   = useNavigate();
+  const location   = useLocation();
   const [step, setStep]       = useState(1);
   const [form, setForm]       = useState(defaultForm);
   const [errors, setErrors]   = useState({});
@@ -606,217 +410,134 @@ const BatchForm = () => {
   const [done, setDone]       = useState(false);
   const bodyRef = useRef(null);
 
+  const queryParams = new URLSearchParams(location.search);
+  const editId = queryParams.get("edit");
+
   const scrollTop = () => bodyRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+
+  useEffect(() => {
+    if (editId) {
+      const fetchBatchDetails = async () => {
+        try {
+          const res = await axios.get(`http://localhost:5000/api/admin/batches/${editId}`, {
+            headers: { Authorization: `Bearer ${getToken()}` }
+          });
+          
+          if (res.data.success) {
+            const b = res.data.batch;
+            setForm({
+              ...defaultForm,
+              name: b.name,
+              academic_year: b.academic_year,
+              start_year: b.start_year,
+              end_year: b.end_year,
+              max_strength: b.max_strength,
+              department_id: b.department_id,
+              department_name: DEPARTMENTS.find(d => d.id === b.department_id)?.name || "",
+              course: b.course_name,
+              sections: b.sections?.length > 0 ? b.sections : [{ name: "A", strength: "60" }],
+              proctor: b.proctor_id ? { id: b.proctor_id, first_name: b.proctor_fname, last_name: b.proctor_lname } : null,
+              hod: b.hod_id ? { id: b.hod_id, first_name: b.hod_fname, last_name: b.hod_lname } : null,
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching details:", error);
+        }
+      };
+      fetchBatchDetails();
+    }
+  }, [editId]);
 
   const validateStep = (s) => {
     const e = {};
     if (s === 1) {
-      if (!form.name?.trim())         e.name          = "Batch name is required";
-      if (!form.academic_year)        e.academic_year = "Academic year is required";
-      if (!form.max_strength?.trim()) e.max_strength  = "Max strength is required";
+      if (!form.name?.trim())         e.name          = "Required";
+      if (!form.academic_year)        e.academic_year = "Required";
+      if (!form.max_strength)         e.max_strength  = "Required";
     }
-    if (s === 2 && !form.department_id) e.department_id = "Select a department";
-    if (s === 3 && !form.course)        e.course        = "Select a course";
-    if (s === 4 && form.sections.some(s => !s.name.trim())) e.sections = "All sections must have a name";
+    if (s === 2 && !form.department_id) e.department_id = "Required";
+    if (s === 3 && !form.course)        e.course        = "Required";
+    if (s === 4 && form.sections.some(sec => !sec.name.trim())) e.sections = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const next = () => { if (!validateStep(step)) { scrollTop(); return; } setStep(s => Math.min(s+1,7)); setErrors({}); scrollTop(); };
+  const next = () => { if (!validateStep(step)) return; setStep(s => Math.min(s+1,7)); scrollTop(); };
   const prev = () => { setStep(s => Math.max(s-1,1)); setErrors({}); scrollTop(); };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (loading || done) return;
     setLoading(true);
-    const batch = { id: Date.now(), ...form, status: "active", created_at: new Date().toISOString(), student_count: form.students.length };
-    setTimeout(() => { addBatch(batch); setDone(true); setTimeout(() => navigate("/admin/batch"), 1500); }, 900);
+
+    try {
+      const payload = {
+        name: form.name,
+        academic_year: form.academic_year,
+        start_year: parseInt(form.start_year) || null,
+        end_year: parseInt(form.end_year) || null,
+        max_strength: parseInt(form.max_strength) || 0,
+        department_id: form.department_id,
+        course_name: form.course,
+        proctor_id: form.proctor?.id || null,
+        hod_id: form.hod?.id || null,
+        sections: form.sections,
+        studentIds: form.students.map(s => s.id)
+      };
+
+      const res = await axios.post("http://localhost:5000/api/admin/batches", payload, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+
+      if (res.data.success) {
+        setDone(true);
+        setTimeout(() => navigate("/admin/batch"), 1500);
+      }
+    } catch (error) {
+      console.error("Error creating batch:", error);
+      toast.error("Failed to save batch. (403: Ensure you are logged in!)");
+      setLoading(false);
+    }
   };
 
   const currentStep = STEPS[step - 1];
 
   return (
     <div style={{ fontFamily: "sans-serif", minHeight: "100vh", background: "white" }}>
-      <style>{`
-        @keyframes fadeIn  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes slideIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes pop     { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
-        @keyframes spin    { to{transform:rotate(360deg)} }
-        .spin { animation: spin 1s linear infinite; }
-      `}</style>
-
-      {/* Page Header */}
       <div style={{ background: "white", borderBottom: `1px solid ${B6_12}`, padding: "16px 24px", display: "flex", alignItems: "center", gap: 16 }}>
-        <button onClick={() => navigate("/admin/batch")}
-          style={{ padding: 8, borderRadius: 12, border: "none", background: B6_05, cursor: "pointer", color: B6, display: "flex", alignItems: "center" }}
-          onMouseEnter={e => e.currentTarget.style.background = B6_12}
-          onMouseLeave={e => e.currentTarget.style.background = B6_05}>
-          <ChevronLeft size={20}/>
-        </button>
+        <button onClick={() => navigate("/admin/batch")} style={{ padding: 8, borderRadius: 12, background: B6_05, color: B6 }}><ChevronLeft size={20}/></button>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 900, color: B6 }}>Create New Batch</h1>
-          <p style={{ fontSize: 13, color: "rgba(37,99,235,0.5)", marginTop: 2 }}>Step {step} of {STEPS.length} · {currentStep.label}</p>
-        </div>
-        <div style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, color: "rgba(37,99,235,0.5)" }}>
-          {Math.round((step / STEPS.length) * 100)}% complete
+          <h1 style={{ fontSize: 20, fontWeight: 900, color: B6 }}>{editId ? "Edit Batch" : "Create New Batch"}</h1>
+          <p style={{ fontSize: 13, color: "rgba(37,99,235,0.5)" }}>Step {step} of {STEPS.length} · {currentStep.label}</p>
         </div>
       </div>
 
-      {/* Progress bar */}
       <div style={{ height: 3, background: B6_10 }}>
-        <div style={{ height: "100%", background: B6, transition: "width 0.5s ease", width: `${(step / STEPS.length) * 100}%`, borderRadius: "0 2px 2px 0" }}/>
+        <div style={{ height: "100%", background: B6, transition: "width 0.5s ease", width: `${(step / STEPS.length) * 100}%` }}/>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 16px", display: "flex", gap: 32 }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 16px" }}>
+        <div style={{ background: "white", borderRadius: 24, border: `1px solid ${B6_12}`, overflow: "hidden" }}>
+          <div style={{ background: B6, padding: "16px 24px", display: "flex", gap: 12, color: "white", alignItems: "center" }}>
+            {React.createElement(currentStep.icon, { size: 20 })}
+            <h2 style={{ fontWeight: 900, fontSize: 18 }}>{currentStep.label}</h2>
+          </div>
 
-        {/* Step sidebar */}
-        <div style={{ display: "none", flexDirection: "column", gap: 4, width: 208, flexShrink: 0 }} className="lg-sidebar">
-          <style>{`.lg-sidebar { display: none; } @media(min-width:1024px){ .lg-sidebar { display: flex !important; } }`}</style>
-          {STEPS.map(s => {
-            const Icon = s.icon;
-            const isActive    = step === s.id;
-            const isCompleted = step > s.id;
-            return (
-              <button key={s.id} type="button"
-                onClick={() => { if (isCompleted) { setStep(s.id); setErrors({}); } }}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderRadius: 16,
-                  textAlign: "left", border: "none", cursor: isCompleted ? "pointer" : isActive ? "default" : "not-allowed",
-                  background: isActive ? "white" : "transparent",
-                  boxShadow: isActive ? `0 4px 16px ${B6_12}, 0 0 0 1px ${B6_12}` : "none",
-                  opacity: !isActive && !isCompleted ? 0.4 : 1,
-                  transform: isActive ? "scale(1.02)" : "scale(1)",
-                  transition: "all 0.2s",
-                }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                  background: isCompleted ? B6 : isActive ? B6 : B6_10,
-                  color: isCompleted || isActive ? "white" : "rgba(37,99,235,0.5)",
-                  boxShadow: isActive ? "0 4px 12px rgba(37,99,235,0.3)" : "none",
-                  transition: "all 0.2s",
-                }}>
-                  {isCompleted ? <Check size={14}/> : <Icon size={14}/>}
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, fontWeight: 900, color: isActive || isCompleted ? "rgba(37,99,235,0.5)" : "rgba(37,99,235,0.35)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Step {s.id}</p>
-                  <p style={{ fontSize: 13, fontWeight: 900, color: isActive || isCompleted ? B6 : "rgba(37,99,235,0.35)", lineHeight: 1.3 }}>{s.label}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+          <div ref={bodyRef} style={{ padding: "32px", minHeight: 400 }}>
+            {step === 1 && <StepBatchInfo    form={form} setForm={setForm} errors={errors}/>}
+            {step === 2 && <StepDepartment   form={form} setForm={setForm} errors={errors}/>}
+            {step === 3 && <StepCourse       form={form} setForm={setForm} errors={errors}/>}
+            {step === 4 && <StepSections     form={form} setForm={setForm} errors={errors}/>}
+            {step === 5 && <StepAssignPerson form={form} setForm={setForm} field="proctor" title="Assign Proctor" subtitle="Monitors student attendance." icon={UserCheck}/>}
+            {step === 6 && <StepAssignPerson form={form} setForm={setForm} field="hod"     title="Assign HOD"     subtitle="Overseas academic progress." icon={ShieldCheck}/>}
+            {step === 7 && <StepStudents     form={form} setForm={setForm}/>}
+          </div>
 
-        {/* Main form card */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {done ? (
-            <div style={{ background: "white", borderRadius: 24, border: `1px solid ${B6_12}`, padding: "64px 32px", textAlign: "center", animation: "fadeIn 0.4s ease" }}>
-              <div style={{ width: 80, height: 80, background: B6_10, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", animation: "pop 0.5s ease" }}>
-                <CheckCircle size={40} color={B6}/>
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 900, color: B6 }}>Batch Created!</h2>
-              <p style={{ color: "rgba(37,99,235,0.5)", marginTop: 8 }}>Redirecting to batch list...</p>
-              <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                {[0,1,2].map(i => (
-                  <div key={i} style={{ width: 8, height: 8, borderRadius: "50%", background: B6, animation: `pop 0.6s ease ${i * 200}ms infinite` }}/>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={{ background: "white", borderRadius: 24, border: `1px solid ${B6_12}`, overflow: "hidden", boxShadow: `0 2px 16px ${B6_08}` }}>
-
-              {/* Step header */}
-              <div style={{ background: B6, padding: "16px 24px", display: "flex", alignItems: "center", gap: 12 }}>
-                {React.createElement(currentStep.icon, { size: 18, color: "white" })}
-                <div>
-                  <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>Step {step} of {STEPS.length}</p>
-                  <h2 style={{ color: "white", fontWeight: 900, fontSize: 18, lineHeight: 1.3 }}>{currentStep.label}</h2>
-                </div>
-                {/* Mobile dots */}
-                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }} className="mobile-dots">
-                  <style>{`@media(min-width:1024px){ .mobile-dots { display: none !important; } }`}</style>
-                  {STEPS.map(s => (
-                    <div key={s.id} style={{ width: 8, height: 8, borderRadius: "50%", background: step >= s.id ? "white" : "rgba(255,255,255,0.3)", transition: "all 0.2s" }}/>
-                  ))}
-                </div>
-              </div>
-
-              {/* Step body */}
-              <div ref={bodyRef} style={{ padding: "32px", minHeight: 400, animation: "slideIn 0.25s ease" }} key={step}>
-                {step === 1 && <StepBatchInfo    form={form} setForm={setForm} errors={errors}/>}
-                {step === 2 && <StepDepartment   form={form} setForm={setForm} errors={errors}/>}
-                {step === 3 && <StepCourse       form={form} setForm={setForm} errors={errors}/>}
-                {step === 4 && <StepSections     form={form} setForm={setForm} errors={errors}/>}
-                {step === 5 && <StepAssignPerson form={form} setForm={setForm} field="proctor" title="Assign Proctor" subtitle="The proctor monitors student attendance, conduct and welfare." icon={UserCheck}/>}
-                {step === 6 && <StepAssignPerson form={form} setForm={setForm} field="hod"     title="Assign HOD"     subtitle="The Head of Department oversees academic progress and faculty." icon={ShieldCheck}/>}
-                {step === 7 && <StepStudents     form={form} setForm={setForm}/>}
-              </div>
-
-              {/* Review summary (step 7 only) */}
-              {step === 7 && (
-                <div style={{ margin: "0 24px 24px", padding: 20, background: B6_05, borderRadius: 16, border: `1px solid ${B6_12}` }}>
-                  <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(37,99,235,0.45)", marginBottom: 12 }}>Batch Summary</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                    <ReviewCard label="Batch Name"    value={form.name}            icon={Layers}     />
-                    <ReviewCard label="Academic Year" value={form.academic_year}   icon={Calendar}   />
-                    <ReviewCard label="Department"    value={form.department_name} icon={Building2}  />
-                    <ReviewCard label="Course"        value={form.course}          icon={BookOpen}   />
-                    <ReviewCard label="Sections"      value={`${form.sections.length} section(s): ${form.sections.map(s=>s.name).join(", ")}`} icon={Hash}/>
-                    <ReviewCard label="Proctor"       value={form.proctor ? `${form.proctor.first_name} ${form.proctor.last_name}` : "Not assigned"} icon={UserCheck}/>
-                    <ReviewCard label="HOD"           value={form.hod ? `${form.hod.first_name} ${form.hod.last_name}` : "Not assigned"} icon={ShieldCheck}/>
-                    <ReviewCard label="Students"      value={`${form.students.length} student(s) assigned`} icon={Users}/>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation footer */}
-              <div style={{ borderTop: `1px solid ${B6_08}`, padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: B6_05 }}>
-                <button type="button" onClick={prev} disabled={step === 1}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 8, padding: "10px 20px",
-                    borderRadius: 12, border: `1px solid ${B6_20}`, background: "white",
-                    color: B6, fontSize: 13, fontWeight: 700, cursor: step === 1 ? "not-allowed" : "pointer",
-                    opacity: step === 1 ? 0.3 : 1, transition: "all 0.15s",
-                  }}>
-                  <ChevronLeft size={16}/> Back
-                </button>
-
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  {[5,6,7].includes(step) && (
-                    <button type="button" onClick={() => step < 7 ? next() : handleSubmit()}
-                      style={{ padding: "10px 16px", fontSize: 13, fontWeight: 700, color: "rgba(37,99,235,0.5)", background: "none", border: "none", cursor: "pointer" }}>
-                      Skip
-                    </button>
-                  )}
-                  {step < 7 ? (
-                    <button type="button" onClick={next}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8, padding: "10px 24px",
-                        background: B6, color: "white", fontSize: 13, fontWeight: 700,
-                        borderRadius: 12, border: "none", cursor: "pointer",
-                        boxShadow: "0 4px 14px rgba(37,99,235,0.35)",
-                        transition: "all 0.15s",
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = "#1d4ed8"}
-                      onMouseLeave={e => e.currentTarget.style.background = B6}>
-                      Continue <ChevronRight size={16}/>
-                    </button>
-                  ) : (
-                    <button type="button" onClick={handleSubmit} disabled={loading}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 8, padding: "10px 24px",
-                        background: B6, color: "white", fontSize: 13, fontWeight: 700,
-                        borderRadius: 12, border: "none", cursor: loading ? "not-allowed" : "pointer",
-                        opacity: loading ? 0.7 : 1,
-                        boxShadow: "0 4px 14px rgba(37,99,235,0.35)",
-                      }}>
-                      {loading
-                        ? <><Loader size={15} className="spin"/> Creating...</>
-                        : <><CheckCircle size={15}/> Create Batch</>}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          <div style={{ borderTop: `1px solid ${B6_08}`, padding: "16px 24px", display: "flex", justifyContent: "space-between", background: B6_05 }}>
+            <button onClick={prev} disabled={step === 1} style={{ padding: "10px 20px", borderRadius: 12, border: `1px solid ${B6_20}`, background: "white", color: B6, fontWeight: 700, opacity: step === 1 ? 0.3 : 1 }}>Back</button>
+            <button onClick={step < 7 ? next : handleSubmit} disabled={loading || done} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 24px", background: B6, color: "white", fontWeight: 700, borderRadius: 12 }}>
+              {loading ? "Processing..." : step === 7 ? "Finish" : "Continue"} <ChevronRight size={16}/>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -46,15 +47,39 @@ export const CreateCourse = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { 
     e.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    console.log("Submitting:", { ...form, modules });
-    navigate("/faculty/courses");
+
+    try {
+      // 🎯 FIXED: Removed localStorage token check and replaced headers with withCredentials: true
+      const response = await axios.post(
+        "http://localhost:5000/api/faculty/courses", 
+        {
+          courseTitle: form.courseTitle,
+          className: form.class,        // Mapping 'class' to 'className' for backend
+          academicYear: form.academicYear,
+          status: form.status,
+          description: form.description, 
+          modules: modules              
+        },
+        { 
+          withCredentials: true // 🎯 This forces the browser to send the HTTP-Only cookie!
+        }
+      );
+
+      if (response.data.success) {
+        console.log("Success:", response.data.message);
+        navigate("/faculty/courses");
+      }
+    } catch (err) {
+      console.error("Backend Error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Failed to save course to database.");
+    }
   };
 
   const handleCancel = () => navigate("/faculty/courses");

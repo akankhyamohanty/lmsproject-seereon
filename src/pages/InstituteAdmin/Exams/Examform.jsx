@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { jsPDF } from "jspdf";
-import api from "../../../services/api";
+import axios from "axios";
 import {
   SEMESTER_OPTIONS,
-  BATCH_OPTIONS,
+  BATCH_OPTIONS, // Used as fallback
   YEAR_OPTIONS,
-  SUBJECT_OPTIONS,
+  SUBJECT_OPTIONS, // Used as fallback
   EXAM_TYPE_OPTIONS,
   DURATION_OPTIONS,
 } from "./Examstorage.jsx";
@@ -75,12 +75,14 @@ const Section = ({ title, children }) => (
 );
 
 // ─── Question Paper Print Modal ───────────────────────────────────────────────
-const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
+const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) => {
   const handlePrint = () => window.print();
 
-  const subjLabel = SUBJECT_OPTIONS.find((o) => o.value === form.subject)?.label || form.subject;
+  // Use dynamic subjects if loaded, otherwise fallback to local storage options
+  const activeSubjects = dynamicSubjects.length > 0 ? dynamicSubjects : SUBJECT_OPTIONS;
+  const subjLabel = activeSubjects.find((o) => String(o.value) === String(form.subject))?.label || form.subject;
+  
   const typeLabel = EXAM_TYPE_OPTIONS.find((o) => o.value === form.examType)?.label || form.examType;
-
   const totalMarksCalc = questionsList.reduce((s, q) => s + Number(q.marks || 0), 0);
 
   const difficultyBadgeColor = {
@@ -108,56 +110,36 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-
-          {/* Modal Header */}
           <div className="qp-no-print flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
             <div className="flex items-center gap-2 text-slate-700">
               <span className="text-lg">🖨️</span>
               <span className="font-bold text-sm uppercase tracking-tight">Question Paper Preview</span>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={handlePrint}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md"
-              >
+              <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md">
                 🖨️ Print / Save PDF
               </button>
-              <button
-                onClick={onClose}
-                className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-all"
-              >
-                ✕
-              </button>
+              <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-all">✕</button>
             </div>
           </div>
 
-          {/* Scrollable Paper Area */}
           <div id="qp-print-content" className="overflow-y-auto flex-1">
             <div className="p-10 text-slate-800 bg-white">
-
-              {/* Header */}
               <div className="text-center mb-8 pb-6 border-b-2 border-slate-900">
-                <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">
-                  ACADEMIC INSTITUTION
-                </h1>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">
-                  Department of {subjLabel}
-                </p>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">ACADEMIC INSTITUTION</h1>
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Department of {subjLabel}</p>
                 <div className="mt-4">
                   <h2 className="text-xl font-black text-blue-700">{form.title}</h2>
-                  {typeLabel && (
-                    <p className="text-sm font-semibold text-slate-500 mt-1">{typeLabel}</p>
-                  )}
+                  {typeLabel && <p className="text-sm font-semibold text-slate-500 mt-1">{typeLabel}</p>}
                 </div>
               </div>
 
-              {/* Meta Info Grid */}
               <div className="grid grid-cols-3 gap-4 mb-8 text-sm">
                 {[
                   { label: "Subject", value: subjLabel },
                   { label: "Date", value: form.examDate || "—" },
                   { label: "Time", value: form.startTime || "—" },
-                  { label: "Duration", value: form.duration ? `${form.duration} mins` : "—" },
+                  { label: "Duration", value: form.duration ? `${form.duration}` : "—" },
                   { label: "Total Marks", value: form.totalMarks || totalMarksCalc || "—" },
                   { label: "Passing Marks", value: form.passingMarks || "—" },
                   { label: "Semester", value: form.semester || "—" },
@@ -171,7 +153,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                 ))}
               </div>
 
-              {/* Instructions */}
               {form.instructions && (
                 <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                   <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Instructions</p>
@@ -179,7 +160,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                 </div>
               )}
 
-              {/* Questions */}
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b-2 border-slate-900 pb-2">
                   <h3 className="font-black text-xs uppercase tracking-widest">Questions</h3>
@@ -193,21 +173,12 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                     <div key={index} className="border-b border-slate-100 pb-5 last:border-0">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
-                          {/* Question number + badges */}
                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                             <span className="font-black text-slate-900 text-sm">Q{index + 1}.</span>
-                            <span className="text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                              {q.type}
-                            </span>
-                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${difficultyBadgeColor[q.difficulty] || "bg-slate-100 text-slate-500"}`}>
-                              {q.difficulty}
-                            </span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{q.type}</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${difficultyBadgeColor[q.difficulty] || "bg-slate-100 text-slate-500"}`}>{q.difficulty}</span>
                           </div>
-
-                          {/* Question Text */}
                           <p className="font-semibold text-slate-800 text-[15px] leading-relaxed">{q.question}</p>
-
-                          {/* MCQ Options */}
                           {q.type === "MCQ" && (
                             <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5">
                               {["A", "B", "C", "D"].map((opt) => (
@@ -220,8 +191,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                               ))}
                             </div>
                           )}
-
-                          {/* Answer space lines for non-MCQ */}
                           {q.type !== "MCQ" && (
                             <div className="mt-3 space-y-2">
                               {Array.from({ length: q.type === "LONG_ANSWER" || q.type === "SUBJECTIVE" ? 5 : 2 }).map((_, i) => (
@@ -230,8 +199,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                             </div>
                           )}
                         </div>
-
-                        {/* Marks box */}
                         <div className="shrink-0 text-center border-2 border-slate-900 rounded-lg w-14 py-2">
                           <p className="font-black text-lg text-slate-900 leading-none">{q.marks}</p>
                           <p className="text-[8px] font-bold text-slate-400 uppercase">marks</p>
@@ -241,7 +208,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                   ))
                 )}
 
-                {/* Total */}
                 {questionsList.length > 0 && (
                   <div className="flex justify-end pt-4 border-t-2 border-slate-900">
                     <div className="text-right">
@@ -252,7 +218,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                 )}
               </div>
 
-              {/* Footer Signatures */}
               <div className="mt-16 flex justify-between items-end">
                 <div className="text-center">
                   <div className="w-32 h-px bg-slate-300 mb-2" />
@@ -264,7 +229,6 @@ const QuestionPaperPrint = ({ form, questionsList, onClose }) => {
                 </div>
               </div>
 
-              {/* Footnote */}
               <div className="mt-10 pt-6 border-t border-slate-100 text-center">
                 <p className="text-[8px] text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
                   This is a digitally generated question paper. · Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
@@ -298,7 +262,7 @@ const EMPTY = {
   assignedFaculty: "",
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 const ExamForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -306,31 +270,63 @@ const ExamForm = () => {
   const isEdit = !!editExam;
 
   const [activeTab, setActiveTab] = useState("details");
-  const [faculties, setFaculties] = useState([]);
   const [form, setForm] = useState(isEdit ? { ...editExam, attachedPdf: null } : { ...EMPTY });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [showPrintModal, setShowPrintModal] = useState(false); // ← NEW
+  const [showPrintModal, setShowPrintModal] = useState(false); 
+
+  // 🎯 Dynamic Setup States
+  const [faculties, setFaculties] = useState([]);
+  const [dynamicSubjects, setDynamicSubjects] = useState([]);
+  const [dynamicBatches, setDynamicBatches] = useState([]);
 
   const [questionsList, setQuestionsList] = useState([]);
   const [currentQ, setCurrentQ] = useState({
-    question: "",
-    marks: "",
-    type: "MCQ",
-    difficulty: "Medium",
+    question: "", marks: "", type: "MCQ", difficulty: "Medium",
     optionA: "", optionB: "", optionC: "", optionD: "",
   });
 
+  // 🎯 Fetch Faculties, Courses, and Batches together
   useEffect(() => {
-    setFaculties([
-      { value: "faculty_1", label: "Dr. Aris" },
-      { value: "faculty_2", label: "Prof. Sarah" },
-    ]);
+    const fetchSetupData = async () => {
+      try {
+        let token = localStorage.getItem('token'); 
+        if (!token) {
+          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          token = storedUser?.token || storedUser?.data?.token; 
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Fetch all needed dropdown data simultaneously
+        const [facRes, courseRes, batchRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/admin/faculty", { headers }).catch(() => ({ data: { success: false } })),
+          axios.get("http://localhost:5000/api/admin/courses", { headers }).catch(() => ({ data: { success: false } })),
+          axios.get("http://localhost:5000/api/admin/batches", { headers }).catch(() => ({ data: { success: false } }))
+        ]);
+
+        if (facRes.data?.success) {
+          setFaculties(facRes.data.faculty.map(f => ({ value: f.id, label: f.name })));
+        }
+        if (courseRes.data?.success || courseRes.data?.data) {
+          const cData = courseRes.data.data || courseRes.data.courses || [];
+          setDynamicSubjects(cData.map(c => ({ value: c.id, label: c.courseTitle || c.course_name })));
+        }
+        if (batchRes.data?.success || batchRes.data?.data) {
+          const bData = batchRes.data.data || batchRes.data.batches || [];
+          // Ensure value maps correctly depending on whether you save ID or Name
+          setDynamicBatches(bData.map(b => ({ value: b.batch_name || b.id, label: b.batch_name })));
+        }
+      } catch (error) {
+        console.error("Failed to load setup data:", error);
+      }
+    };
+    fetchSetupData();
   }, []);
 
   const set = (field) => (e) => {
     const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
   };
 
   const handleQChange = (e) => {
@@ -341,10 +337,11 @@ const ExamForm = () => {
   useEffect(() => {
     if (!isEdit && form.subject && form.examType && !form.title) {
       const typeLabel = EXAM_TYPE_OPTIONS.find((o) => o.value === form.examType)?.label || "";
-      const subjLabel = SUBJECT_OPTIONS.find((o) => o.value === form.subject)?.label || form.subject;
+      const activeSubjects = dynamicSubjects.length > 0 ? dynamicSubjects : SUBJECT_OPTIONS;
+      const subjLabel = activeSubjects.find((o) => String(o.value) === String(form.subject))?.label || form.subject;
       setForm((prev) => ({ ...prev, title: `${subjLabel} - ${typeLabel}` }));
     }
-  }, [form.subject, form.examType]);
+  }, [form.subject, form.examType, dynamicSubjects, isEdit]);
 
   const addQuestion = () => {
     if (!currentQ.question || !currentQ.marks || !currentQ.type || !currentQ.difficulty) {
@@ -376,8 +373,10 @@ const ExamForm = () => {
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
-    const subjName = SUBJECT_OPTIONS.find(o => o.value === form.subject)?.label || form.subject;
-    doc.text(`Subject: ${subjName}   |   Marks: ${form.totalMarks}   |   Time: ${form.duration} mins`, 105, yPos, { align: "center" });
+    const activeSubjects = dynamicSubjects.length > 0 ? dynamicSubjects : SUBJECT_OPTIONS;
+    const subjName = activeSubjects.find(o => String(o.value) === String(form.subject))?.label || form.subject;
+    
+    doc.text(`Subject: ${subjName}   |   Marks: ${form.totalMarks}   |   Time: ${form.duration}`, 105, yPos, { align: "center" });
     yPos += 15;
 
     doc.line(20, yPos, 190, yPos);
@@ -407,7 +406,7 @@ const ExamForm = () => {
     });
 
     const pdfBlob = doc.output('blob');
-    const pdfFile = new File([pdfBlob], `${form.subject.replace(/\s+/g, '_')}_QuestionPaper.pdf`, { type: 'application/pdf' });
+    const pdfFile = new File([pdfBlob], `${subjName.replace(/\s+/g, '_')}_QuestionPaper.pdf`, { type: 'application/pdf' });
     setForm((prev) => ({ ...prev, attachedPdf: pdfFile }));
     toast.success("✅ PDF Generated & Attached Successfully!");
     setActiveTab("details");
@@ -427,45 +426,66 @@ const ExamForm = () => {
 
   const validate = () => {
     const e = {};
-    if (!form.title.trim()) e.title = "Required";
+    if (!form.title?.trim()) e.title = "Required";
     if (!form.subject) e.subject = "Required";
+    if (!form.examType) e.examType = "Required";
+    if (!form.semester) e.semester = "Required";
+    if (!form.batch) e.batch = "Required";
+    if (!form.year) e.year = "Required";
     if (!form.examDate) e.examDate = "Required";
     if (!form.startTime) e.startTime = "Required";
     if (!form.duration) e.duration = "Required";
     if (!form.totalMarks) e.totalMarks = "Required";
+    if (!form.passingMarks) e.passingMarks = "Required"; 
     if (form.isAssigned && !form.assignedFaculty) e.assignedFaculty = "Please select a faculty";
     return e;
   };
 
+  // 🚀 SINGLE, CORRECT handleSave
   const handleSave = async () => {
     const e = validate();
-    setErrors(e);
-    if (Object.keys(e).length > 0) return toast.error("Please fix form errors");
+    setErrors(e); 
+    
+    if (Object.keys(e).length > 0) {
+      setActiveTab("details");
+      return toast.error("Please fill in all required Exam Details");
+    }
 
     if (!isEdit && !form.isAssigned && !form.attachedPdf) {
-      return toast.error("Please generate the Question Paper PDF or delegate to faculty!");
+      setActiveTab("builder");
+      return toast.error("You must generate and attach the PDF before scheduling.");
     }
 
     setSaving(true);
     try {
-      const submitData = new FormData();
+      const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user'))?.token;
+      
+      const formData = new FormData();
       Object.keys(form).forEach(key => {
         if (key !== "attachedPdf" && form[key] !== null) {
-          submitData.append(key, form[key]);
+          formData.append(key, form[key]);
         }
       });
-      if (form.attachedPdf) submitData.append("question_paper", form.attachedPdf);
+      
+      if (form.attachedPdf) {
+        formData.append("question_paper", form.attachedPdf);
+      }
 
-      const res = isEdit
-        ? await api.put(`/exams/${editExam.id}`, submitData)
-        : await api.post("/exams", submitData);
+      const res = isEdit 
+        ? await axios.put(`http://localhost:5000/api/admin/exams/${editExam.id}`, formData, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+          })
+        : await axios.post("http://localhost:5000/api/admin/exams", formData, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
+          });
 
       if (res.data.success) {
-        toast.success(isEdit ? "Exam Updated!" : "Exam Scheduled!");
+        toast.success(isEdit ? "Exam Updated Successfully!" : "Exam Scheduled Successfully!");
         navigate("/admin/exams");
       }
     } catch (error) {
-      toast.error("Failed to save exam");
+      console.error("Save Error:", error);
+      toast.error(error.response?.data?.message || "Failed to save exam");
     } finally {
       setSaving(false);
     }
@@ -498,7 +518,16 @@ const ExamForm = () => {
             <div className="space-y-2">
               <Section title="Exam Identity">
                 <div className="grid grid-cols-1 text-left sm:grid-cols-2 gap-4 mb-4">
-                  <div><Label required>Subject</Label><Select value={form.subject} onChange={set("subject")} options={SUBJECT_OPTIONS} placeholder="Select Subject" /><ErrMsg msg={errors.subject} /></div>
+                  <div>
+                    <Label required>Subject</Label>
+                    <Select 
+                      value={form.subject} 
+                      onChange={set("subject")} 
+                      options={dynamicSubjects.length > 0 ? dynamicSubjects : SUBJECT_OPTIONS} 
+                      placeholder="Select Subject" 
+                    />
+                    <ErrMsg msg={errors.subject} />
+                  </div>
                   <div><Label required>Exam Type</Label><Select value={form.examType} onChange={set("examType")} options={EXAM_TYPE_OPTIONS} placeholder="Select Type" /><ErrMsg msg={errors.examType} /></div>
                 </div>
                 <div><Label required>Exam Title</Label><Input value={form.title} onChange={set("title")} placeholder="e.g. Mathematics - Mid-Term Exam" /><ErrMsg msg={errors.title} /></div>
@@ -507,7 +536,16 @@ const ExamForm = () => {
               <Section title="Target & Schedule">
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div><Label required>Semester</Label><Select value={form.semester} onChange={set("semester")} options={SEMESTER_OPTIONS} placeholder="Select" /><ErrMsg msg={errors.semester} /></div>
-                  <div><Label required>Batch</Label><Select value={form.batch} onChange={set("batch")} options={BATCH_OPTIONS} placeholder="Select" /><ErrMsg msg={errors.batch} /></div>
+                  <div>
+                    <Label required>Batch</Label>
+                    <Select 
+                      value={form.batch} 
+                      onChange={set("batch")} 
+                      options={dynamicBatches.length > 0 ? dynamicBatches : BATCH_OPTIONS} 
+                      placeholder="Select" 
+                    />
+                    <ErrMsg msg={errors.batch} />
+                  </div>
                   <div><Label required>Year</Label><Select value={form.year} onChange={set("year")} options={YEAR_OPTIONS} placeholder="Select" /><ErrMsg msg={errors.year} /></div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -520,7 +558,7 @@ const ExamForm = () => {
               <Section title="Marks & Venue">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div><Label required>Total Marks</Label><Input type="number" value={form.totalMarks} onChange={set("totalMarks")} placeholder="100" /><ErrMsg msg={errors.totalMarks} /></div>
-                  <div><Label required>Passing Marks</Label><Input type="number" value={form.passingMarks} onChange={set("passingMarks")} placeholder="40" /></div>
+                  <div><Label required>Passing Marks</Label><Input type="number" value={form.passingMarks} onChange={set("passingMarks")} placeholder="40" /><ErrMsg msg={errors.passingMarks} /></div>
                 </div>
                 <div><Label>Venue / Room</Label><Input value={form.venue} onChange={set("venue")} placeholder="Hall A" /></div>
               </Section>
@@ -528,13 +566,7 @@ const ExamForm = () => {
               <Section title="Faculty Assignment & Permissions">
                 <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/50">
                   <div className="flex items-center gap-2 mb-4">
-                    <input
-                      type="checkbox"
-                      id="delegate"
-                      checked={form.isAssigned}
-                      onChange={set("isAssigned")}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    />
+                    <input type="checkbox" id="delegate" checked={form.isAssigned} onChange={set("isAssigned")} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
                     <label htmlFor="delegate" className="text-sm font-semibold text-gray-700 cursor-pointer">
                       Delegate Question Paper creation to a specific Faculty?
                     </label>
@@ -542,12 +574,7 @@ const ExamForm = () => {
                   {form.isAssigned && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
                       <Label required>Assign Faculty</Label>
-                      <Select
-                        value={form.assignedFaculty}
-                        onChange={set("assignedFaculty")}
-                        options={faculties}
-                        placeholder="Choose faculty member"
-                      />
+                      <Select value={form.assignedFaculty} onChange={set("assignedFaculty")} options={faculties} placeholder="Choose faculty member" />
                       <ErrMsg msg={errors.assignedFaculty} />
                     </div>
                   )}
@@ -567,13 +594,7 @@ const ExamForm = () => {
                       </button>
                     ) : (
                       <div className="flex gap-2">
-                        {/* ── PRINT BUTTON (Details Tab) ── */}
-                        <button
-                          type="button"
-                          onClick={() => setShowPrintModal(true)}
-                          className="flex items-center gap-1.5 px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-50 transition-all"
-                          title="Print Question Paper"
-                        >
+                        <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-50 transition-all">
                           🖨️ Print Paper
                         </button>
                         <button type="button" onClick={handleDownloadPDF} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs font-bold">
@@ -622,14 +643,8 @@ const ExamForm = () => {
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col h-full max-h-[500px]">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-gray-800">Paper Preview ({questionsList.length})</h3>
-                  {/* ── PRINT BUTTON (Builder Tab) ── */}
                   {questionsList.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowPrintModal(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-100 transition-all"
-                      title="Print Question Paper"
-                    >
+                    <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-100 transition-all">
                       🖨️ Print Preview
                     </button>
                   )}
@@ -645,10 +660,24 @@ const ExamForm = () => {
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={generateAndAttachPDF} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg text-sm">
-                    Generate PDF & Attach
+                
+                {/* 🚀 FIXED BUTTONS FOR TAB 2 */}
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-200 mt-4">
+                  <button onClick={generateAndAttachPDF} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md text-sm hover:bg-blue-700 transition">
+                    1. Generate PDF & Attach
                   </button>
+                  <button 
+                    onClick={handleSave} 
+                    disabled={saving || (!form.isAssigned && !form.attachedPdf && !isEdit)} 
+                    className="w-full py-3 bg-green-600 text-white font-bold rounded-xl shadow-md text-sm hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving ? "Saving Exam..." : "2. Schedule Exam"}
+                  </button>
+                  {(!form.isAssigned && !form.attachedPdf && !isEdit) && (
+                    <p className="text-xs text-center text-slate-500 italic">
+                      You must generate the PDF first before scheduling.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -656,12 +685,12 @@ const ExamForm = () => {
         </div>
       </div>
 
-      {/* ── Print Modal ── */}
       {showPrintModal && (
-        <QuestionPaperPrint
-          form={form}
-          questionsList={questionsList}
-          onClose={() => setShowPrintModal(false)}
+        <QuestionPaperPrint 
+          form={form} 
+          questionsList={questionsList} 
+          onClose={() => setShowPrintModal(false)} 
+          dynamicSubjects={dynamicSubjects}
         />
       )}
     </div>

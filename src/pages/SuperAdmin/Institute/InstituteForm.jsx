@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, Trash2, Upload } from "lucide-react";
+import { adminService } from "../../../services/adminService"; // NEW: Imported the service
 
 const STEPS = [
   { id: 0, title: "Organisation", subtitle: "Basic Details" },
@@ -14,6 +15,7 @@ export default function InstituteForm() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false); // NEW: Loading state for API call
 
   const [form, setForm] = useState({
     organisation: {
@@ -45,111 +47,30 @@ export default function InstituteForm() {
         father: "",
         spouse: "",
         children: "",
-        currentAddress: {
-          line1: "",
-          line2: "",
-          city: "",
-          state: "",
-          pin: "",
-        },
-        permanentAddress: {
-          line1: "",
-          line2: "",
-          city: "",
-          state: "",
-          pin: "",
-        },
-        documents: {
-          panNo: "",
-          panDoc: "",
-          aadhaarNo: "",
-          aadhaarDoc: "",
-        },
-        bank: {
-          bankName: "",
-          accountNumber: "",
-          ifscCode: "",
-        },
-        associateCompany: {
-          bankName: "",
-          accountNumber: "",
-          ifscCode: "",
-        },
+        currentAddress: { line1: "", line2: "", city: "", state: "", pin: "" },
+        permanentAddress: { line1: "", line2: "", city: "", state: "", pin: "" },
+        documents: { panNo: "", panDoc: "", aadhaarNo: "", aadhaarDoc: "" },
+        bank: { bankName: "", accountNumber: "", ifscCode: "" },
+        associateCompany: { bankName: "", accountNumber: "", ifscCode: "" },
       },
     ],
     legal: {
-      // Land & Building Documents
-      propertyDeed: "",
-      propertyDeedDoc: "",
-      buildingApproval: "",
-      buildingApprovalDoc: "",
-      completionCertificate: "",
-      completionCertificateDoc: "",
-      
-      // NOCs
-      fireNOC: "",
-      fireNOCDoc: "",
-      policeNOC: "",
-      policeNOCDoc: "",
-      municipalityNOC: "",
-      municipalityNOCDoc: "",
-      educationDeptNOC: "",
-      educationDeptNOCDoc: "",
-      pollutionNOC: "",
-      pollutionNOCDoc: "",
-      
-      // Infrastructure & Safety
-      waterConnection: "",
-      waterConnectionDoc: "",
-      electricityConnection: "",
-      electricityConnectionDoc: "",
-      safetyAudit: "",
-      safetyAuditDoc: "",
-      drainageSystem: "",
-      drainageSystemDoc: "",
-      
-      // Financial & Administrative
-      panNo: "",
-      panDoc: "",
-      gstinNo: "",
-      gstinDoc: "",
-      bankAccount: "",
-      bankAccountDoc: "",
-      trustDeed: "",
-      trustDeedDoc: "",
-      
-      // Education Registration
-      diseCode: "",
-      disecodeDoc: "",
-      provisionalRecognition: "",
-      provisionalRecognitionDoc: "",
-      affiliation: "",
-      affiliationDoc: "",
-      
-      // Policies
-      childProtectionPolicy: "",
-      childProtectionPolicyDoc: "",
-      harassmentPolicy: "",
-      harassmentPolicyDoc: "",
-      admissionPolicy: "",
-      admissionPolicyDoc: "",
-      feeStructure: "",
-      feeStructureDoc: "",
+      propertyDeed: "", propertyDeedDoc: "", buildingApproval: "", buildingApprovalDoc: "",
+      completionCertificate: "", completionCertificateDoc: "", fireNOC: "", fireNOCDoc: "",
+      policeNOC: "", policeNOCDoc: "", municipalityNOC: "", municipalityNOCDoc: "",
+      educationDeptNOC: "", educationDeptNOCDoc: "", pollutionNOC: "", pollutionNOCDoc: "",
+      waterConnection: "", waterConnectionDoc: "", electricityConnection: "", electricityConnectionDoc: "",
+      safetyAudit: "", safetyAuditDoc: "", drainageSystem: "", drainageSystemDoc: "",
+      panNo: "", panDoc: "", gstinNo: "", gstinDoc: "", bankAccount: "", bankAccountDoc: "",
+      trustDeed: "", trustDeedDoc: "", diseCode: "", disecodeDoc: "", provisionalRecognition: "",
+      provisionalRecognitionDoc: "", affiliation: "", affiliationDoc: "", childProtectionPolicy: "",
+      childProtectionPolicyDoc: "", harassmentPolicy: "", harassmentPolicyDoc: "", admissionPolicy: "",
+      admissionPolicyDoc: "", feeStructure: "", feeStructureDoc: "",
     },
     branches: [
       {
-        id: 1,
-        shortName: "",
-        name: "",
-        city: "",
-        state: "",
-        pin: "",
-        address1: "",
-        address2: "",
-        gstin: "",
-        contactPerson: "",
-        contactNo: "",
-        email: "",
+        id: 1, shortName: "", name: "", city: "", state: "", pin: "",
+        address1: "", address2: "", gstin: "", contactPerson: "", contactNo: "", email: "",
       },
     ],
   });
@@ -172,7 +93,7 @@ export default function InstituteForm() {
     setForm({ ...form, directors: updatedDirectors });
   };
 
-  // Update nested director fields (address, documents, bank)
+  // Update nested director fields
   const updateDirectorNested = (directorIdx, section, field, value) => {
     const updatedDirectors = [...form.directors];
     updatedDirectors[directorIdx][section][field] = value;
@@ -182,19 +103,8 @@ export default function InstituteForm() {
   // Add new director
   const addDirector = () => {
     const newDirector = {
-      id: form.directors.length + 1,
-      name: "",
-      email: "",
-      secondaryEmail: "",
-      contact: "",
-      mobile: "",
-      whatsapp: "",
-      gender: "",
-      dob: "",
-      interest: "",
-      father: "",
-      spouse: "",
-      children: "",
+      id: form.directors.length + 1, name: "", email: "", secondaryEmail: "", contact: "",
+      mobile: "", whatsapp: "", gender: "", dob: "", interest: "", father: "", spouse: "", children: "",
       currentAddress: { line1: "", line2: "", city: "", state: "", pin: "" },
       permanentAddress: { line1: "", line2: "", city: "", state: "", pin: "" },
       documents: { panNo: "", panDoc: "", aadhaarNo: "", aadhaarDoc: "" },
@@ -207,36 +117,20 @@ export default function InstituteForm() {
   // Remove director
   const removeDirector = (idx) => {
     if (form.directors.length > 1) {
-      setForm({
-        ...form,
-        directors: form.directors.filter((_, i) => i !== idx),
-      });
+      setForm({ ...form, directors: form.directors.filter((_, i) => i !== idx) });
     }
   };
 
   // Update legal fields
   const updateLegal = (field, value) => {
-    setForm({
-      ...form,
-      legal: { ...form.legal, [field]: value },
-    });
+    setForm({ ...form, legal: { ...form.legal, [field]: value } });
   };
 
   // Add new branch
   const addBranch = () => {
     const newBranch = {
-      id: form.branches.length + 1,
-      shortName: "",
-      name: "",
-      city: "",
-      state: "",
-      pin: "",
-      address1: "",
-      address2: "",
-      gstin: "",
-      contactPerson: "",
-      contactNo: "",
-      email: "",
+      id: form.branches.length + 1, shortName: "", name: "", city: "", state: "",
+      pin: "", address1: "", address2: "", gstin: "", contactPerson: "", contactNo: "", email: "",
     };
     setForm({ ...form, branches: [...form.branches, newBranch] });
   };
@@ -251,10 +145,7 @@ export default function InstituteForm() {
   // Remove branch
   const removeBranch = (idx) => {
     if (form.branches.length > 1) {
-      setForm({
-        ...form,
-        branches: form.branches.filter((_, i) => i !== idx),
-      });
+      setForm({ ...form, branches: form.branches.filter((_, i) => i !== idx) });
     }
   };
 
@@ -262,20 +153,13 @@ export default function InstituteForm() {
   const validateStep = () => {
     const newErrors = {};
     if (step === 0) {
-      if (!form.organisation.name.trim())
-        newErrors.name = "Registered Name is required";
-      if (!form.organisation.phone.trim())
-        newErrors.phone = "Phone Number is required";
-      if (!form.organisation.altPhone.trim())
-        newErrors.altPhone = "Alternate Phone is required";
-      if (!form.organisation.email.trim())
-        newErrors.email = "Email is required";
-      if (!form.organisation.city.trim())
-        newErrors.city = "City is required";
-      if (!form.organisation.state.trim())
-        newErrors.state = "State is required";
-      if (!form.organisation.pin.trim())
-        newErrors.pin = "PIN Code is required";
+      if (!form.organisation.name.trim()) newErrors.name = "Registered Name is required";
+      if (!form.organisation.phone.trim()) newErrors.phone = "Phone Number is required";
+      if (!form.organisation.altPhone.trim()) newErrors.altPhone = "Alternate Phone is required";
+      if (!form.organisation.email.trim()) newErrors.email = "Email is required";
+      if (!form.organisation.city.trim()) newErrors.city = "City is required";
+      if (!form.organisation.state.trim()) newErrors.state = "State is required";
+      if (!form.organisation.pin.trim()) newErrors.pin = "PIN Code is required";
       if (!form.organisation.type) newErrors.type = "Organisation Type is required";
     }
     setErrors(newErrors);
@@ -295,19 +179,29 @@ export default function InstituteForm() {
     window.scrollTo(0, 0);
   };
 
-  // Submit form
-  const submit = () => {
-    const existing = JSON.parse(localStorage.getItem("institutes")) || [];
-    const newOrganisation = {
-      ...form,
-      id: Date.now(),
-      status: "Active",
-      createdAt: new Date().toLocaleString(),
-      plan: "Premium",
-    };
-    existing.push(newOrganisation);
-    localStorage.setItem("institutes", JSON.stringify(existing));
-    navigate("/admin/institute");
+  // --- NEW: DYNAMIC SUBMIT LOGIC ---
+  const submit = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      console.log("SENDING THIS TO BACKEND:", form);
+
+      // We now pass the ENTIRE form state to the backend
+      // because the backend is ready to handle the JSON structure!
+      const response = await adminService.createInstitute(form);
+      
+      if (response.success) {
+        alert("Institute Created Successfully!");
+        // Automatically redirect back to the Super Admin Institute List upon success
+        navigate("/super-admin/institutes");
+      }
+    } catch (err) {
+      console.error("Error creating institute:", err);
+      // Show backend error (e.g. "Institute with this email already exists")
+      alert(err.response?.data?.message || err.message || "Failed to create institute");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -334,10 +228,7 @@ export default function InstituteForm() {
             </div>
             <div className="flex justify-between mt-4 gap-1 sm:gap-2">
               {STEPS.map((s, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col items-center flex-1 sm:flex-initial"
-                >
+                <div key={i} className="flex flex-col items-center flex-1 sm:flex-initial">
                   <div
                     className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all text-md sm:text-md ${
                       i < step
@@ -380,9 +271,7 @@ export default function InstituteForm() {
                           errors.name ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.name && (
-                        <p className="text-red-500 text-md mt-1">{errors.name}</p>
-                      )}
+                      {errors.name && <p className="text-red-500 text-md mt-1">{errors.name}</p>}
                     </div>
 
                     <div>
@@ -398,9 +287,7 @@ export default function InstituteForm() {
                           errors.phone ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.phone && (
-                        <p className="text-red-500 text-md mt-1">{errors.phone}</p>
-                      )}
+                      {errors.phone && <p className="text-red-500 text-md mt-1">{errors.phone}</p>}
                     </div>
 
                     <div>
@@ -416,9 +303,7 @@ export default function InstituteForm() {
                           errors.altPhone ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.altPhone && (
-                        <p className="text-red-500 text-md mt-1">{errors.altPhone}</p>
-                      )}
+                      {errors.altPhone && <p className="text-red-500 text-md mt-1">{errors.altPhone}</p>}
                     </div>
 
                     <div>
@@ -434,9 +319,7 @@ export default function InstituteForm() {
                           errors.email ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.email && (
-                        <p className="text-red-500 text-md mt-1">{errors.email}</p>
-                      )}
+                      {errors.email && <p className="text-red-500 text-md mt-1">{errors.email}</p>}
                     </div>
 
                     <div>
@@ -465,9 +348,7 @@ export default function InstituteForm() {
                           errors.city ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.city && (
-                        <p className="text-red-500 text-md mt-1">{errors.city}</p>
-                      )}
+                      {errors.city && <p className="text-red-500 text-md mt-1">{errors.city}</p>}
                     </div>
 
                     <div className="sm:col-span-2">
@@ -509,9 +390,7 @@ export default function InstituteForm() {
                           errors.state ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.state && (
-                        <p className="text-red-500 text-md mt-1">{errors.state}</p>
-                      )}
+                      {errors.state && <p className="text-red-500 text-md mt-1">{errors.state}</p>}
                     </div>
 
                     <div>
@@ -527,9 +406,7 @@ export default function InstituteForm() {
                           errors.pin ? "border-red-500" : "border-gray-300"
                         }`}
                       />
-                      {errors.pin && (
-                        <p className="text-red-500 text-md mt-1">{errors.pin}</p>
-                      )}
+                      {errors.pin && <p className="text-red-500 text-md mt-1">{errors.pin}</p>}
                     </div>
 
                     <div>
@@ -562,9 +439,7 @@ export default function InstituteForm() {
                         <option value="Institute">Institute</option>
                         <option value="University">University</option>
                       </select>
-                      {errors.type && (
-                        <p className="text-red-500 text-md mt-1">{errors.type}</p>
-                      )}
+                      {errors.type && <p className="text-red-500 text-md mt-1">{errors.type}</p>}
                     </div>
                   </div>
                 </div>
@@ -593,7 +468,6 @@ export default function InstituteForm() {
                       )}
                     </div>
 
-                    {/* Director Personal Details */}
                     <div className="space-y-6">
                       <div>
                         <h4 className="font-semibold w-full md:w-1/10 text-md sm:text-base text-gray-800 mb-4">
@@ -618,9 +492,7 @@ export default function InstituteForm() {
                             type="email"
                             placeholder="Secondary Email"
                             value={director.secondaryEmail}
-                            onChange={(e) =>
-                              updateDirector(dirIdx, "secondaryEmail", e.target.value)
-                            }
+                            onChange={(e) => updateDirector(dirIdx, "secondaryEmail", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
@@ -701,45 +573,35 @@ export default function InstituteForm() {
                             type="text"
                             placeholder="Address Line 1"
                             value={director.currentAddress.line1}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "currentAddress", "line1", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "currentAddress", "line1", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
                             placeholder="Address Line 2"
                             value={director.currentAddress.line2}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "currentAddress", "line2", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "currentAddress", "line2", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
                             placeholder="City"
                             value={director.currentAddress.city}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "currentAddress", "city", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "currentAddress", "city", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="State"
                             value={director.currentAddress.state}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "currentAddress", "state", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "currentAddress", "state", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="PIN"
                             value={director.currentAddress.pin}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "currentAddress", "pin", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "currentAddress", "pin", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
@@ -749,9 +611,7 @@ export default function InstituteForm() {
                       <div>
                         <label className="flex items-center mb-4">
                           <input type="checkbox" className="mr-2" />
-                          <span className="text-md sm:text-md text-gray-700">
-                            Same as Current Address
-                          </span>
+                          <span className="text-md sm:text-md text-gray-700">Same as Current Address</span>
                         </label>
                         <h4 className="font-semibold w-full md:w-1/9 text-md sm:text-base text-gray-700 mb-4">
                           Permanent Address
@@ -761,70 +621,35 @@ export default function InstituteForm() {
                             type="text"
                             placeholder="Address Line 1"
                             value={director.permanentAddress.line1}
-                            onChange={(e) =>
-                              updateDirectorNested(
-                                dirIdx,
-                                "permanentAddress",
-                                "line1",
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "permanentAddress", "line1", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
                             placeholder="Address Line 2"
                             value={director.permanentAddress.line2}
-                            onChange={(e) =>
-                              updateDirectorNested(
-                                dirIdx,
-                                "permanentAddress",
-                                "line2",
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "permanentAddress", "line2", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 sm:col-span-2 text-md"
                           />
                           <input
                             type="text"
                             placeholder="City"
                             value={director.permanentAddress.city}
-                            onChange={(e) =>
-                              updateDirectorNested(
-                                dirIdx,
-                                "permanentAddress",
-                                "city",
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "permanentAddress", "city", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="State"
                             value={director.permanentAddress.state}
-                            onChange={(e) =>
-                              updateDirectorNested(
-                                dirIdx,
-                                "permanentAddress",
-                                "state",
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "permanentAddress", "state", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="PIN"
                             value={director.permanentAddress.pin}
-                            onChange={(e) =>
-                              updateDirectorNested(
-                                dirIdx,
-                                "permanentAddress",
-                                "pin",
-                                e.target.value
-                              )
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "permanentAddress", "pin", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
@@ -835,69 +660,38 @@ export default function InstituteForm() {
                         <h4 className="font-semibold w-full md:w-1/12 text-md sm:text-base text-gray-700 mb-4">Documents</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
-                              PAN Number
-                            </label>
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">PAN Number</label>
                             <input
                               type="text"
                               placeholder="PAN No"
                               value={director.documents.panNo}
-                              onChange={(e) =>
-                                updateDirectorNested(dirIdx, "documents", "panNo", e.target.value)
-                              }
+                              onChange={(e) => updateDirectorNested(dirIdx, "documents", "panNo", e.target.value)}
                               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
-                              Upload PAN
-                            </label>
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">Upload PAN</label>
                             <input
                               type="file"
-                              onChange={(e) =>
-                                updateDirectorNested(
-                                  dirIdx,
-                                  "documents",
-                                  "panDoc",
-                                  e.target.files?.[0]?.name
-                                )
-                              }
+                              onChange={(e) => updateDirectorNested(dirIdx, "documents", "panDoc", e.target.files?.[0]?.name)}
                               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
-                              Aadhaar Number
-                            </label>
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">Aadhaar Number</label>
                             <input
                               type="text"
                               placeholder="Aadhaar No"
                               value={director.documents.aadhaarNo}
-                              onChange={(e) =>
-                                updateDirectorNested(
-                                  dirIdx,
-                                  "documents",
-                                  "aadhaarNo",
-                                  e.target.value
-                                )
-                              }
-                       className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
+                              onChange={(e) => updateDirectorNested(dirIdx, "documents", "aadhaarNo", e.target.value)}
+                              className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                             />
                           </div>
                           <div>
-                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">
-                              Upload Aadhaar
-                            </label>
+                            <label className="text-md w-full md:w-1/6 text-gray-700 mb-2 block">Upload Aadhaar</label>
                             <input
                               type="file"
-                              onChange={(e) =>
-                                updateDirectorNested(
-                                  dirIdx,
-                                  "documents",
-                                  "aadhaarDoc",
-                                  e.target.files?.[0]?.name
-                                )
-                              }
+                              onChange={(e) => updateDirectorNested(dirIdx, "documents", "aadhaarDoc", e.target.files?.[0]?.name)}
                               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                             />
                           </div>
@@ -912,27 +706,21 @@ export default function InstituteForm() {
                             type="text"
                             placeholder="Bank Name"
                             value={director.bank.bankName}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "bank", "bankName", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "bank", "bankName", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="Account Number"
                             value={director.bank.accountNumber}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "bank", "accountNumber", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "bank", "accountNumber", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                           <input
                             type="text"
                             placeholder="IFSC Code"
                             value={director.bank.ifscCode}
-                            onChange={(e) =>
-                              updateDirectorNested(dirIdx, "bank", "ifscCode", e.target.value)
-                            }
+                            onChange={(e) => updateDirectorNested(dirIdx, "bank", "ifscCode", e.target.value)}
                             className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                           />
                         </div>
@@ -940,7 +728,6 @@ export default function InstituteForm() {
                     </div>
                   </div>
                 ))}
-
                 <button
                   onClick={addDirector}
                   className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-md sm:text-base"
@@ -957,68 +744,53 @@ export default function InstituteForm() {
                   Legal Details & Documents
                 </h2>
 
-                {/* Land & Building Documents */}
                 <div className="space-y-4">
                   <h3 className="text-base md:w-1/6 sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">
                      Land & Building Documents
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Property Deed
-                      </label>
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">Property Deed</label>
                       <input
                         type="text"
                         placeholder="Deed reference/number"
                         value={form.legal.propertyDeed}
                         onChange={(e) => updateLegal("propertyDeed", e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("propertyDeedDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("propertyDeedDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Building Approval
-                      </label>
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">Building Approval</label>
                       <input
                         type="text"
                         placeholder="Approval number"
                         value={form.legal.buildingApproval}
                         onChange={(e) => updateLegal("buildingApproval", e.target.value)}
-                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("buildingApprovalDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("buildingApprovalDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Building Completion Certificate
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Building Completion Certificate</label>
                       <input
                         type="text"
                         placeholder="Certificate number"
                         value={form.legal.completionCertificate}
                         onChange={(e) => updateLegal("completionCertificate", e.target.value)}
-                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("completionCertificateDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("completionCertificateDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1032,100 +804,77 @@ export default function InstituteForm() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Fire Department NOC
-                      </label>
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">Fire Department NOC</label>
                       <input
                         type="text"
                         placeholder="NOC number"
                         value={form.legal.fireNOC}
                         onChange={(e) => updateLegal("fireNOC", e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("fireNOCDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("fireNOCDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/8 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Police NOC
-                      </label>
+                      <label className="block md:w-1/8 text-md sm:text-md font-medium text-gray-700 mb-2">Police NOC</label>
                       <input
                         type="text"
                         placeholder="NOC number"
                         value={form.legal.policeNOC}
                         onChange={(e) => updateLegal("policeNOC", e.target.value)}
-                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("policeNOCDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("policeNOCDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Municipality NOC
-                      </label>
+                      <label className="block md:w-1/6 text-md sm:text-md font-medium text-gray-700 mb-2">Municipality NOC</label>
                       <input
                         type="text"
                         placeholder="NOC number"
                         value={form.legal.municipalityNOC}
                         onChange={(e) => updateLegal("municipalityNOC", e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("municipalityNOCDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("municipalityNOCDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Education Department NOC
-                      </label>
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">Education Department NOC</label>
                       <input
                         type="text"
                         placeholder="NOC number"
                         value={form.legal.educationDeptNOC}
                         onChange={(e) => updateLegal("educationDeptNOC", e.target.value)}
-                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("educationDeptNOCDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("educationDeptNOCDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2"> Pollution Control Board NOC
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Pollution Control Board NOC</label>
                       <input
                         type="text"
                         placeholder="NOC number"
                         value={form.legal.pollutionNOC}
                         onChange={(e) => updateLegal("pollutionNOC", e.target.value)}
-                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("pollutionNOCDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("pollutionNOCDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1134,85 +883,67 @@ export default function InstituteForm() {
 
                 {/* Infrastructure & Safety */}
                 <div className="space-y-4">
-                  <h3 className="text-base md:w-1/4  sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">Infrastructure & Safety Documents
+                  <h3 className="text-base md:w-1/4  sm:text-lg font-bold text-black-700 border-l-4 border-black-700 pl-3">
+                    Infrastructure & Safety Documents
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3  text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Water Connection Certificate
-                      </label>
+                      <label className="block md:w-1/3  text-md sm:text-md font-medium text-gray-700 mb-2">Water Connection Certificate</label>
                       <input
                         type="text"
                         placeholder="Reference number"
                         value={form.legal.waterConnection}
-                 onChange={(e) => updateLegal("waterConnection", e.target.value)}
-               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        onChange={(e) => updateLegal("waterConnection", e.target.value)}
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("waterConnectionDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("waterConnectionDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Electricity Connection Certificate
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Electricity Connection Certificate</label>
                       <input
                         type="text"
                         placeholder="Consumer number"
                         value={form.legal.electricityConnection}
                         onChange={(e) => updateLegal("electricityConnection", e.target.value)}
-                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("electricityConnectionDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("electricityConnectionDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Safety Audit Report
-                      </label>
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">Safety Audit Report</label>
                       <input
                         type="text"
                         placeholder="Audit reference"
                         value={form.legal.safetyAudit}
-                 onChange={(e) => updateLegal("safetyAudit", e.target.value)}
-               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        onChange={(e) => updateLegal("safetyAudit", e.target.value)}
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("safetyAuditDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("safetyAuditDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Drainage System Certification
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Drainage System Certification</label>
                       <input
                         type="text"
                         placeholder="Certificate number"
                         value={form.legal.drainageSystem}
                         onChange={(e) => updateLegal("drainageSystem", e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("drainageSystemDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("drainageSystemDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1226,81 +957,62 @@ export default function InstituteForm() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/6 text-md md:text-md font-medium text-gray-700 pt-2">
-                        PAN Number
-                      </label>
+                      <label className="block md:w-1/6 text-md md:text-md font-medium text-gray-700 pt-2">PAN Number</label>
                       <input
                         type="text"
                         placeholder="PAN"
                         value={form.legal.panNo}
                         onChange={(e) => updateLegal("panNo", e.target.value)}
-                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("panDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("panDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/6  text-md sm:text-md font-medium text-gray-700 mb-2">
-                        GSTIN Number
-                      </label>
+                      <label className="block md:w-1/6  text-md sm:text-md font-medium text-gray-700 mb-2">GSTIN Number</label>
                       <input
                         type="text"
                         placeholder="GSTIN"
                         value={form.legal.gstinNo}
                         onChange={(e) => updateLegal("gstinNo", e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("gstinDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("gstinDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Bank Account Certificate
-                      </label>
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">Bank Account Certificate</label>
                       <input
                         type="text"
                         placeholder="Account number"
                         value={form.legal.bankAccount}
                         onChange={(e) => updateLegal("bankAccount", e.target.value)}
-                     className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("bankAccountDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("bankAccountDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Trust Deed / Society Registration
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Trust Deed / Society Registration</label>
                       <input
                         type="text"
                         placeholder="Document number"
                         value={form.legal.trustDeed}
                         onChange={(e) => updateLegal("trustDeed", e.target.value)}
-                     className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("trustDeedDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("trustDeedDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1314,29 +1026,22 @@ export default function InstituteForm() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/7 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        DISE Code
-                      </label>
+                      <label className="block md:w-1/7 text-md sm:text-md font-medium text-gray-700 mb-2">DISE Code</label>
                       <input
                         type="text"
                         placeholder="DISE Code"
                         value={form.legal.diseCode}
                         onChange={(e) => updateLegal("diseCode", e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("disecodeDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("disecodeDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Provisional Recognition Certificate
-                      </label>
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">Provisional Recognition Certificate</label>
                       <input
                         type="text"
                         placeholder="Certificate number"
@@ -1346,29 +1051,22 @@ export default function InstituteForm() {
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("provisionalRecognitionDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("provisionalRecognitionDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Board Affiliation Certificate
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Board Affiliation Certificate</label>
                       <input
                         type="text"
                         placeholder="Affiliation number"
                         value={form.legal.affiliation}
                         onChange={(e) => updateLegal("affiliation", e.target.value)}
-               className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("affiliationDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("affiliationDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1382,81 +1080,62 @@ export default function InstituteForm() {
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Child Protection Policy
-                      </label>
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">Child Protection Policy</label>
                       <input
                         type="text"
                         placeholder="Policy reference"
                         value={form.legal.childProtectionPolicy}
                         onChange={(e) => updateLegal("childProtectionPolicy", e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("childProtectionPolicyDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("childProtectionPolicyDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Harassment Prevention Policy
-                      </label>
+                      <label className="block md:w-1/3 text-md sm:text-md font-medium text-gray-700 mb-2">Harassment Prevention Policy</label>
                       <input
                         type="text"
                         placeholder="Policy reference"
                         value={form.legal.harassmentPolicy}
                         onChange={(e) => updateLegal("harassmentPolicy", e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("harassmentPolicyDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("harassmentPolicyDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Admission Policy
-                      </label>
+                      <label className="block md:w-1/5 text-md sm:text-md font-medium text-gray-700 mb-2">Admission Policy</label>
                       <input
                         type="text"
                         placeholder="Policy reference"
                         value={form.legal.admissionPolicy}
                         onChange={(e) => updateLegal("admissionPolicy", e.target.value)}
-                   className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("admissionPolicyDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("admissionPolicyDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
-
                     <div className="border border-gray-200 rounded-lg p-4">
-                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">
-                        Fee Structure Document
-                      </label>
+                      <label className="block md:w-1/4 text-md sm:text-md font-medium text-gray-700 mb-2">Fee Structure Document</label>
                       <input
                         type="text"
                         placeholder="Document reference"
                         value={form.legal.feeStructure}
                         onChange={(e) => updateLegal("feeStructure", e.target.value)}
-                 className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
+                        className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 mb-2 text-md"
                       />
                       <input
                         type="file"
-                        onChange={(e) =>
-                          updateLegal("feeStructureDoc", e.target.files?.[0]?.name)
-                        }
+                        onChange={(e) => updateLegal("feeStructureDoc", e.target.files?.[0]?.name)}
                         className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-md"
                       />
                     </div>
@@ -1471,7 +1150,6 @@ export default function InstituteForm() {
                 <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-6">
                   Branch Locations
                 </h2>
-
                 <div className="border-2 border-gray-300 rounded-lg p-4 bg-blue-50">
                   <label className="flex items-center text-gray-700 font-medium text-md sm:text-base">
                     <input type="radio" name="branch-option" className="mr-3" defaultChecked />
@@ -1479,18 +1157,16 @@ export default function InstituteForm() {
                   </label>
                   <div className="flex gap-4 sm:gap-6 mt-3 ml-6 text-md sm:text-base">
                     <label className="flex items-center text-gray-700">
-                      <input type="radio" name="branch-assoc" defaultChecked className="mr-2" />
-                      Yes
+                      <input type="radio" name="branch-assoc" defaultChecked className="mr-2" /> Yes
                     </label>
                     <label className="flex items-center text-gray-700">
-                      <input type="radio" name="branch-assoc" className="mr-2" />
-                      No
+                      <input type="radio" name="branch-assoc" className="mr-2" /> No
                     </label>
                   </div>
                 </div>
 
                 {form.branches.map((branch, branchIdx) => (
-                  <div key={branchIdx} className="border-2 border-white-200 rounded-lg p-4 sm:p-6 bg-yellow-50">
+                  <div key={branchIdx} className="border-2 border-white-200 rounded-lg p-4 sm:p-6 bg-blue-50">
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-800">
                         Branch {branchIdx + 1}
@@ -1504,7 +1180,6 @@ export default function InstituteForm() {
                         </button>
                       )}
                     </div>
-
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                         <input
@@ -1544,7 +1219,6 @@ export default function InstituteForm() {
                           className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 text-md"
                         />
                       </div>
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                         <input
                           type="text"
@@ -1568,7 +1242,6 @@ export default function InstituteForm() {
                           className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-white-500 lg:col-span-3 text-md"
                         />
                       </div>
-
                       <div className="border-t-2 border-gray-300 pt-4 mt-4">
                         <h4 className="font-semibold md:w-1/8 text-md sm:text-base text-gray-700 mb-4">
                           Branch Contact Details
@@ -1600,7 +1273,6 @@ export default function InstituteForm() {
                     </div>
                   </div>
                 ))}
-
                 <button
                   onClick={addBranch}
                   className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 mt-4 text-md sm:text-base"
@@ -1677,7 +1349,7 @@ export default function InstituteForm() {
           <div className="flex flex-col sm:flex-row justify-between mt-6 sm:mt-8 gap-3 sm:gap-4">
             <button
               onClick={goPrev}
-              disabled={step === 0}
+              disabled={step === 0 || isSubmitting}
               className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 rounded-lg font-semibold text-md sm:text-base text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition w-full sm:w-auto"
             >
               <ChevronLeft size={20} /> Previous
@@ -1693,9 +1365,16 @@ export default function InstituteForm() {
             ) : (
               <button
                 onClick={submit}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-md sm:text-base transition w-full sm:w-auto"
+                disabled={isSubmitting}
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-md sm:text-base transition w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <Upload size={20} /> Create Organisation
+                {isSubmitting ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <Upload size={20} /> Create Organisation
+                  </>
+                )}
               </button>
             )}
           </div>

@@ -1,105 +1,128 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import axios from "axios";
 import {
-  Search, Eye, Check, X, Plus, Filter, Trash2, Edit,
+  Search, Eye, Check, X, Plus, Filter, Trash2, Edit, Download,
   GraduationCap, Calendar, Mail, User, Phone, MapPin,
   AlertTriangle, School, Building2, FileText, Clock
 } from "lucide-react";
 
-const STORAGE_KEY = "student_management_list_v4";
+// --- AUTH TOKEN HELPER ---
+const getToken = () => {
+  let token = localStorage.getItem('token');
+  if (!token) {
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    token = storedUser?.token || storedUser?.data?.token;
+  }
+  return token;
+};
 
 export const StudentList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [editingStudent, setEditingStudent] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // --- LOAD DATA ---
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setStudents(JSON.parse(stored));
-    } else {
-      const initialData = [
-        {
-          id: "STU-1001",
-          type: "University",
-          name: "John Doe",
-          firstName: "John",
-          lastName: "Doe",
-          course: "B.Tech CSE",
-          standard: "",
-          section: "A",
-          year: "2024-25",
-          status: "Active",
-          email: "john@edu.in",
-          phone: "9876543210",
-          dob: "2000-05-15",
-          gender: "Male",
-          aadhar: "1234 5678 9012",
-          pan: "ABCDE1234F",
-          rollNo: "001",
-          documents: {
-            aadhar: null,
-            pan: null,
-            tenth: null,
-            twelfth: null,
-            graduation: null,
-            masters: null
-          },
-          address: {
-            street: "123 Main Street",
-            city: "Delhi",
-            state: "Delhi",
-            pincode: "110001",
-            country: "India"
-          }
-        }
-      ];
-      setStudents(initialData);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
+  // --- DYNAMIC: FETCH STUDENTS ---
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      if (!token) return;
+
+      const response = await axios.get("http://localhost:5000/api/admin/students", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const formattedData = response.data.students.map(s => ({
+          ...s,
+          db_id: s.id, 
+          id: s.rollNo || s.student_code || `STU-${s.id}`,
+          name: s.name || `${s.first_name} ${s.last_name}`.trim(),
+          firstName: s.first_name || s.name?.split(" ")[0] || "",
+          lastName: s.last_name || s.name?.split(" ").slice(1).join(" ") || "",
+          type: s.type || "University",
+          status: s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : "Pending",
+          course: s.course || "-",
+          standard: s.standard || "-",
+          section: s.section || "A",
+          email: s.email || "",
+          phone: s.phone || "-",
+          // Parse JSON if stored as string in DB
+          address: s.address ? (typeof s.address === 'string' ? JSON.parse(s.address) : s.address) : {},
+          documents: s.documents ? (typeof s.documents === 'string' ? JSON.parse(s.documents) : s.documents) : {}
+        }));
+        setStudents(formattedData);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchStudents();
   }, []);
 
-  const updateStorage = (updatedList) => {
-    setStudents(updatedList);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-  };
+  // --- DYNAMIC: SAVE STUDENT ---
+  const handleSaveStudent = async (newStudentData) => {
+    try {
+      const token = getToken();
+      if (!token) return;
 
-  const handleSaveStudent = (newStudentData) => {
-    if (editingStudent) {
-      const updated = students.map(s => s.id === editingStudent.id ? { ...s, ...newStudentData } : s);
-      updateStorage(updated);
-      setEditingStudent(null);
-    } else {
-      const prefix = newStudentData.type === "School" ? "SCH" : "STU";
-      const newStudent = {
-        id: `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`,
-        status: "Pending",
-        documents: {
-          aadhar: null,
-          pan: null,
-          tenth: null,
-          twelfth: null,
-          graduation: null,
-          masters: null
-        },
-        address: {},
-        ...newStudentData
+      const payload = {
+        ...newStudentData,
+        rollNo: newStudentData.rollNo || `STU${Math.floor(Math.random() * 90000) + 10000}`,
+        name: `${newStudentData.firstName} ${newStudentData.lastName}`.trim(),
+        first_name: newStudentData.firstName,
+        last_name: newStudentData.lastName,
       };
-      updateStorage([...students, newStudent]);
+
+      if (editingStudent && editingStudent.db_id) {
+        await axios.put(`http://localhost:5000/api/admin/students/${editingStudent.db_id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/admin/students", payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      setEditingStudent(null);
+      setIsAddModalOpen(false);
+      fetchStudents(); // Refresh data from DB
+
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert(err.response?.data?.message || "Failed to save student.");
     }
-    setIsAddModalOpen(false);
   };
 
-  const handleDelete = (id) => {
-    const updated = students.filter(s => s.id !== id);
-    updateStorage(updated);
-    setDeleteConfirm(null);
+  // --- DYNAMIC: DELETE STUDENT ---
+  const handleDelete = async (id) => {
+    try {
+      const studentToDelete = students.find(s => s.id === id);
+      const token = getToken();
+      if (!token || !studentToDelete?.db_id) return;
+
+      await axios.delete(`http://localhost:5000/api/admin/students/${studentToDelete.db_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setDeleteConfirm(null);
+      fetchStudents(); // Refresh data from DB
+
+    } catch (err) {
+      console.error("Delete Error:", err);
+      alert("Failed to delete student.");
+    }
   };
 
   const filteredStudents = students.filter(item => {
@@ -179,7 +202,13 @@ export const StudentList = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredStudents.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="py-12 text-center text-slate-500 font-bold">
+                    Loading Students...
+                  </td>
+                </tr>
+              ) : filteredStudents.length > 0 ? (
                 filteredStudents.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="py-4 pl-6 pr-4">
@@ -222,12 +251,12 @@ export const StudentList = () => {
 
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border ${
-                        item.status === 'Pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                        item.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                        'bg-red-50 text-red-700 border-red-100'
+                        item.status === 'Pending' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                        item.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        'bg-red-50 text-red-700 border-red-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          item.status === 'Pending' ? 'bg-yellow-500' :
+                          item.status === 'Pending' ? 'bg-orange-500' :
                           item.status === 'Active' ? 'bg-emerald-500' :
                           'bg-red-500'
                         }`}></span>
@@ -249,7 +278,7 @@ export const StudentList = () => {
                             setEditingStudent(item);
                             setIsAddModalOpen(true);
                           }}
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
                           title="Edit"
                         >
                           <Edit size={18} />
@@ -283,7 +312,7 @@ export const StudentList = () => {
 
       {/* MODALS */}
       {isAddModalOpen && (
-        <StudentFormModal
+        <EnhancedStudentForm
           student={editingStudent}
           onClose={() => {
             setIsAddModalOpen(false);
@@ -317,38 +346,30 @@ export const StudentList = () => {
 };
 
 // ============================================================================
-// STUDENT FORM MODAL - Enhanced with 4 Tabs
+// ENHANCED STUDENT FORM
 // ============================================================================
-const StudentFormModal = ({ student, onClose, onSave }) => {
-  const [form, setForm] = useState(student || {
-    type: "University",
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-    aadhar: "",
-    pan: "",
-    course: "",
-    standard: "",
-    section: "",
-    rollNo: "",
-    year: "",
-    documents: {
-      aadhar: null,
-      pan: null,
-      tenth: null,
-      twelfth: null,
-      graduation: null,
-      masters: null
+const EnhancedStudentForm = ({ student, onClose, onSave }) => {
+  const [form, setForm] = useState({
+    type: student?.type || "University",
+    firstName: student?.firstName || student?.name?.split(" ")[0] || "",
+    lastName: student?.lastName || student?.name?.split(" ").slice(1).join(" ") || "",
+    email: student?.email || "",
+    phone: student?.phone || "",
+    dob: student?.dob || "",
+    gender: student?.gender || "",
+    aadhar: student?.aadhar || "",
+    pan: student?.pan || "",
+    course: student?.course || "",
+    standard: student?.standard || "",
+    section: student?.section || "",
+    rollNo: student?.rollNo || "",
+    year: student?.year || "2024-25",
+    status: student?.status || "Pending",
+    documents: student?.documents || {
+      aadhar: null, pan: null, tenth: null, twelfth: null, graduation: null, masters: null
     },
-    address: {
-      street: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "India"
+    address: student?.address || {
+      street: "", city: "", state: "", pincode: "", country: "India"
     }
   });
 
@@ -408,23 +429,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.firstName || !form.email) {
-      alert("Please fill required fields");
-      return;
-    }
-    if (form.type === "University" && !form.course) {
-      alert("Please select a course");
-      return;
-    }
-    if (form.type === "School" && !form.standard) {
-      alert("Please select a class");
-      return;
-    }
-    if (!form.section) {
-      alert("Please select a section");
-      return;
-    }
-    if (!form.year) {
-      alert("Please select an academic year");
+      alert("Please fill required fields (First Name, Email)");
       return;
     }
 
@@ -454,13 +459,18 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
         {/* TAB NAVIGATION */}
         <div className="bg-slate-50 border-b border-slate-200 px-8 py-4 flex gap-2 overflow-x-auto sticky top-0">
           {[
-            { id: "personal", label: "Personal Details", icon: "👤" },
-            { id: "academic", label: "Academic Section", icon: "🎓" }
+            { id: "personal", label: "Personal", icon: "👤" },
+            { id: "academic", label: "Academic", icon: "🎓" },
+            { id: "address", label: "Address", icon: "📍" },
+            { id: "documents", label: "Documents", icon: "📄" }
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-md font-bold whitespace-nowrap transition ${
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab(tab.id);
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition ${
                 activeTab === tab.id
                   ? "bg-white text-blue-600 shadow-sm"
                   : "text-slate-600 hover:text-slate-800"
@@ -473,77 +483,37 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
 
         {/* SCROLLABLE CONTENT */}
         <div className="overflow-y-auto flex-1 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form id="studentForm" onSubmit={handleSubmit} className="space-y-6">
 
-            {/* TAB 1: PERSONAL & ADDRESS */}
+            {/* PERSONAL TAB */}
             {activeTab === "personal" && (
-              <div className="space-y-8">
-                {/* PERSONAL INFORMATION SECTION */}
+              <div className="space-y-6">
                 <div className="border-l-4 border-blue-500 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Personal Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">First Name *</label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        value={form.firstName}
-                        onChange={handleChange}
-                        placeholder="John"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">First Name *</label>
+                      <input type="text" name="firstName" value={form.firstName} onChange={handleChange} placeholder="John" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Last Name *</label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        value={form.lastName}
-                        onChange={handleChange}
-                        placeholder="Doe"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Last Name *</label>
+                      <input type="text" name="lastName" value={form.lastName} onChange={handleChange} placeholder="Doe" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Email *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        placeholder="john@example.com"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Email *</label>
+                      <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="john@example.com" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Phone</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        placeholder="+91 98765 43210"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Phone</label>
+                      <input type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+91 98765 43210" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Date of Birth</label>
-                      <input
-                        type="date"
-                        name="dob"
-                        value={form.dob}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Date of Birth</label>
+                      <input type="date" name="dob" value={form.dob} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Gender</label>
-                      <select
-                        name="gender"
-                        value={form.gender}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      >
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Gender</label>
+                      <select name="gender" value={form.gender} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -553,246 +523,154 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
                   </div>
                 </div>
 
-                {/* IDENTITY SECTION */}
-                <div className="border-l-4 border-blue-600 pl-6">
+                <div className="border-l-4 border-purple-500 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Identity Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Aadhar Number</label>
-                      <input
-                        type="text"
-                        name="aadhar"
-                        value={form.aadhar}
-                        onChange={handleChange}
-                        placeholder="XXXX XXXX XXXX"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Aadhar Number</label>
+                      <input type="text" name="aadhar" value={form.aadhar} onChange={handleChange} placeholder="XXXX XXXX XXXX" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">PAN Number</label>
-                      <input
-                        type="text"
-                        name="pan"
-                        value={form.pan}
-                        onChange={handleChange}
-                        placeholder="ABCDE1234F"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* ADDRESS INFORMATION SECTION */}
-                <div className="border-l-4 border-blue-600 pl-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-5">Address Information</h3>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Street Address</label>
-                      <input
-                        type="text"
-                        name="street"
-                        value={form.address.street}
-                        onChange={handleAddressChange}
-                        placeholder="123 Main Street"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">City</label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={form.address.city}
-                          onChange={handleAddressChange}
-                          placeholder="New Delhi"
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">State</label>
-                        <input
-                          type="text"
-                          name="state"
-                          value={form.address.state}
-                          onChange={handleAddressChange}
-                          placeholder="Delhi"
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Pincode</label>
-                        <input
-                          type="text"
-                          name="pincode"
-                          value={form.address.pincode}
-                          onChange={handleAddressChange}
-                          placeholder="110001"
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Country</label>
-                        <input
-                          type="text"
-                          name="country"
-                          value={form.address.country}
-                          onChange={handleAddressChange}
-                          placeholder="India"
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">PAN Number</label>
+                      <input type="text" name="pan" value={form.pan} onChange={handleChange} placeholder="ABCDE1234F" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 2: ACADEMIC & DOCUMENTS */}
+            {/* ACADEMIC TAB */}
             {activeTab === "academic" && (
-              <div className="space-y-8">
-                {/* ACADEMIC INFORMATION SECTION */}
-                <div className="border-l-4 border-blue-600 pl-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-5">Academic Information</h3>
+              <div className="border-l-4 border-green-500 pl-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-5">Academic Information</h3>
 
-                  <div className="mb-6 flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange("School")}
-                      className={`px-6 py-2 rounded-lg font-bold text-md transition ${
-                        form.type === "School"
-                          ? "bg-orange-100 text-orange-700 border-2 border-orange-300"
-                          : "bg-slate-100 text-slate-600 border-2 border-slate-200"
-                      }`}
-                    >
-                      🏫 School
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange("University")}
-                      className={`px-6 py-2 rounded-lg font-bold text-md transition ${
-                        form.type === "University"
-                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                          : "bg-slate-100 text-slate-600 border-2 border-slate-200"
-                      }`}
-                    >
-                      🎓 University
-                    </button>
+                <div className="mb-6 flex gap-3">
+                  <button type="button" onClick={() => handleTypeChange("School")} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${form.type === "School" ? "bg-orange-100 text-orange-700 border-2 border-orange-300" : "bg-slate-100 text-slate-600 border-2 border-slate-200"}`}>
+                    🏫 School
+                  </button>
+                  <button type="button" onClick={() => handleTypeChange("University")} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${form.type === "University" ? "bg-blue-100 text-blue-700 border-2 border-blue-300" : "bg-slate-100 text-slate-600 border-2 border-slate-200"}`}>
+                    🎓 University
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {form.type === "University" ? (
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Course *</label>
+                      <select name="course" value={form.course} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Course</option>
+                        <option>B.Tech CS</option>
+                        <option>B.Tech IT</option>
+                        <option>MBA</option>
+                        <option>BBA</option>
+                        <option>B.Sc</option>
+                        <option>M.Tech</option>
+                        <option>M.Sc</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Class *</label>
+                      <select name="standard" value={form.standard} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Class</option>
+                        {[...Array(12)].map((_, i) => (
+                          <option key={i} value={`Class ${i + 1}`}>Class {i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Section</label>
+                    <select name="section" value={form.section} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="">Select Section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Roll Number</label>
+                    <input type="text" name="rollNo" value={form.rollNo} onChange={handleChange} placeholder="Leave blank to auto-generate" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Academic Year</label>
+                    <input type="text" value="2024-25" disabled className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-slate-100 text-slate-500" />
+                  </div>
+                  
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Status</label>
+                    <select name="status" value={form.status} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="Pending">Pending</option>
+                      <option value="Active">Active</option>
+                      <option value="Rejected">Rejected</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ADDRESS TAB */}
+            {activeTab === "address" && (
+              <div className="border-l-4 border-orange-500 pl-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-5">Address Information</h3>
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Street Address</label>
+                    <input type="text" name="street" value={form.address.street} onChange={handleAddressChange} placeholder="123 Main Street" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {form.type === "University" ? (
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Course *</label>
-                        <select
-                          name="course"
-                          value={form.course}
-                          onChange={handleChange}
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Course</option>
-                          <option>B.Tech CS</option>
-                          <option>B.Tech IT</option>
-                          <option>MBA</option>
-                          <option>BBA</option>
-                          <option>B.Sc</option>
-                          <option>M.Tech</option>
-                          <option>M.Sc</option>
-                        </select>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Class *</label>
-                        <select
-                          name="standard"
-                          value={form.standard}
-                          onChange={handleChange}
-                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Class</option>
-                          {[...Array(12)].map((_, i) => (
-                            <option key={i} value={`Class ${i + 1}`}>Class {i + 1}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Section *</label>
-                      <select
-                        name="section"
-                        value={form.section}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select Section</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                      </select>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">City</label>
+                      <input type="text" name="city" value={form.address.city} onChange={handleAddressChange} placeholder="New Delhi" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
 
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Roll Number</label>
-                      <input
-                        type="text"
-                        name="rollNo"
-                        value={form.rollNo}
-                        onChange={handleChange}
-                        placeholder="001"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">State</label>
+                      <input type="text" name="state" value={form.address.state} onChange={handleAddressChange} placeholder="Delhi" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
 
                     <div>
-                      <label className="text-md font-bold text-slate-600 uppercase mb-2 block">Academic Year *</label>
-                      <select
-                        name="year"
-                        value={form.year}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-md outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select Academic Year</option>
-                        <option>2020-21</option>
-                        <option>2021-22</option>
-                        <option>2022-23</option>
-                        <option>2023-24</option>
-                        <option>2024-25</option>
-                        <option>2025-26</option>
-                        <option>2026-27</option>
-                      </select>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Pincode</label>
+                      <input type="text" name="pincode" value={form.address.pincode} onChange={handleAddressChange} placeholder="110001" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Country</label>
+                      <input type="text" name="country" value={form.address.country} onChange={handleAddressChange} placeholder="India" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
 
-                {/* DOCUMENTS SECTION */}
-                <div className="border-l-4 border-blue-600 pl-6">
-                  <h3 className="text-lg font-bold text-slate-900 mb-5">Educational Documents</h3>
+            {/* DOCUMENTS TAB */}
+            {activeTab === "documents" && (
+              <div className="border-l-4 border-red-500 pl-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-5">Educational Documents</h3>
 
-                  <div className="space-y-6">
-                    {[
-                      { key: 'aadhar', label: 'Aadhar Card', icon: '🪪' },
-                      { key: 'pan', label: 'PAN Card', icon: '💳' },
-                      { key: 'tenth', label: '10th Standard Certificate', icon: '📚' },
-                      { key: 'twelfth', label: '12th Standard Certificate', icon: '📚' },
-                      { key: 'graduation', label: 'Graduation Degree', icon: '🎓' },
-                      { key: 'masters', label: "Master's Degree", icon: '👨‍🎓' }
-                    ].map(doc => (
-                      <DocumentUploadField
-                        key={doc.key}
-                        label={doc.label}
-                        icon={doc.icon}
-                        docType={doc.key}
-                        uploaded={form.documents[doc.key]}
-                        onUpload={(e) => handleDocumentUpload(e, doc.key)}
-                      />
-                    ))}
-                  </div>
+                <div className="space-y-6">
+                  {[
+                    { key: 'aadhar', label: 'Aadhar Card', icon: '🪪' },
+                    { key: 'pan', label: 'PAN Card', icon: '💳' },
+                    { key: 'tenth', label: '10th Standard Certificate', icon: '📚' },
+                    { key: 'twelfth', label: '12th Standard Certificate', icon: '📚' },
+                    { key: 'graduation', label: 'Graduation Degree', icon: '🎓' },
+                    { key: 'masters', label: "Master's Degree", icon: '👨‍🎓' }
+                  ].map(doc => (
+                    <DocumentUploadField
+                      key={doc.key}
+                      label={doc.label}
+                      icon={doc.icon}
+                      docType={doc.key}
+                      uploaded={form.documents[doc.key]}
+                      onUpload={(e) => handleDocumentUpload(e, doc.key)}
+                    />
+                  ))}
                 </div>
               </div>
             )}
@@ -810,7 +688,8 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
             Cancel
           </button>
           <button
-            onClick={handleSubmit}
+            type="submit"
+            form="studentForm"
             className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
           >
             <FileText size={18} /> {student ? 'Update Student' : 'Enroll Student'}
@@ -829,7 +708,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
 const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => {
   return (
     <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
-      <label className="text-md font-bold text-slate-700 mb-3 block-flex items-center gap-2">
+      <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
         <span className="text-lg">{icon}</span> {label}
       </label>
 
@@ -852,17 +731,17 @@ const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => {
                 ? 'bg-emerald-100 text-emerald-600'
                 : 'bg-blue-100 text-blue-600'
             }`}>
-              {uploaded ? <Check size={24} /> : <FileText size={24} />}
+              {uploaded ? <Check size={24} /> : <Download size={24} />}
             </div>
             {uploaded ? (
               <div>
                 <p className="text-sm font-bold text-slate-800">✓ {uploaded.name}</p>
-                <p className="text-md text-slate-500">Uploaded on {uploaded.uploaded}</p>
+                <p className="text-xs text-slate-500">Uploaded on {uploaded.uploaded}</p>
               </div>
             ) : (
               <div>
                 <p className="text-sm font-bold text-slate-700">Click to upload</p>
-                <p className="text-md text-slate-500">PDF, JPG, PNG (Max 5MB)</p>
+                <p className="text-xs text-slate-500">PDF, JPG, PNG (Max 5MB)</p>
               </div>
             )}
           </div>
@@ -873,7 +752,7 @@ const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => {
 };
 
 // ============================================================================
-// STUDENT DETAILS MODAL
+// STUDENT DETAILS MODAL - Shows All Information
 // ============================================================================
 const StudentDetailsModal = ({ student, onClose, onEdit }) => {
   return createPortal(
@@ -881,7 +760,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 max-h-[90vh] overflow-y-auto">
 
         {/* HEADER */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex justify-between items-center sticky top-0">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex justify-between items-center sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-black text-white">Student Profile</h2>
             <p className="text-blue-100 text-sm mt-1">Complete information</p>
@@ -896,21 +775,21 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
 
           {/* PROFILE HEADER */}
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl font-black text-blue-700 border-4 border-white shadow-lg">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl font-black text-blue-700 border-4 border-white shadow-lg uppercase">
               {student.name[0]}
             </div>
             <div>
               <h3 className="text-2xl font-black text-slate-900">{student.name}</h3>
               <p className="text-slate-600 text-lg mt-1">{student.id}</p>
               <div className="flex gap-2 mt-3">
-                <span className={`px-3 py-1 rounded-full text-md font-bold ${
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   student.type === 'School' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
                 }`}>
                   {student.type === 'School' ? '🏫 School' : '🎓 University'}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-md font-bold ${
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   student.status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                  student.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                  student.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
                   'bg-red-100 text-red-700'
                 }`}>
                   {student.status}
@@ -928,19 +807,19 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
             </h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Email</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.email}</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Email</p>
+                <p className="text-md font-bold text-slate-800 mt-1 truncate" title={student.email}>{student.email}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Phone</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Phone</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{student.phone || '-'}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Date of Birth</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Date of Birth</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{student.dob || '-'}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Gender</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Gender</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{student.gender || '-'}</p>
               </div>
             </div>
@@ -953,23 +832,24 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
             </h4>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Program</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Program</p>
                 <p className="text-md font-bold text-slate-800 mt-1">
                   {student.type === 'School' ? student.standard : student.course}
                 </p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Section</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Section</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{student.section}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Roll Number</p>
+                <p className="text-xs font-bold text-slate-500 uppercase">Roll Number</p>
                 <p className="text-md font-bold text-slate-800 mt-1">{student.rollNo || '-'}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-md font-bold text-slate-500 uppercase">Academic Year</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.year}</p>
-              </div>
+  <p className="text-xs font-bold text-slate-500 uppercase">Academic Year</p>
+  {/* Shows the actual DB value, or a dash if it's empty */}
+  <p className="text-md font-bold text-slate-800 mt-1">{student.year || "—"}</p>
+</div>
             </div>
           </div>
 
@@ -980,7 +860,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
                 <MapPin size={20} className="text-red-600" /> Address
               </h4>
               <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-                <p className="text-md font-bold text-slate-800">{student.address.street}</p>
+                <p className="text-md font-bold text-slate-800">{student.address.street || "Not Provided"}</p>
                 <p className="text-md text-slate-700">
                   {student.address.city}, {student.address.state} {student.address.pincode}
                 </p>
@@ -990,23 +870,23 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
           )}
 
           {/* DOCUMENTS */}
-          {student.documents && (
+          {student.documents && Object.keys(student.documents).length > 0 && (
             <div>
               <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-blue-600" /> Documents
+                <FileText size={20} className="text-purple-600" /> Documents
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(student.documents).map(([key, value]) => (
                   <div key={key} className={`p-3 rounded-lg border-2 ${
                     value ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
                   }`}>
-                    <p className="text-md font-bold text-slate-600 uppercase">
+                    <p className="text-xs font-bold text-slate-600 uppercase">
                       {key.replace(/([A-Z])/g, ' $1').trim()}
                     </p>
                     {value ? (
-                      <p className="text-md font-bold text-emerald-700 mt-1">✓ Uploaded</p>
+                      <p className="text-sm font-bold text-emerald-700 mt-1">✓ Uploaded</p>
                     ) : (
-                      <p className="text-md font-bold text-slate-500 mt-1">Not Uploaded</p>
+                      <p className="text-sm font-bold text-slate-500 mt-1">Not Uploaded</p>
                     )}
                   </div>
                 ))}
@@ -1016,7 +896,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
         </div>
 
         {/* FOOTER */}
-        <div className="border-t border-slate-200 bg-slate-50 px-8 py-6 flex gap-3">
+        <div className="border-t border-slate-200 bg-slate-50 px-8 py-6 flex gap-3 sticky bottom-0">
           <button
             onClick={onClose}
             className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition"
@@ -1025,7 +905,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
           </button>
           <button
             onClick={onEdit}
-            className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
           >
             <Edit size={18} /> Edit Student
           </button>
@@ -1070,3 +950,4 @@ const DeleteConfirmModal = ({ student, onClose, onConfirm }) => {
   );
 };
 
+export default StudentList;
