@@ -3,6 +3,30 @@ export const BATCH_KEY    = "batch_list";
 export const FACULTY_KEY  = "faculty_list";
 export const STUDENT_KEY  = "student_list";
 
+// ─── Storage Adapter ──────────────────────────────────────────────────────────
+// window.storage is only available inside Claude artifact sandbox.
+// Falls back to localStorage when running in a normal browser (e.g. Vite dev).
+const storage = (typeof window !== "undefined" && window.storage)
+  ? window.storage
+  : {
+      get: async (key) => {
+        const value = localStorage.getItem(key);
+        return value !== null ? { key, value } : null;
+      },
+      set: async (key, value) => {
+        localStorage.setItem(key, value);
+        return { key, value };
+      },
+      delete: async (key) => {
+        localStorage.removeItem(key);
+        return { key, deleted: true };
+      },
+      list: async (prefix = "") => {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+        return { keys };
+      },
+    };
+
 // ─── Departments ──────────────────────────────────────────────────────────────
 export const DEPARTMENTS = [
   { id: "cs",      name: "Computer Science",    icon: "💻", color: "blue"    },
@@ -57,50 +81,53 @@ export const COLOR_MAP = {
 };
 
 // ─── Batch CRUD ───────────────────────────────────────────────────────────────
-export const getBatches = () => {
+export const getBatches = async () => {
   try {
-    return JSON.parse(localStorage.getItem(BATCH_KEY) || "[]");
+    const result = await storage.get(BATCH_KEY);
+    return result ? JSON.parse(result.value) : [];
   } catch {
     return [];
   }
 };
 
-export const saveBatches = (batches) => {
-  localStorage.setItem(BATCH_KEY, JSON.stringify(batches));
+export const saveBatches = async (batches) => {
+  await storage.set(BATCH_KEY, JSON.stringify(batches));
 };
 
-export const addBatch = (batch) => {
-  const batches = getBatches();
+export const addBatch = async (batch) => {
+  const batches = await getBatches();
   batches.push(batch);
-  saveBatches(batches);
+  await saveBatches(batches);
 };
 
-export const updateBatch = (id, updates) => {
-  const batches = getBatches().map(b => b.id === id ? { ...b, ...updates } : b);
-  saveBatches(batches);
+export const updateBatch = async (id, updates) => {
+  const batches = (await getBatches()).map(b => b.id === id ? { ...b, ...updates } : b);
+  await saveBatches(batches);
 };
 
-export const deleteBatch = (id) => {
-  saveBatches(getBatches().filter(b => b.id !== id));
+export const deleteBatch = async (id) => {
+  await saveBatches((await getBatches()).filter(b => b.id !== id));
 };
 
-export const getBatchById = (id) => {
-  return getBatches().find(b => b.id === Number(id)) || null;
+export const getBatchById = async (id) => {
+  return (await getBatches()).find(b => b.id === Number(id)) || null;
 };
 
 // ─── Faculty helpers ──────────────────────────────────────────────────────────
-export const getFaculty = () => {
+export const getFaculty = async () => {
   try {
-    return JSON.parse(localStorage.getItem(FACULTY_KEY) || "[]");
+    const result = await storage.get(FACULTY_KEY);
+    return result ? JSON.parse(result.value) : [];
   } catch {
     return [];
   }
 };
 
 // ─── Student helpers ──────────────────────────────────────────────────────────
-export const getStudents = () => {
+export const getStudents = async () => {
   try {
-    return JSON.parse(localStorage.getItem(STUDENT_KEY) || "[]");
+    const result = await storage.get(STUDENT_KEY);
+    return result ? JSON.parse(result.value) : [];
   } catch {
     return [];
   }

@@ -134,19 +134,22 @@ export const StudentList = () => {
       {/* TABS & FILTERS */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-end">
         <div className="bg-white p-1 rounded-xl border border-slate-200 inline-flex shadow-sm">
-          {["all", "pending", "active", "rejected"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
-                activeTab === tab
-                  ? "bg-slate-800 text-white shadow-md"
-                  : "text-slate-500 hover:bg-slate-50"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+         {[
+  { key: "all",      label: "All",      active: "text-blue-700 bg-blue-50 border-blue-300",     badge: "bg-blue-100 text-blue-700"},
+  { key: "pending",  label: "Pending",  active: "text-orange-700 bg-orange-50 border-orange-300", badge: "bg-orange-100 text-orange-700"},
+  { key: "active",  label: "Active",  active: "text-emerald-700 bg-emerald-50 border-emerald-400", badge: "bg-emerald-100 text-emerald-700" },
+  { key: "rejected", label: "Rejected", active: "text-red-700 bg-red-50 border-red-300",         badge: "bg-red-100 text-red-700" },
+].map((tab) => (
+  <button
+    key={tab.key}
+    onClick={() => setActiveTab(tab.key)}
+    className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
+      activeTab === tab.key ? tab.active : "text-slate-500 hover:bg-slate-50"
+    }`}
+  >
+    {tab.label}
+  </button>
+))}
         </div>
 
         <div className="relative w-full md:w-80">
@@ -246,7 +249,7 @@ export const StudentList = () => {
                             setEditingStudent(item);
                             setIsAddModalOpen(true);
                           }}
-                          className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                           title="Edit"
                         >
                           <Edit size={18} />
@@ -551,7 +554,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
                 </div>
 
                 {/* IDENTITY SECTION */}
-                <div className="border-l-4 border-purple-500 pl-6">
+                <div className="border-l-4 border-blue-600 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Identity Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -580,7 +583,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
                 </div>
 
                 {/* ADDRESS INFORMATION SECTION */}
-                <div className="border-l-4 border-orange-500 pl-6">
+                <div className="border-l-4 border-blue-600 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Address Information</h3>
                   <div className="space-y-5">
                     <div>
@@ -653,7 +656,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
             {activeTab === "academic" && (
               <div className="space-y-8">
                 {/* ACADEMIC INFORMATION SECTION */}
-                <div className="border-l-4 border-green-500 pl-6">
+                <div className="border-l-4 border-blue-600 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Academic Information</h3>
 
                   <div className="mb-6 flex gap-3">
@@ -768,7 +771,7 @@ const StudentFormModal = ({ student, onClose, onSave }) => {
                 </div>
 
                 {/* DOCUMENTS SECTION */}
-                <div className="border-l-4 border-red-500 pl-6">
+                <div className="border-l-4 border-blue-600 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Educational Documents</h3>
 
                   <div className="space-y-6">
@@ -990,7 +993,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
           {student.documents && (
             <div>
               <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-purple-600" /> Documents
+                <FileText size={20} className="text-blue-600" /> Documents
               </h4>
               <div className="grid grid-cols-2 gap-3">
                 {Object.entries(student.documents).map(([key, value]) => (
@@ -1022,7 +1025,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
           </button>
           <button
             onClick={onEdit}
-            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
           >
             <Edit size={18} /> Edit Student
           </button>
@@ -1067,181 +1070,3 @@ const DeleteConfirmModal = ({ student, onClose, onConfirm }) => {
   );
 };
 
-// import React, { useEffect, useState } from "react";
-// import { Search, Eye, Check, X } from "lucide-react";
-
-// const STORAGE_KEY = "student_management_list";
-
-// export const StudentList = () => {
-//   const [students, setStudents] = useState([]);
-//   const [search, setSearch] = useState("");
-
-//   /* ---------------- LOAD DATA ---------------- */
-//   useEffect(() => {
-//     const stored = localStorage.getItem(STORAGE_KEY);
-//     if (stored) {
-//       setStudents(JSON.parse(stored));
-//     } else {
-//       const initialData = [
-//         { id: "STU001", name: "John Doe", course: "B.Tech CSE", section: "CSE-A", year: "2024-25", status: "Pending" },
-//         { id: "STU002", name: "Amit Kumar", course: "B.Tech ECE", section: "ECE-A", year: "2024-25", status: "Pending" },
-//         { id: "STU003", name: "Priya Sharma", course: "B.Tech CSE", section: "CSE-B", year: "2024-25", status: "Pending" },
-//       ];
-//       setStudents(initialData);
-//       localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
-//     }
-//   }, []);
-
-//   /* ---------------- SAVE ---------------- */
-//   const updateStorage = (updatedList) => {
-//     setStudents(updatedList);
-//     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-//   };
-
-//   /* ---------------- ACTIONS ---------------- */
-//   const approveStudent = (id) => {
-//     updateStorage(
-//       students.map((s) =>
-//         s.id === id ? { ...s, status: "Active" } : s
-//       )
-//     );
-//   };
-
-//   const rejectStudent = (id) => {
-//     updateStorage(
-//       students.map((s) =>
-//         s.id === id ? { ...s, status: "Rejected" } : s
-//       )
-//     );
-//   };
-
-//   /* ---------------- ADD STUDENT (DEMO) ---------------- */
-//   const addStudent = () => {
-//     const newStudent = {
-//       id: `STU${Date.now()}`,
-//       name: "New Student",
-//       course: "B.Tech CSE",
-//       section: "CSE-A",
-//       year: "2024-25",
-//       status: "Pending",
-//     };
-//     updateStorage([...students, newStudent]);
-//   };
-
-//   /* ---------------- FILTER ---------------- */
-//   const filteredStudents = students.filter(
-//     (s) =>
-//       s.name.toLowerCase().includes(search.toLowerCase()) ||
-//       s.id.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   return (
-//     <div className="font-sans text-left w-full text-gray-900">
-//       {/* PAGE TITLE */}
-//       <div className="mb-6 flex justify-between items-center">
-//         <div>
-//           <h1 className="text-2xl text-start font-bold">Student Management</h1>
-//           <p className="text-sm text-gray-500">Manage student records and profiles</p>
-//         </div>
-//         <button
-//           onClick={addStudent}
-//           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-//         >
-//           + Add Student
-//         </button>
-//       </div>
-
-//       <div className="bg-white rounded-xl shadow-sm border p-6">
-//         {/* FILTERS */}
-//         <div className="mb-8 grid grid-cols-1 md:grid-cols-12 gap-4">
-//           <div className="md:col-span-6 relative">
-//             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-//             <input
-//               type="text"
-//               placeholder="Search by student name or ID..."
-//               value={search}
-//               onChange={(e) => setSearch(e.target.value)}
-//               className="w-full bg-gray-100 pl-12 pr-4 py-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-//             />
-//           </div>
-//         </div>
-
-//         {/* TABLE */}
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left">
-//             <thead>
-//               <tr className="border-b">
-//                 <th className="py-3">Student ID</th>
-//                 <th>Full Name</th>
-//                 <th>Course</th>
-//                 <th>Class / Section</th>
-//                 <th>Academic Year</th>
-//                 <th>Status</th>
-//                 <th className="text-center">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {filteredStudents.map((student) => (
-//                 <tr key={student.id} className="border-b hover:bg-gray-50">
-//                   <td className="py-3 font-bold">{student.id}</td>
-//                   <td className="text-gray-600">{student.name}</td>
-//                   <td className="font-bold">{student.course}</td>
-//                   <td className="font-bold">{student.section}</td>
-//                   <td className="text-gray-500">{student.year}</td>
-//                   <td>
-//                     <span
-//                       className={`px-3 py-1 rounded-full text-xs font-bold
-//                         ${
-//                           student.status === "Active"
-//                             ? "bg-green-100 text-green-700"
-//                             : student.status === "Rejected"
-//                             ? "bg-red-100 text-red-700"
-//                             : "bg-yellow-100 text-yellow-700"
-//                         }`}
-//                     >
-//                       {student.status}
-//                     </span>
-//                   </td>
-//                   <td>
-//                     <div className="flex justify-center gap-2">
-//                       <button className="p-2 hover:bg-gray-100 rounded-lg">
-//                         <Eye size={18} />
-//                       </button>
-//                       <button
-//                         onClick={() => approveStudent(student.id)}
-//                         className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600"
-//                       >
-//                         <Check size={16} />
-//                       </button>
-//                       <button
-//                         onClick={() => rejectStudent(student.id)}
-//                         className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600"
-//                       >
-//                         <X size={16} />
-//                       </button>
-//                     </div>
-//                   </td>
-//                 </tr>
-//               ))}
-
-//               {filteredStudents.length === 0 && (
-//                 <tr>
-//                   <td colSpan="7" className="text-center py-6 text-gray-400">
-//                     No students found
-//                   </td>
-//                 </tr>
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-
-//         {/* FOOTER */}
-//         <div className="pt-4 text-sm text-gray-500">
-//           Showing {filteredStudents.length} of {students.length} students
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default StudentList;

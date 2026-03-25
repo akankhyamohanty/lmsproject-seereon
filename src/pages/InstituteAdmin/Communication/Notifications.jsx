@@ -137,10 +137,10 @@ export const Notifications = () => {
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
           <div className="h-2 bg-[#2563eb]" />
 
-          <form onSubmit={handleSend} className="p-10 space-y-8">
+          <form onSubmit={handleSend} className="p-10 space-y-8 text-left">
             {/* Course */}
             <div>
-              <label className="text-md font-black uppercase tracking-widest text-slate-700">
+              <label className="text-md  font-black uppercase tracking-widest text-slate-700">
                 Course / Class
               </label>
               <div className="relative mt-2">

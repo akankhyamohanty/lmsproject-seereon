@@ -482,9 +482,9 @@ const EditModal = ({ faculty, onClose, onSave }) => {
 
       case "credentials": return (
         <div className="space-y-4">
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex gap-2">
-            <Lock size={15} className="text-amber-300 flex-shrink-0 mt-0.5"/>
-            <p className="text-md text-amber-400">Leave password fields blank to keep the existing password.</p>
+          <div className="p-3 bg-amber-50 border border-red-200 rounded-xl flex gap-2">
+            <Lock size={15} className="text-red-300 flex-shrink-0 mt-0.5"/>
+            <p className="text-md text-red-600">Leave password fields blank to keep the existing password.</p>
           </div>
           <EditInput label="Institution Code" name="institute_code" value={form.institute_code} onChange={handleChange} error={errors.institute_code} required disabled={loading} hint="Unique login code for this faculty"/>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -496,18 +496,18 @@ const EditModal = ({ faculty, onClose, onSave }) => {
       case "legal": return (
         <div className="space-y-5">
           <div className="rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-slate-700 px-4 py-2.5 flex items-center gap-2">
+            <div className="bg-blue-600 px-4 py-2.5 flex items-center gap-2">
               <span>🪪</span><span className="text-md font-black text-white">Aadhar Card</span>
             </div>
-            <div className="p-4">
+            <div className="p-4 text-left">
               <EditInput label="Aadhar Number" name="aadhar_no" value={form.aadhar_no} onChange={handleChange} disabled={loading} hint="12-digit Aadhar number"/>
             </div>
           </div>
           <div className="rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-slate-700 px-4 py-2.5 flex items-center gap-2">
+            <div className="bg-blue-600 px-4 py-2.5 flex items-center gap-2">
               <span>💳</span><span className="text-md font-black text-white">PAN Card</span>
             </div>
-            <div className="p-4">
+            <div className="p-4 text-left">
               <EditInput label="PAN Number" name="pan_no" value={form.pan_no} onChange={handleChange} disabled={loading} hint="10-character PAN"/>
             </div>
           </div>
@@ -524,29 +524,29 @@ const EditModal = ({ faculty, onClose, onSave }) => {
               const edu = form.education?.[key] || {};
               return (
                 <div key={key} className="rounded-2xl border border-orange-100 overflow-hidden">
-                  <div className="bg-gradient-to-r from-orange-200 to-amber-200 px-4 py-2.5">
+                  <div className="bg-gradient-to-r from-blue-400 to-blue-400 px-4 py-2.5">
                     <span className="text-md font-black text-white">{label}</span>
                   </div>
                   <div className="p-4 space-y-2.5 bg-orange-50/30">
                     {hasDegree && (
                       <input type="text" value={edu.degree || ""} onChange={e => handleEduChange(key, "degree", e.target.value)}
                         placeholder="Degree name" disabled={loading}
-                        className="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-md outline-none focus:border-orange-200 focus:ring-2 focus:ring-orange-100"/>
+                        className="w-full px-3 py-2.5 rounded-xl border border-blue-300 bg-white text-md outline-none focus:border-blue-300 focus:ring-2 focus:ring-orange-100"/>
                     )}
                     <input type="text" value={hasBoard ? (edu.board || "") : (edu.university || "")}
                       onChange={e => handleEduChange(key, hasBoard ? "board" : "university", e.target.value)}
                       placeholder={hasBoard ? "Board name" : "University / Institute"} disabled={loading}
-                      className="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-md outline-none focus:border-orange-200 focus:ring-2 focus:ring-orange-100"/>
+                      className="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-md outline-none focus:border-blue-200 focus:ring-2 focus:ring-blue-100"/>
                     <div className="grid grid-cols-2 gap-2">
                       <input type="text" value={edu.marks || ""} onChange={e => handleEduChange(key, "marks", e.target.value)}
                         placeholder="Marks / CGPA" disabled={loading}
-                        className="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-md outline-none focus:border-orange-200 focus:ring-2 focus:ring-orange-100"/>
+                        className="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-md outline-none focus:border-blue-200 focus:ring-2 focus:ring-blue-100"/>
                       <input type="text" value={edu.year || ""} onChange={e => handleEduChange(key, "year", e.target.value)}
                         placeholder="Pass Year" disabled={loading}
-                        className="w-full px-3 py-2.5 rounded-xl border border-orange-200 bg-white text-md outline-none focus:border-orange-200 focus:ring-2 focus:ring-orange-100"/>
+                        className="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-md outline-none focus:border-blue-200 focus:ring-2 focus:ring-blue-100"/>
                     </div>
                     <div className={`p-2.5 rounded-xl border text-md font-semibold flex items-center gap-2 ${
-                      edu.file ? "bg-emerald-50 border-emerald-200 text-emerald-300" : "bg-slate-100 border-slate-200 text-slate-400"
+                      edu.file ? "bg-emerald-50 border-blue-200 text-blue-300" : "bg-slate-100 border-slate-200 text-slate-400"
                     }`}>
                       <FileText size={12}/>
                       {edu.file

@@ -1,144 +1,8 @@
-// import React, { useState } from 'react';
-// import { Plus, Edit, Trash2 } from 'lucide-react';
-
-// export const AcademicSetup = () => {
-//   const [activeTab, setActiveTab] = useState('courses');
-
-//   // 1. Mock Data for COURSES Tab
-//   const courses = [
-//     { id: 1, name: "B.Tech CS", type: "Undergraduate", duration: "4 Years", pattern: "Semester" },
-//     { id: 2, name: "B.Tech CS", type: "Undergraduate", duration: "4 Years", pattern: "Semester" },
-//     { id: 3, name: "B.Tech CS", type: "Undergraduate", duration: "4 Years", pattern: "Semester" },
-//   ];
-
-//   // 2. Mock Data for CLASSES Tab (New Screenshot Data)
-//   const classes = [
-//     { id: 1, name: "B.Tech CS", year: "2024-25", section: "CSE-A", teacher: "Dr. Sarah Johnson" },
-//     { id: 2, name: "B.Tech CS", year: "2024-25", section: "CSE-A", teacher: "Dr. Sarah Johnson" },
-//     { id: 3, name: "B.Tech CS", year: "2024-25", section: "CSE-A", teacher: "Dr. Sarah Johnson" },
-//   ];
-
-//   return (
-//     <div className="font-sans text-left w-full text-gray-900">
-      
-//       {/* HEADER SECTION */}
-//       {/* <div className="mb-8">
-//         <h2 className="text-3xl font-bold text-gray-900">Hi, Subham</h2>
-//         <p className="text-sm text-gray-500 mt-1">Welcome back! Here's what's happening today.</p>
-//       </div> */}
-
-//       <div className="mb-8">
-//         <h1 className="text-2xl font-bold text-gray-900">Academic Setup</h1>
-//         <p className="text-sm text-gray-500 mt-1">Manage courses, classes, and academic structure</p>
-//       </div>
-
-//       {/* TABS SWITCHER */}
-//       <div className="flex items-center gap-4 border-b border-gray-200 pb-4 mb-6">
-//         <button 
-//           onClick={() => setActiveTab('courses')}
-//           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
-//             activeTab === 'courses' 
-//               ? "bg-blue-600 text-white shadow-md" 
-//               : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-//           }`}
-//         >
-//           Courses
-//         </button>
-//         <button 
-//           onClick={() => setActiveTab('classes')}
-//           className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
-//             activeTab === 'classes' 
-//               ? "bg-blue-600 text-white shadow-md" 
-//               : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-//           }`}
-//         >
-//           Classes / Sections
-//         </button>
-//       </div>
-
-//       {/* DYNAMIC ADD BUTTON */}
-//       <div className="flex justify-end mb-6">
-//         <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors">
-//           <Plus size={18} />
-//           {activeTab === 'courses' ? "Add Course" : "Add Class / Section"}
-//         </button>
-//       </div>
-
-//       {/* DYNAMIC TABLE CARD */}
-//       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left border-collapse">
-//             <thead>
-//               <tr className="border-b border-gray-100 bg-white">
-//                 {activeTab === 'courses' ? (
-//                   // Courses Header
-//                   <>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Course Name</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Course Type</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Duration</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Academic Pattern</th>
-//                   </>
-//                 ) : (
-//                   // Classes Header
-//                   <>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Course Name</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Academic Year</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Section Name</th>
-//                     <th className="p-5 text-sm font-bold text-gray-900">Class Teacher</th>
-//                   </>
-//                 )}
-//                 <th className="p-5 text-sm font-bold text-gray-900 text-center">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {activeTab === 'courses' ? (
-//                 // Courses Rows
-//                 courses.map((course) => (
-//                   <tr key={course.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-//                     <td className="p-5 text-sm font-medium text-gray-900">{course.name}</td>
-//                     <td className="p-5 text-sm text-gray-500 font-medium">{course.type}</td>
-//                     <td className="p-5 text-sm text-gray-900 font-bold">{course.duration}</td>
-//                     <td className="p-5 text-sm text-gray-900 font-bold">{course.pattern}</td>
-//                     <td className="p-5 text-center">
-//                       <div className="flex items-center justify-center gap-3">
-//                         <button className="text-gray-900 hover:text-blue-600"><Edit size={18} /></button>
-//                         <button className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))
-//               ) : (
-//                 // Classes Rows (New Data)
-//                 classes.map((cls) => (
-//                   <tr key={cls.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-//                     <td className="p-5 text-sm font-medium text-gray-900">{cls.name}</td>
-//                     <td className="p-5 text-sm text-gray-500 font-medium">{cls.year}</td>
-//                     <td className="p-5 text-sm text-gray-900 font-bold">{cls.section}</td>
-//                     <td className="p-5 text-sm text-gray-900 font-medium">{cls.teacher}</td>
-//                     <td className="p-5 text-center">
-//                       <div className="flex items-center justify-center gap-3">
-//                         <button className="text-gray-900 hover:text-blue-600"><Edit size={18} /></button>
-//                         <button className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))
-//               )}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-
-//     </div>
-//   );
-// };
-
-// export default AcademicSetup;
-
 import React, { useEffect, useState } from "react";
 import {
-  Plus, Trash2, BookOpen, Building2, FileText, ChevronRight, X, Save, Search, Filter,
-  CheckCircle, Circle
+  Plus, Trash2, BookOpen, Building2, FileText,
+  CheckCircle, Save, Upload, X, ChevronDown, ChevronUp,
+  GripVertical, BookMarked, Hash, Clock, Paperclip
 } from "lucide-react";
 
 export default function AcademicSetup() {
@@ -149,45 +13,45 @@ export default function AcademicSetup() {
     syllabus: null
   });
 
-  // --- DATA STATE ---
-  const [departments, setDepartments] = useState(() => JSON.parse(localStorage.getItem("departments")) || [
-    { id: 1, name: "Computer Science", code: "CSE", head: "Dr. Sarah John" },
-    { id: 2, name: "Electronics & Comm.", code: "ECE", head: "Prof. Amit Sharma" },
-  ]);
+  const [departments, setDepartments] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("departments")) || [
+      { id: 1, name: "Computer Science", code: "CSE", head: "Dr. Sarah John" },
+      { id: 2, name: "Electronics & Comm.", code: "ECE", head: "Prof. Amit Sharma" },
+    ]; } catch { return []; }
+  });
 
-  const [courses, setCourses] = useState(() => JSON.parse(localStorage.getItem("courses")) || [
-    { id: 1, name: "B.Tech Computer Science", code: "BT-CSE", duration: "4 Years", type: "UG", deptId: 1 },
-    { id: 2, name: "M.Tech Data Science", code: "MT-DS", duration: "2 Years", type: "PG", deptId: 1 },
-  ]);
+  const [courses, setCourses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("courses")) || [
+      { id: 1, name: "B.Tech Computer Science", code: "BT-CSE", duration: "4 Years", type: "UG", deptId: 1 },
+      { id: 2, name: "M.Tech Data Science", code: "MT-DS", duration: "2 Years", type: "PG", deptId: 1 },
+    ]; } catch { return []; }
+  });
 
-  const [syllabi, setSyllabi] = useState(() => JSON.parse(localStorage.getItem("syllabi")) || [
-    { id: 1, name: "Syllabus 2024", courseId: 1, semester: 1, subjects: ["DSA", "DBMS", "Web Dev"] },
-  ]);
+  const [syllabi, setSyllabi] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("syllabi")) || [
+      { id: 1, name: "Syllabus 2024", courseId: 1, semester: 1, subjects: ["DSA", "DBMS", "Web Dev"] },
+    ]; } catch { return []; }
+  });
 
-  // --- PERSISTENCE ---
   useEffect(() => { localStorage.setItem("departments", JSON.stringify(departments)); }, [departments]);
   useEffect(() => { localStorage.setItem("courses", JSON.stringify(courses)); }, [courses]);
   useEffect(() => { localStorage.setItem("syllabi", JSON.stringify(syllabi)); }, [syllabi]);
 
-  // --- STEP HANDLERS ---
   const handleStepSubmit = (data) => {
     setSetupData(prev => ({ ...prev, ...data }));
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
-    }
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const handleFinalSubmit = () => {
-    if (setupData.department && Object.keys(setupData.department).length > 0) {
-      setDepartments([...departments, { id: Date.now(), ...setupData.department }]);
+    if (setupData.department && setupData.department.name) {
+      setDepartments(prev => [...prev, { id: Date.now(), ...setupData.department }]);
     }
-    if (setupData.course && Object.keys(setupData.course).length > 0) {
-      setCourses([...courses, { id: Date.now(), ...setupData.course }]);
+    if (setupData.course && setupData.course.name) {
+      setCourses(prev => [...prev, { id: Date.now(), ...setupData.course }]);
     }
-    if (setupData.syllabus && Object.keys(setupData.syllabus).length > 0) {
-      setSyllabi([...syllabi, { id: Date.now(), ...setupData.syllabus }]);
+    if (setupData.syllabus && setupData.syllabus.name) {
+      setSyllabi(prev => [...prev, { id: Date.now(), ...setupData.syllabus }]);
     }
-    
     setCurrentStep(1);
     setSetupData({ department: null, course: null, syllabus: null });
     alert("✅ Academic Structure Added Successfully!");
@@ -201,41 +65,77 @@ export default function AcademicSetup() {
     }
   };
 
+  // Build the "live" department list: saved ones + the pending one from Step 1 (if not yet saved)
+  const pendingDeptId = "pending-new";
+  const allDepartmentsForCourse = [
+    ...departments,
+    ...(setupData.department?.name
+      ? [{ id: pendingDeptId, name: setupData.department.name, code: setupData.department.code }]
+      : [])
+  ];
+
+  // Build the "live" course list: saved ones + the pending one from Step 2
+  const pendingCourseId = "pending-new";
+  const allCoursesForSyllabus = [
+    ...courses,
+    ...(setupData.course?.name
+      ? [{ id: pendingCourseId, name: setupData.course.name, code: setupData.course.code }]
+      : [])
+  ];
+
   return (
     <div className="w-full font-sans text-left relative">
-
-      {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-2xl font-black text-slate-800 tracking-tight">Academic Configuration</h1>
-        <p className="text-md font-bold text-slate-400 uppercase tracking-widest mt-1">Add Department → Course → Syllabus → Submit</p>
+        <p className="text-md font-bold text-slate-400 uppercase tracking-widest mt-1">
+          Add Department → Course → Syllabus → Submit
+        </p>
       </div>
 
-      {/* STEP INDICATOR */}
       <StepIndicator currentStep={currentStep} />
 
-      {/* STEP CONTENT */}
       <div className="mb-12">
-        {currentStep === 1 && <StepDepartment onSubmit={handleStepSubmit} departments={departments} />}
-        {currentStep === 2 && <StepCourse onSubmit={handleStepSubmit} courses={courses} departments={departments} />}
-        {currentStep === 3 && <StepSyllabus onSubmit={handleStepSubmit} syllabi={syllabi} courses={courses} />}
+        {currentStep === 1 && (
+          <StepDepartment onSubmit={handleStepSubmit} />
+        )}
+        {currentStep === 2 && (
+          <StepCourse
+            onSubmit={handleStepSubmit}
+            departments={allDepartmentsForCourse}
+            // Auto-select the just-created department
+            defaultDeptId={setupData.department?.name ? pendingDeptId : ""}
+            pendingDeptId={pendingDeptId}
+            newDeptName={setupData.department?.name}
+          />
+        )}
+        {currentStep === 3 && (
+          <StepSyllabus
+            onSubmit={handleStepSubmit}
+            courses={allCoursesForSyllabus}
+            // Auto-select the just-created course
+            defaultCourseId={setupData.course?.name ? pendingCourseId : ""}
+            pendingCourseId={pendingCourseId}
+            newCourseName={setupData.course?.name}
+          />
+        )}
         {currentStep === 4 && (
           <ReviewAndSubmit
             setupData={setupData}
             onSubmit={handleFinalSubmit}
             onBack={() => setCurrentStep(3)}
-            departments={departments}
-            courses={courses}
+            departments={allDepartmentsForCourse}
+            courses={allCoursesForSyllabus}
+            pendingDeptId={pendingDeptId}
+            pendingCourseId={pendingCourseId}
           />
         )}
       </div>
 
-      {/* SUMMARY TABLES */}
       <div className="space-y-8">
         <SummaryTable title="Departments" icon={Building2} data={departments} onDelete={(id) => handleDelete('dept', id)} type="dept" />
         <SummaryTable title="Courses" icon={BookOpen} data={courses} onDelete={(id) => handleDelete('course', id)} type="course" departments={departments} />
         <SummaryTable title="Syllabi" icon={FileText} data={syllabi} onDelete={(id) => handleDelete('syllabus', id)} type="syllabus" courses={courses} />
       </div>
-
     </div>
   );
 }
@@ -263,7 +163,6 @@ const StepIndicator = ({ currentStep }) => {
             }`}>
               {step.icon}
             </div>
-
             <div className="ml-3">
               <p className={`text-[10px] font-black uppercase tracking-wider ${currentStep >= step.number ? "text-[#0F53D5]" : "text-slate-400"}`}>
                 Step {step.number}
@@ -272,7 +171,6 @@ const StepIndicator = ({ currentStep }) => {
                 {step.title}
               </p>
             </div>
-
             {index < steps.length - 1 && (
               <div className={`flex-1 h-1 mx-4 rounded-full ${currentStep > step.number ? "bg-[#0F53D5]" : "bg-slate-200"}`}></div>
             )}
@@ -286,39 +184,28 @@ const StepIndicator = ({ currentStep }) => {
 // ============================================================================
 // STEP 1: DEPARTMENT
 // ============================================================================
-const StepDepartment = ({ onSubmit, departments }) => {
+const StepDepartment = ({ onSubmit }) => {
   const [formData, setFormData] = useState({ name: "", code: "", head: "" });
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
-
     if (!formData.name.trim()) newErrors.name = "Department name is required";
     if (!formData.code.trim()) newErrors.code = "Department code is required";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     onSubmit({ department: formData });
-    setFormData({ name: "", code: "", head: "" });
   };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-blue-100 text-[#0F53D5] rounded-lg">
-          <Building2 size={24} />
-        </div>
+        <div className="p-3 bg-blue-100 text-[#0F53D5] rounded-lg"><Building2 size={24} /></div>
         <div>
           <h2 className="text-2xl font-black text-slate-900">Step 1: Add Department</h2>
           <p className="text-md text-slate-500 font-bold">Create a new academic department</p>
@@ -329,52 +216,31 @@ const StepDepartment = ({ onSubmit, departments }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Department Name *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+            <input type="text" name="name" value={formData.name} onChange={handleChange}
               placeholder="e.g. Computer Science"
-              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-                errors.name ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.name ? "border-red-500" : "border-slate-200"}`}
             />
             {errors.name && <p className="text-md text-red-600 font-bold">{errors.name}</p>}
           </div>
-
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Department Code *</label>
-            <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
+            <input type="text" name="code" value={formData.code} onChange={handleChange}
               placeholder="e.g. CSE"
-              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-                errors.code ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.code ? "border-red-500" : "border-slate-200"}`}
             />
             {errors.code && <p className="text-md text-red-600 font-bold">{errors.code}</p>}
           </div>
         </div>
-
         <div className="space-y-1">
           <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Head of Department</label>
-          <input
-            type="text"
-            name="head"
-            value={formData.head}
-            onChange={handleChange}
+          <input type="text" name="head" value={formData.head} onChange={handleChange}
             placeholder="e.g. Dr. Sarah John"
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all"
           />
         </div>
-
         <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-          >
+          <button type="submit"
+            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
             <Plus size={18} /> Add Department & Continue
           </button>
         </div>
@@ -384,62 +250,62 @@ const StepDepartment = ({ onSubmit, departments }) => {
 };
 
 // ============================================================================
-// STEP 2: COURSE
+// STEP 2: COURSE  (auto-links to the department just created)
 // ============================================================================
-const StepCourse = ({ onSubmit, courses, departments }) => {
-  const [formData, setFormData] = useState({ name: "", code: "", type: "UG", duration: "", deptId: "" });
+const StepCourse = ({ onSubmit, departments, defaultDeptId, pendingDeptId, newDeptName }) => {
+  const [formData, setFormData] = useState({
+    name: "", code: "", type: "UG", duration: "",
+    // Pre-select the department that was just created in Step 1
+    deptId: defaultDeptId || ""
+  });
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
-
     if (!formData.name.trim()) newErrors.name = "Course name is required";
     if (!formData.code.trim()) newErrors.code = "Course code is required";
     if (!formData.deptId) newErrors.deptId = "Department selection is required";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
     onSubmit({ course: formData });
-    setFormData({ name: "", code: "", type: "UG", duration: "", deptId: "" });
   };
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg">
-          <BookOpen size={24} />
-        </div>
+        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><BookOpen size={24} /></div>
         <div>
           <h2 className="text-2xl font-black text-slate-900">Step 2: Add Course</h2>
           <p className="text-md text-slate-500 font-bold">Create a new course under a department</p>
         </div>
       </div>
 
+      {/* Smart hint: show which department is auto-selected */}
+      {newDeptName && formData.deptId === pendingDeptId && (
+        <div className="mb-5 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-4 py-3">
+          <span className="text-lg">🔗</span>
+          <p className="text-md font-bold">
+            Auto-linked to <span className="text-[#0F53D5]">"{newDeptName}"</span> — the department you just created.
+            You can change it below if needed.
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Select Department *</label>
-          <select
-            name="deptId"
-            value={formData.deptId}
-            onChange={handleChange}
-            className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-              errors.deptId ? "border-red-500" : "border-slate-200"
-            }`}
-          >
+          <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Department *</label>
+          <select name="deptId" value={formData.deptId} onChange={handleChange}
+            className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.deptId ? "border-red-500" : "border-slate-200"}`}>
             <option value="">-- Select Department --</option>
             {departments.map(dept => (
-              <option key={dept.id} value={dept.id}>{dept.name} ({dept.code})</option>
+              <option key={dept.id} value={dept.id}>
+                {dept.name} ({dept.code}){dept.id === pendingDeptId ? " — just added ✨" : ""}
+              </option>
             ))}
           </select>
           {errors.deptId && <p className="text-md text-red-600 font-bold">{errors.deptId}</p>}
@@ -448,30 +314,17 @@ const StepCourse = ({ onSubmit, courses, departments }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Course Name *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
+            <input type="text" name="name" value={formData.name} onChange={handleChange}
               placeholder="e.g. B.Tech Computer Science"
-              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-                errors.name ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.name ? "border-red-500" : "border-slate-200"}`}
             />
             {errors.name && <p className="text-md text-red-600 font-bold">{errors.name}</p>}
           </div>
-
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Course Code *</label>
-            <input
-              type="text"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
+            <input type="text" name="code" value={formData.code} onChange={handleChange}
               placeholder="e.g. BT-CSE"
-              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-                errors.code ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.code ? "border-red-500" : "border-slate-200"}`}
             />
             {errors.code && <p className="text-md text-red-600 font-bold">{errors.code}</p>}
           </div>
@@ -480,25 +333,16 @@ const StepCourse = ({ onSubmit, courses, departments }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Type</label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all"
-            >
+            <select name="type" value={formData.type} onChange={handleChange}
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all">
               <option value="UG">Undergraduate (UG)</option>
               <option value="PG">Postgraduate (PG)</option>
               <option value="Diploma">Diploma</option>
             </select>
           </div>
-
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Duration</label>
-            <input
-              type="text"
-              name="duration"
-              value={formData.duration}
-              onChange={handleChange}
+            <input type="text" name="duration" value={formData.duration} onChange={handleChange}
               placeholder="e.g. 4 Years"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all"
             />
@@ -506,10 +350,8 @@ const StepCourse = ({ onSubmit, courses, departments }) => {
         </div>
 
         <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-          >
+          <button type="submit"
+            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
             <Plus size={18} /> Add Course & Continue
           </button>
         </div>
@@ -519,119 +361,325 @@ const StepCourse = ({ onSubmit, courses, departments }) => {
 };
 
 // ============================================================================
-// STEP 3: SYLLABUS
+// STEP 3: SYLLABUS — Rich Subject Builder
 // ============================================================================
-const StepSyllabus = ({ onSubmit, syllabi, courses }) => {
-  const [formData, setFormData] = useState({ name: "", courseId: "", semester: "1", subjects: "" });
+
+const EMPTY_SUBJECT = () => ({
+  id: Date.now() + Math.random(),
+  name: "",
+  code: "",
+  credits: "",
+  topics: [""],
+  files: [],        // { name, size, type, dataUrl }
+  expanded: true,
+});
+
+const StepSyllabus = ({ onSubmit, courses, defaultCourseId, pendingCourseId, newCourseName }) => {
+  const [meta, setMeta] = useState({
+    name: "",
+    semester: "1",
+    courseId: defaultCourseId || "",
+  });
+  const [subjects, setSubjects] = useState([EMPTY_SUBJECT()]);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+  const handleMetaChange = (e) => {
+    setMeta({ ...meta, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
+  // ── Subject field changes ──────────────────────────────────────────────────
+  const updateSubject = (id, field, value) => {
+    setSubjects(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s));
+    if (errors[`subj_${id}_${field}`]) setErrors(prev => { const e = {...prev}; delete e[`subj_${id}_${field}`]; return e; });
+  };
+
+  const addSubject = () => setSubjects(prev => [...prev, EMPTY_SUBJECT()]);
+
+  const removeSubject = (id) => setSubjects(prev => prev.filter(s => s.id !== id));
+
+  const toggleExpand = (id) => setSubjects(prev => prev.map(s => s.id === id ? { ...s, expanded: !s.expanded } : s));
+
+  // ── Topics per subject ─────────────────────────────────────────────────────
+  const addTopic = (subjId) =>
+    setSubjects(prev => prev.map(s => s.id === subjId ? { ...s, topics: [...s.topics, ""] } : s));
+
+  const updateTopic = (subjId, idx, val) =>
+    setSubjects(prev => prev.map(s => {
+      if (s.id !== subjId) return s;
+      const t = [...s.topics]; t[idx] = val; return { ...s, topics: t };
+    }));
+
+  const removeTopic = (subjId, idx) =>
+    setSubjects(prev => prev.map(s => {
+      if (s.id !== subjId) return s;
+      const t = s.topics.filter((_, i) => i !== idx);
+      return { ...s, topics: t.length ? t : [""] };
+    }));
+
+  // ── File upload per subject ────────────────────────────────────────────────
+  const handleFileChange = (subjId, e) => {
+    const incoming = Array.from(e.target.files);
+    incoming.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const fileObj = { name: file.name, size: file.size, type: file.type, dataUrl: ev.target.result };
+        setSubjects(prev => prev.map(s =>
+          s.id === subjId ? { ...s, files: [...s.files, fileObj] } : s
+        ));
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  };
+
+  const removeFile = (subjId, fileName) =>
+    setSubjects(prev => prev.map(s =>
+      s.id === subjId ? { ...s, files: s.files.filter(f => f.name !== fileName) } : s
+    ));
+
+  // ── Validation & submit ────────────────────────────────────────────────────
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = {};
+    if (!meta.name.trim()) newErrors.name = "Syllabus name is required";
+    if (!meta.courseId) newErrors.courseId = "Course selection is required";
+    subjects.forEach(s => {
+      if (!s.name.trim()) newErrors[`subj_${s.id}_name`] = "Subject name required";
+    });
+    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
 
-    if (!formData.name.trim()) newErrors.name = "Syllabus name is required";
-    if (!formData.courseId) newErrors.courseId = "Course selection is required";
-    if (!formData.subjects.trim()) newErrors.subjects = "At least one subject is required";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    const subjectArray = formData.subjects.split(",").map(s => s.trim()).filter(s => s);
-    onSubmit({ syllabus: { ...formData, subjects: subjectArray } });
-    setFormData({ name: "", courseId: "", semester: "1", subjects: "" });
+    const cleanSubjects = subjects.map(s => ({
+      name: s.name,
+      code: s.code,
+      credits: s.credits,
+      topics: s.topics.filter(t => t.trim()),
+      files: s.files,
+    }));
+    onSubmit({ syllabus: { ...meta, subjects: cleanSubjects } });
   };
+
+  const formatBytes = (bytes) => bytes < 1024 ? `${bytes}B` : bytes < 1048576 ? `${(bytes/1024).toFixed(1)}KB` : `${(bytes/1048576).toFixed(1)}MB`;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-          <FileText size={24} />
-        </div>
+        <div className="p-3 bg-purple-100 text-blue-600 rounded-lg"><FileText size={24} /></div>
         <div>
           <h2 className="text-2xl font-black text-slate-900">Step 3: Add Syllabus</h2>
-          <p className="text-md text-slate-500 font-bold">Create syllabus for a course</p>
+          <p className="text-md text-slate-500 font-bold">Build subjects with topics & document uploads</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Select Course *</label>
-            <select
-              name="courseId"
-              value={formData.courseId}
-              onChange={handleChange}
-              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-                errors.courseId ? "border-red-500" : "border-slate-200"
-              }`}
-            >
-              <option value="">-- Select Course --</option>
-              {courses.map(course => (
-                <option key={course.id} value={course.id}>{course.name} ({course.code})</option>
-              ))}
-            </select>
-            {errors.courseId && <p className="text-md text-red-600 font-bold">{errors.courseId}</p>}
-          </div>
+      {/* Auto-link hint */}
+      {newCourseName && meta.courseId === pendingCourseId && (
+        <div className="mb-5 flex items-center gap-2 bg-purple-50 border border-purple-200 text-blue-600 rounded-xl px-4 py-3">
+          <span className="text-lg">🔗</span>
+          <p className="text-md font-bold">
+            Auto-linked to <span className="text-blue-600">"{newCourseName}"</span> — the course you just created.
+            You can change it below if needed.
+          </p>
+        </div>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-6">
+
+        {/* ── Syllabus Meta ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Syllabus Name *</label>
+            <input type="text" name="name" value={meta.name} onChange={handleMetaChange}
+              placeholder="e.g. Syllabus 2024-25"
+              className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.name ? "border-red-500" : "border-slate-200"}`}
+            />
+            {errors.name && <p className="text-md text-red-600 font-bold">{errors.name}</p>}
+          </div>
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Semester</label>
-            <input
-              type="number"
-              name="semester"
-              value={formData.semester}
-              onChange={handleChange}
-              min="1"
-              max="8"
+            <input type="number" name="semester" value={meta.semester} onChange={handleMetaChange}
+              min="1" max="8"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all"
             />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Syllabus Name *</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="e.g. Syllabus 2024-25"
-            className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-              errors.name ? "border-red-500" : "border-slate-200"
-            }`}
-          />
-          {errors.name && <p className="text-md text-red-600 font-bold">{errors.name}</p>}
+          <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Course *</label>
+          <select name="courseId" value={meta.courseId} onChange={handleMetaChange}
+            className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${errors.courseId ? "border-red-500" : "border-slate-200"}`}>
+            <option value="">-- Select Course --</option>
+            {courses.map(course => (
+              <option key={course.id} value={course.id}>
+                {course.name} ({course.code}){course.id === pendingCourseId ? " — just added ✨" : ""}
+              </option>
+            ))}
+          </select>
+          {errors.courseId && <p className="text-md text-red-600 font-bold">{errors.courseId}</p>}
         </div>
 
+        {/* ── Subject Cards ── */}
         <div className="space-y-1">
-          <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">Subjects *</label>
-          <textarea
-            name="subjects"
-            value={formData.subjects}
-            onChange={handleChange}
-            placeholder="Enter subjects separated by commas&#10;e.g. Data Structures, Database Management, Web Development"
-            rows="4"
-            className={`w-full bg-slate-50 border rounded-xl px-4 py-3 text-md font-bold text-slate-700 outline-none focus:border-[#0F53D5] focus:ring-2 focus:ring-blue-200 transition-all ${
-              errors.subjects ? "border-red-500" : "border-slate-200"
-            }`}
-          />
-          {errors.subjects && <p className="text-md text-red-600 font-bold">{errors.subjects}</p>}
-          <p className="text-[10px] text-slate-500 font-bold mt-1">💡 Separate multiple subjects with commas</p>
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-black text-slate-600 uppercase tracking-wider">
+              Subjects ({subjects.length})
+            </label>
+            <button type="button" onClick={addSubject}
+              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-[11px] font-black uppercase tracking-wider rounded-lg hover:bg-blue-600 transition-colors">
+              <Plus size={14} /> Add Subject
+            </button>
+          </div>
+
+          <div className="space-y-4 mt-3">
+            {subjects.map((subj, idx) => (
+              <div key={subj.id}
+                className={`border-2 rounded-2xl overflow-hidden transition-all ${errors[`subj_${subj.id}_name`] ? "border-red-300" : "border-slate-200 hover:border-purple-300"}`}>
+
+                {/* Subject Card Header */}
+                <div className={`flex items-center gap-3 px-5 py-4 cursor-pointer select-none ${subj.expanded ? "bg-purple-50" : "bg-slate-50"}`}
+                  onClick={() => toggleExpand(subj.id)}>
+                  <div className="flex items-center justify-center w-7 h-7 bg-blue-600 text-white rounded-lg text-[11px] font-black flex-shrink-0">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-black text-slate-800 truncate">
+                      {subj.name || <span className="text-slate-400 font-bold italic">Untitled Subject</span>}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-bold">
+                      {[subj.code && `Code: ${subj.code}`, subj.credits && `${subj.credits} Credits`, `${subj.topics.filter(t=>t.trim()).length} topics`, `${subj.files.length} file(s)`].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {subjects.length > 1 && (
+                      <button type="button"
+                        onClick={(e) => { e.stopPropagation(); removeSubject(subj.id); }}
+                        className="p-1.5 hover:bg-red-100 text-red-500 rounded-lg transition-colors">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                    {subj.expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  </div>
+                </div>
+
+                {/* Subject Card Body */}
+                {subj.expanded && (
+                  <div className="px-5 py-5 space-y-5 bg-white">
+
+                    {/* Name + Code + Credits */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1 md:col-span-1">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                          <BookMarked size={10} /> Subject Name *
+                        </label>
+                        <input type="text" value={subj.name}
+                          onChange={(e) => updateSubject(subj.id, "name", e.target.value)}
+                          placeholder="e.g. Data Structures"
+                          className={`w-full bg-slate-50 border rounded-xl px-3 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all ${errors[`subj_${subj.id}_name`] ? "border-red-400" : "border-slate-200"}`}
+                        />
+                        {errors[`subj_${subj.id}_name`] && <p className="text-md text-red-600 font-bold">{errors[`subj_${subj.id}_name`]}</p>}
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                          <Hash size={10} /> Subject Code
+                        </label>
+                        <input type="text" value={subj.code}
+                          onChange={(e) => updateSubject(subj.id, "code", e.target.value)}
+                          placeholder="e.g. CS301"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                          <Clock size={10} /> Credit Hours
+                        </label>
+                        <input type="number" value={subj.credits}
+                          onChange={(e) => updateSubject(subj.id, "credits", e.target.value)}
+                          placeholder="e.g. 4"
+                          min="1" max="10"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-md font-bold text-slate-700 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Topics */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Topics / Chapters</label>
+                        <button type="button" onClick={() => addTopic(subj.id)}
+                          className="text-[10px] font-black text-purple-600 hover:text-purple-800 flex items-center gap-1 uppercase tracking-wider">
+                          <Plus size={11} /> Add Topic
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {subj.topics.map((topic, tIdx) => (
+                          <div key={tIdx} className="flex items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 w-5 text-right flex-shrink-0">{tIdx + 1}.</span>
+                            <input type="text" value={topic}
+                              onChange={(e) => updateTopic(subj.id, tIdx, e.target.value)}
+                              placeholder={`Topic ${tIdx + 1}...`}
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-md font-bold text-slate-700 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-100 transition-all"
+                            />
+                            {subj.topics.length > 1 && (
+                              <button type="button" onClick={() => removeTopic(subj.id, tIdx)}
+                                className="p-1.5 hover:bg-red-50 text-red-400 rounded-lg transition-colors flex-shrink-0">
+                                <X size={13} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* File Upload */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                        <Paperclip size={10} /> Document Uploads (PDF, DOC, DOCX)
+                      </label>
+
+                      {/* Drop zone */}
+                      <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:border-purple-400 hover:bg-purple-50 transition-all group">
+                        <Upload size={20} className="text-slate-400 group-hover:text-purple-500 mb-1 transition-colors" />
+                        <span className="text-[11px] font-black text-slate-500 group-hover:text-purple-600 uppercase tracking-wider transition-colors">Click to upload or drag & drop</span>
+                        <span className="text-[10px] text-slate-400 font-bold mt-0.5">PDF, DOC, DOCX — multiple files allowed</span>
+                        <input type="file" multiple accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          className="hidden" onChange={(e) => handleFileChange(subj.id, e)} />
+                      </label>
+
+                      {/* Uploaded files list */}
+                      {subj.files.length > 0 && (
+                        <div className="space-y-2">
+                          {subj.files.map((file, fIdx) => {
+                            const isPdf = file.type === "application/pdf" || file.name.endsWith(".pdf");
+                            return (
+                              <div key={fIdx} className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 group">
+                                <div className={`w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-black flex-shrink-0 ${isPdf ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600"}`}>
+                                  {isPdf ? "PDF" : "DOC"}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-md font-bold text-slate-700 truncate">{file.name}</p>
+                                  <p className="text-[10px] text-slate-400 font-bold">{formatBytes(file.size)}</p>
+                                </div>
+                                <button type="button" onClick={() => removeFile(subj.id, file.name)}
+                                  className="p-1.5 hover:bg-red-100 text-red-400 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex gap-3 pt-4">
-          <button
-            type="submit"
-            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-          >
+          <button type="submit"
+            className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
             <Plus size={18} /> Add Syllabus & Continue
           </button>
         </div>
@@ -643,21 +691,17 @@ const StepSyllabus = ({ onSubmit, syllabi, courses }) => {
 // ============================================================================
 // STEP 4: REVIEW & SUBMIT
 // ============================================================================
-const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses }) => {
-  const getDepartmentName = (deptId) => {
-    return departments.find(d => d.id === Number(deptId))?.name || "Unknown";
-  };
+const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses, pendingDeptId, pendingCourseId }) => {
+  const getDepartmentName = (deptId) =>
+    departments.find(d => String(d.id) === String(deptId))?.name || "Unknown";
 
-  const getCourseName = (courseId) => {
-    return courses.find(c => c.id === Number(courseId))?.name || "Unknown";
-  };
+  const getCourseName = (courseId) =>
+    courses.find(c => String(c.id) === String(courseId))?.name || "Unknown";
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 mb-8">
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 bg-orange-100 text-orange-600 rounded-lg">
-          <CheckCircle size={24} />
-        </div>
+        <div className="p-3 bg-orange-100 text-orange-600 rounded-lg"><CheckCircle size={24} /></div>
         <div>
           <h2 className="text-2xl font-black text-slate-900">Step 4: Review & Submit</h2>
           <p className="text-md text-slate-500 font-bold">Verify your academic setup before submitting</p>
@@ -668,7 +712,7 @@ const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses }) 
         {/* Department */}
         <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
           <h3 className="text-lg font-black text-blue-900 mb-3">🏢 Department Details</h3>
-          <div className="grid grid-cols-2 gap-4 text-md">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-[10px] font-black text-blue-600 uppercase">Name</p>
               <p className="text-md font-bold text-blue-900">{setupData.department?.name || "Not Added"}</p>
@@ -687,10 +731,10 @@ const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses }) 
         {/* Course */}
         <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 p-6 rounded-xl border border-emerald-200">
           <h3 className="text-lg font-black text-emerald-900 mb-3">📚 Course Details</h3>
-          <div className="grid grid-cols-2 gap-4 text-md">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-[10px] font-black text-emerald-600 uppercase">Department</p>
-              <p className="text-md font-bold text-emerald-900">{getDepartmentName(setupData.course?.deptId) || "—"}</p>
+              <p className="text-md font-bold text-emerald-900">{getDepartmentName(setupData.course?.deptId)}</p>
             </div>
             <div>
               <p className="text-[10px] font-black text-emerald-600 uppercase">Name</p>
@@ -709,46 +753,86 @@ const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses }) 
 
         {/* Syllabus */}
         <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200">
-          <h3 className="text-lg font-black text-purple-900 mb-3">📄 Syllabus Details</h3>
-          <div className="space-y-3 text-md">
-            <div>
-              <p className="text-[10px] font-black text-purple-600 uppercase">Course</p>
-              <p className="text-md font-bold text-purple-900">{getCourseName(setupData.syllabus?.courseId) || "—"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-purple-600 uppercase">Syllabus Name</p>
-              <p className="text-md font-bold text-purple-900">{setupData.syllabus?.name || "Not Added"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-purple-600 uppercase">Semester</p>
-              <p className="text-md font-bold text-purple-900">Semester {setupData.syllabus?.semester || "—"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-purple-600 uppercase mb-2 block">Subjects</p>
-              <div className="flex flex-wrap gap-2">
-                {setupData.syllabus?.subjects?.map((subject, idx) => (
-                  <span key={idx} className="bg-purple-600 text-white px-3 py-1 rounded-full text-[11px] font-black">
-                    {subject}
-                  </span>
-                )) || <span className="text-slate-600">No subjects added</span>}
+          <h3 className="text-lg font-black text-purple-900 mb-4">📄 Syllabus Details</h3>
+          <div className="space-y-3 mb-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-black text-purple-600 uppercase">Course</p>
+                <p className="text-md font-bold text-purple-900">{getCourseName(setupData.syllabus?.courseId)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-purple-600 uppercase">Syllabus Name</p>
+                <p className="text-md font-bold text-purple-900">{setupData.syllabus?.name || "Not Added"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-purple-600 uppercase">Semester</p>
+                <p className="text-md font-bold text-purple-900">Semester {setupData.syllabus?.semester || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-purple-600 uppercase">Total Subjects</p>
+                <p className="text-md font-bold text-purple-900">{setupData.syllabus?.subjects?.length || 0}</p>
               </div>
             </div>
           </div>
+
+          {/* Subject breakdown */}
+          {setupData.syllabus?.subjects?.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-black text-purple-700 uppercase tracking-wider">Subject Breakdown</p>
+              {setupData.syllabus.subjects.map((subj, idx) => (
+                <div key={idx} className="bg-white rounded-xl border border-purple-200 p-4">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 flex items-center justify-center bg-purple-600 text-white rounded-md text-[10px] font-black flex-shrink-0">{idx+1}</span>
+                      <div>
+                        <p className="font-black text-slate-800">{subj.name}</p>
+                        <p className="text-[10px] text-slate-500 font-bold">
+                          {[subj.code, subj.credits && `${subj.credits} credits`].filter(Boolean).join(" · ") || "No code/credits set"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {subj.topics?.filter(t=>t).length > 0 && (
+                        <span className="bg-purple-100 text-blue-600 px-2 py-0.5 rounded text-[10px] font-black">{subj.topics.filter(t=>t).length} topics</span>
+                      )}
+                      {subj.files?.length > 0 && (
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black">{subj.files.length} file(s)</span>
+                      )}
+                    </div>
+                  </div>
+                  {subj.topics?.filter(t=>t).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {subj.topics.filter(t=>t).map((t, ti) => (
+                        <span key={ti} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold">• {t}</span>
+                      ))}
+                    </div>
+                  )}
+                  {subj.files?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {subj.files.map((f, fi) => {
+                        const isPdf = f.type === "application/pdf" || f.name.endsWith(".pdf");
+                        return (
+                          <span key={fi} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${isPdf ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"}`}>
+                            📎 {f.name}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex gap-3 pt-8 mt-8 border-t border-slate-200">
-        <button
-          onClick={onBack}
-          className="flex-1 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-bold text-md uppercase tracking-widest hover:bg-slate-50 transition-colors"
-        >
+        <button onClick={onBack}
+          className="flex-1 py-3 border-2 border-slate-300 text-slate-700 rounded-xl font-bold text-md uppercase tracking-widest hover:bg-slate-50 transition-colors">
           ← Back
         </button>
-        <button
-          onClick={onSubmit}
-          className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-        >
+        <button onClick={onSubmit}
+          className="flex-1 py-3 bg-[#0F53D5] text-white rounded-xl font-bold text-md uppercase tracking-widest hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
           <Save size={18} /> Submit All
         </button>
       </div>
@@ -760,25 +844,13 @@ const ReviewAndSubmit = ({ setupData, onSubmit, onBack, departments, courses }) 
 // SUMMARY TABLES
 // ============================================================================
 const SummaryTable = ({ title, icon: Icon, data, onDelete, type, departments, courses }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredData = data.filter(item => {
-    if (type === 'dept') return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    if (type === 'course') return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    if (type === 'syllabus') return item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return true;
-  });
-
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <Icon className="text-slate-600" size={20} />
-          <h3 className="text-lg font-black text-slate-900">{title}</h3>
-          <span className="ml-2 bg-blue-100 text-[#0F53D5] px-3 py-1 rounded-full text-md font-bold">{data.length}</span>
-        </div>
+      <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+        <Icon className="text-slate-600" size={20} />
+        <h3 className="text-lg font-black text-slate-900">{title}</h3>
+        <span className="ml-2 bg-blue-100 text-[#0F53D5] px-3 py-1 rounded-full text-md font-bold">{data.length}</span>
       </div>
-
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <tbody className="divide-y divide-slate-100">
@@ -789,14 +861,12 @@ const SummaryTable = ({ title, icon: Icon, data, onDelete, type, departments, co
                 </td>
               </tr>
             ) : (
-              filteredData.map((item) => (
+              data.map((item) => (
                 <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
                   {type === 'dept' && (
                     <>
                       <td className="px-6 py-4 font-bold text-slate-700">{item.name}</td>
-                      <td className="px-6 py-4">
-                        <span className="bg-slate-100 px-3 py-1 rounded text-[11px] font-black text-slate-700">{item.code}</span>
-                      </td>
+                      <td className="px-6 py-4"><span className="bg-slate-100 px-3 py-1 rounded text-[11px] font-black text-slate-700">{item.code}</span></td>
                       <td className="px-6 py-4 text-slate-600 text-md">{item.head || "—"}</td>
                     </>
                   )}
@@ -806,23 +876,22 @@ const SummaryTable = ({ title, icon: Icon, data, onDelete, type, departments, co
                         <p className="font-bold text-slate-700">{item.name}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase">{item.code}</p>
                       </td>
-                      <td className="px-6 py-4 text-slate-600">{departments.find(d => d.id === item.deptId)?.name || "—"}</td>
-                      <td className="px-6 py-4">
-                        <span className="bg-blue-50 text-[#0F53D5] px-2 py-1 rounded text-[11px] font-bold">{item.type}</span>
-                      </td>
+                      <td className="px-6 py-4 text-slate-600">{departments?.find(d => d.id === item.deptId)?.name || "—"}</td>
+                      <td className="px-6 py-4"><span className="bg-blue-50 text-[#0F53D5] px-2 py-1 rounded text-[11px] font-bold">{item.type}</span></td>
                       <td className="px-6 py-4 text-slate-600 text-md font-bold">{item.duration}</td>
                     </>
                   )}
                   {type === 'syllabus' && (
                     <>
                       <td className="px-6 py-4 font-bold text-slate-700">{item.name}</td>
-                      <td className="px-6 py-4 text-slate-600">{courses.find(c => c.id === item.courseId)?.name || "—"}</td>
+                      <td className="px-6 py-4 text-slate-600">{courses?.find(c => c.id === item.courseId)?.name || "—"}</td>
                       <td className="px-6 py-4 text-slate-600">Sem {item.semester}</td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap gap-1">
-                          {item.subjects?.slice(0, 2).map((s, i) => (
-                            <span key={i} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-[10px] font-bold">{s}</span>
-                          ))}
+                          {item.subjects?.slice(0, 2).map((s, i) => {
+                            const label = typeof s === "object" ? s.name : s;
+                            return <span key={i} className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-[10px] font-bold">{label}</span>;
+                          })}
                           {item.subjects?.length > 2 && (
                             <span className="text-slate-600 text-[10px] font-bold">+{item.subjects.length - 2} more</span>
                           )}
@@ -831,11 +900,8 @@ const SummaryTable = ({ title, icon: Icon, data, onDelete, type, departments, co
                     </>
                   )}
                   <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => onDelete(item.id)}
-                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete"
-                    >
+                    <button onClick={() => onDelete(item.id)}
+                      className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Delete">
                       <Trash2 size={16} />
                     </button>
                   </td>

@@ -100,7 +100,7 @@ export const SuperAdminDashboard = () => {
               <div>
                 <p className="text-gray-600 text-sm font-medium mb-2">{metric.title}</p>
                 <h3 className="text-3xl font-bold text-gray-800 mb-1">{metric.value}</h3>
-                <p className="text-xs text-gray-500">{metric.subtitle}</p>
+                <p className="text-md text-gray-500">{metric.subtitle}</p>
               </div>
               <div className="text-3xl opacity-40">{metric.icon}</div>
             </div>
@@ -122,10 +122,10 @@ export const SuperAdminDashboard = () => {
                   <div className="text-2xl">{activity.icon}</div>
                   <div className="flex-1">
                     <p className="font-semibold text-sm text-gray-800">{activity.title}</p>
-                    <p className="text-xs text-gray-500">{activity.subtitle}</p>
+                    <p className="text-md text-gray-500">{activity.subtitle}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400 whitespace-nowrap ml-4">{activity.time}</span>
+                <span className="text-md text-gray-400 whitespace-nowrap ml-4">{activity.time}</span>
               </div>
             ))}
           </div>

@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
-  Building2, Phone, Mail, MapPin, Calendar, CreditCard,
-  Users, FileText, ChevronLeft, Landmark, ShieldCheck,
-  Droplets, Zap, TreePine, BookOpen, ScrollText, BadgeCheck
+  Building2, Users, FileText, GitBranch, ChevronLeft,
+  MapPin, Phone, Mail, Landmark, ShieldCheck, Zap,
+  CreditCard, BookOpen, ScrollText, BadgeCheck, Calendar,
+  ChevronRight,
 } from "lucide-react";
 
-const formatText = (text = "") =>
-  text?.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) || "—";
+const fmt = (text = "") =>
+  text?.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) || "";
 
 const statusStyles = {
   Active:    "bg-green-100 text-green-700 border border-green-300",
@@ -15,45 +16,269 @@ const statusStyles = {
   Trial:     "bg-blue-100 text-blue-700 border border-blue-300",
 };
 
-/* ── small reusable pieces ─────────────────────────────────────── */
-const Field = ({ label, value }) => (
-  <div>
-    <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
-    <p className="text-sm font-medium text-gray-800">{value || "—"}</p>
-  </div>
-);
+// ─── Reusable Components ──────────────────────────────────────────────────────
 
-const SectionCard = ({ title, icon: Icon, children }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-    <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-100 bg-gray-50">
-      <Icon size={18} className="text-blue-600" />
-      <h3 className="font-semibold text-gray-800">{title}</h3>
-    </div>
-    <div className="p-6">{children}</div>
+const InfoRow = ({ label, value }) => (
+  <div className="flex items-start gap-4 py-3 border-b border-gray-100 last:border-0">
+    <span className="text-sm text-gray-400 w-48 shrink-0 text-right leading-5">{label}</span>
+    <span className="text-sm text-gray-800 font-medium leading-5 flex-1">{value || "—"}</span>
   </div>
 );
 
 const DocRow = ({ label, value, doc }) => (
-  <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-    <span className="text-sm text-gray-600">{label}</span>
-    <div className="flex items-center gap-3">
-      {value && <span className="text-sm font-medium text-gray-800 bg-gray-100 px-2 py-0.5 rounded">{value}</span>}
-      {doc
-        ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1"><BadgeCheck size={11} /> Uploaded</span>
-        : <span className="text-xs bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">No file</span>
-      }
+  <div className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-0">
+    <span className="text-sm text-gray-400 w-48 shrink-0 text-right">{label}</span>
+    <div className="flex items-center gap-3 flex-wrap flex-1">
+      {value && <span className="text-sm text-gray-800 font-medium">{value}</span>}
+      {doc ? (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold bg-green-100 text-green-700 border border-green-200 px-2.5 py-0.5 rounded-full">
+          <BadgeCheck size={11} /> Uploaded
+        </span>
+      ) : (
+        <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full">No file</span>
+      )}
     </div>
   </div>
 );
 
-/* ═══════════════════════════════════════════════════════════════ */
-export default function InstituteView() {
-  const { id }       = useParams();
-  const { state }    = useLocation();
-  const navigate     = useNavigate();
-  const [inst, setInst] = useState(null);
+const LegalCat = ({ icon: Icon, label }) => (
+  <div className="flex items-center gap-2 pt-5 pb-2">
+    <Icon size={13} className="text-blue-500 shrink-0" />
+    <span className="text-xs font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap">{label}</span>
+    <div className="flex-1 h-px bg-gray-100 ml-1" />
+  </div>
+);
 
-  /* Load from router state OR localStorage */
+const SectionTitle = ({ title, subtitle }) => (
+  <div className="mb-6 pb-4 border-b border-gray-100">
+    <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+    {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+  </div>
+);
+
+// ─── LEFT SIDEBAR MENU ────────────────────────────────────────────────────────
+
+const MENU = [
+  { id: "organisation", label: "Organisation",   icon: Building2, subtitle: "Basic details"          },
+  { id: "directors",    label: "Directors",       icon: Users,     subtitle: "Partners & directors"   },
+  { id: "legal",        label: "Legal Documents", icon: FileText,  subtitle: "Certificates & docs"    },
+  { id: "branches",     label: "Branches",        icon: GitBranch, subtitle: "Branch locations"       },
+];
+
+// ─── PANELS ───────────────────────────────────────────────────────────────────
+
+const OrganisationPanel = ({ org, institute }) => (
+  <div>
+    <SectionTitle title="Organisation Details" subtitle="Registered information and contact details" />
+    <InfoRow label="Registered Name"   value={fmt(org.name)} />
+    <InfoRow label="Organisation Type" value={org.type} />
+    <InfoRow label="Phone"             value={org.phone} />
+    <InfoRow label="Alternate Phone"   value={org.altPhone} />
+    <InfoRow label="Email"             value={org.email} />
+    <InfoRow label="Secondary Email"   value={org.secondaryEmail} />
+    <InfoRow label="Address Line 1"    value={fmt(org.address1)} />
+    <InfoRow label="Address Line 2"    value={fmt(org.address2)} />
+    <InfoRow label="City"              value={fmt(org.city)} />
+    <InfoRow label="State"             value={fmt(org.state)} />
+    <InfoRow label="PIN Code"          value={org.pin} />
+    <InfoRow label="Head Office"       value={fmt(org.headOffice)} />
+    <InfoRow
+      label="Member Since"
+      value={institute.createdAt ? new Date(institute.createdAt).toLocaleDateString() : "—"}
+    />
+  </div>
+);
+
+const DirectorsPanel = ({ directors }) => {
+  if (!directors.length) return (
+    <div>
+      <SectionTitle title="Directors / Partners" subtitle="People associated with this institute" />
+      <div className="text-center py-16">
+        <Users size={40} className="mx-auto mb-3 text-gray-200" />
+        <p className="text-gray-400 font-medium">No directors added yet.</p>
+      </div>
+    </div>
+  );
+  return (
+    <div>
+      <SectionTitle title={`Directors / Partners (${directors.length})`} subtitle="People associated with this institute" />
+      <div className="space-y-8">
+        {directors.map((d, idx) => (
+          <div key={idx} className={idx > 0 ? "pt-8 border-t border-gray-100" : ""}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                {d.name?.[0]?.toUpperCase() || (idx + 1)}
+              </div>
+              <div>
+                <p className="font-bold text-blue-600 text-sm">
+                  Director {idx + 1}{d.name ? ` — ${fmt(d.name)}` : ""}
+                </p>
+                {d.email && <p className="text-xs text-gray-400">{d.email}</p>}
+              </div>
+            </div>
+
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-300 mb-1 ml-1">Personal Details</p>
+            <InfoRow label="Email"           value={d.email} />
+            <InfoRow label="Contact"         value={d.contact} />
+            <InfoRow label="Mobile"          value={d.mobile} />
+            <InfoRow label="WhatsApp"        value={d.whatsapp} />
+            <InfoRow label="Gender"          value={d.gender} />
+            <InfoRow label="Date of Birth"   value={d.dob} />
+            <InfoRow label="% of Interest"   value={d.interest ? `${d.interest}%` : null} />
+            <InfoRow label="Father's Name"   value={fmt(d.father)} />
+            <InfoRow label="Spouse Name"     value={fmt(d.spouse)} />
+            <InfoRow label="No. of Children" value={d.children} />
+
+            {(d.bank?.bankName || d.bank?.accountNumber) && (
+              <>
+                <LegalCat icon={CreditCard} label="Bank Details" />
+                <InfoRow label="Bank Name"      value={d.bank?.bankName} />
+                <InfoRow label="Account Number" value={d.bank?.accountNumber} />
+                <InfoRow label="IFSC Code"      value={d.bank?.ifscCode} />
+              </>
+            )}
+
+            {d.currentAddress?.line1 && (
+              <>
+                <LegalCat icon={MapPin} label="Current Address" />
+                <InfoRow label="Address" value={[d.currentAddress.line1, d.currentAddress.line2, fmt(d.currentAddress.city), fmt(d.currentAddress.state), d.currentAddress.pin].filter(Boolean).join(", ")} />
+              </>
+            )}
+            {d.permanentAddress?.line1 && (
+              <>
+                <LegalCat icon={MapPin} label="Permanent Address" />
+                <InfoRow label="Address" value={[d.permanentAddress.line1, d.permanentAddress.line2, fmt(d.permanentAddress.city), fmt(d.permanentAddress.state), d.permanentAddress.pin].filter(Boolean).join(", ")} />
+              </>
+            )}
+
+            {(d.documents?.panNo || d.documents?.aadhaarNo) && (
+              <>
+                <LegalCat icon={FileText} label="Identity Documents" />
+                {d.documents?.panNo     && <InfoRow label="PAN Number"     value={d.documents.panNo} />}
+                {d.documents?.aadhaarNo && <InfoRow label="Aadhaar Number" value={d.documents.aadhaarNo} />}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const LegalPanel = ({ legal }) => (
+  <div>
+    <SectionTitle title="Legal Documents" subtitle="Certificates, NOCs and compliance documents" />
+
+    <LegalCat icon={Landmark}    label="Land & Building" />
+    <DocRow label="Property Deed"                   value={legal.propertyDeed}         doc={legal.propertyDeedDoc} />
+    <DocRow label="Building Approval"               value={legal.buildingApproval}      doc={legal.buildingApprovalDoc} />
+    <DocRow label="Building Completion Certificate" value={legal.completionCertificate} doc={legal.completionCertificateDoc} />
+
+    <LegalCat icon={ShieldCheck} label="No Objection Certificates" />
+    <DocRow label="Fire Department NOC"      value={legal.fireNOC}          doc={legal.fireNOCDoc} />
+    <DocRow label="Police NOC"               value={legal.policeNOC}         doc={legal.policeNOCDoc} />
+    <DocRow label="Municipality NOC"         value={legal.municipalityNOC}   doc={legal.municipalityNOCDoc} />
+    <DocRow label="Education Department NOC" value={legal.educationDeptNOC}  doc={legal.educationDeptNOCDoc} />
+    <DocRow label="Pollution Control NOC"    value={legal.pollutionNOC}      doc={legal.pollutionNOCDoc} />
+
+    <LegalCat icon={Zap}         label="Infrastructure & Safety" />
+    <DocRow label="Water Connection"       value={legal.waterConnection}       doc={legal.waterConnectionDoc} />
+    <DocRow label="Electricity Connection" value={legal.electricityConnection} doc={legal.electricityConnectionDoc} />
+    <DocRow label="Safety Audit Report"    value={legal.safetyAudit}           doc={legal.safetyAuditDoc} />
+    <DocRow label="Drainage System"        value={legal.drainageSystem}        doc={legal.drainageSystemDoc} />
+
+    <LegalCat icon={CreditCard}  label="Financial & Administrative" />
+    <DocRow label="PAN Number"                value={legal.panNo}       doc={legal.panDoc} />
+    <DocRow label="GSTIN"                     value={legal.gstinNo}     doc={legal.gstinDoc} />
+    <DocRow label="Bank Account"              value={legal.bankAccount} doc={legal.bankAccountDoc} />
+    <DocRow label="Trust Deed / Society Reg." value={legal.trustDeed}   doc={legal.trustDeedDoc} />
+
+    <LegalCat icon={BookOpen}    label="Education Registration & Affiliation" />
+    <DocRow label="DISE Code"                     value={legal.diseCode}              doc={legal.disecodeDoc} />
+    <DocRow label="Provisional Recognition"       value={legal.provisionalRecognition} doc={legal.provisionalRecognitionDoc} />
+    <DocRow label="Board Affiliation Certificate" value={legal.affiliation}            doc={legal.affiliationDoc} />
+
+    <LegalCat icon={ScrollText}  label="Mandatory Policies" />
+    <DocRow label="Child Protection Policy" value={legal.childProtectionPolicy} doc={legal.childProtectionPolicyDoc} />
+    <DocRow label="Harassment Prevention"   value={legal.harassmentPolicy}       doc={legal.harassmentPolicyDoc} />
+    <DocRow label="Admission Policy"        value={legal.admissionPolicy}        doc={legal.admissionPolicyDoc} />
+    <DocRow label="Fee Structure Document"  value={legal.feeStructure}           doc={legal.feeStructureDoc} />
+  </div>
+);
+
+const BranchesPanel = ({ branches }) => {
+  if (!branches.length) return (
+    <div>
+      <SectionTitle title="Branch Locations" subtitle="All registered branch offices" />
+      <div className="text-center py-16">
+        <GitBranch size={40} className="mx-auto mb-3 text-gray-200" />
+        <p className="text-gray-400 font-medium">No branches added yet.</p>
+      </div>
+    </div>
+  );
+  return (
+    <div>
+      <SectionTitle title={`Branch Locations (${branches.length})`} subtitle="All registered branch offices" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {branches.map((b, idx) => (
+          <div key={idx} className="border border-gray-100 rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+              <p className="font-bold text-gray-800 text-sm">
+                {b.name ? fmt(b.name) : `Branch ${idx + 1}`}
+              </p>
+              {b.shortName && (
+                <span className="text-xs font-extrabold bg-blue-600 text-white px-2.5 py-0.5 rounded-lg tracking-wide">
+                  {b.shortName.toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="px-4 py-4 space-y-2.5">
+              {b.city && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <MapPin size={13} className="text-gray-400 shrink-0" />
+                  {fmt(b.city)}{b.state ? `, ${fmt(b.state)}` : ""}{b.pin ? ` — ${b.pin}` : ""}
+                </div>
+              )}
+              {b.contactPerson && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Users size={13} className="text-gray-400 shrink-0" />{b.contactPerson}
+                </div>
+              )}
+              {b.contactNo && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Phone size={13} className="text-gray-400 shrink-0" />{b.contactNo}
+                </div>
+              )}
+              {b.email && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Mail size={13} className="text-gray-400 shrink-0" />{b.email}
+                </div>
+              )}
+              {b.address1 && (
+                <div className="flex items-start gap-2 text-sm text-gray-600">
+                  <MapPin size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                  {[b.address1, b.address2].filter(Boolean).join(", ")}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN PAGE
+// ══════════════════════════════════════════════════════════════════════════════
+
+export default function InstituteView() {
+  const { id }    = useParams();
+  const { state } = useLocation();
+  const navigate  = useNavigate();
+  const [inst, setInst]             = useState(null);
+  const [activeMenu, setActiveMenu] = useState("organisation");
+
   useEffect(() => {
     if (state?.institute) {
       setInst(state.institute);
@@ -64,284 +289,155 @@ export default function InstituteView() {
     }
   }, [id, state]);
 
-  if (!inst) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <Building2 size={48} className="mx-auto text-gray-300 mb-3" />
-          <p className="text-gray-500 font-medium">Institute not found</p>
-          <button onClick={() => navigate(-1)} className="mt-4 text-blue-600 text-sm hover:underline">
-            ← Go back
-          </button>
-        </div>
+  if (!inst) return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="text-center text-gray-400">
+        <Building2 size={48} className="mx-auto mb-3 opacity-30" />
+        <p className="text-lg font-semibold text-gray-500">Institute not found</p>
+        <button onClick={() => navigate(-1)} className="mt-4 text-blue-600 text-sm hover:underline">
+          ← Go back
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 
-  const org      = inst.organisation || {};
-  const legal    = inst.legal        || {};
-  const directors = inst.directors   || [];
-  const branches  = inst.branches    || [];
+  const org       = inst.organisation || {};
+  const legal     = inst.legal        || {};
+  const directors = inst.directors    || [];
+  const branches  = inst.branches     || [];
+
+  const counts = {
+    organisation: null,
+    directors:    directors.length,
+    legal:        null,
+    branches:     branches.length,
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto w-full max-w-6xl space-y-6">
 
-        {/* ── BACK ── */}
+        {/* ── Back ── */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 text-sm font-medium transition"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 font-medium transition"
         >
-          <ChevronLeft size={18} /> Back to Institute List
+          <ChevronLeft size={16} /> Back to Institute List
         </button>
 
-        {/* ── HERO HEADER ── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* ── HEADER CARD ── */}
+        <div className="bg-white rounded-xl shadow-sm p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow">
+              <Building2 size={26} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+                {fmt(org.name) || "—"}
+              </h1>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {org.type}&nbsp;&nbsp;·&nbsp;&nbsp;
+                {fmt(org.city)}{org.state ? `, ${fmt(org.state)}` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${statusStyles[inst.status] || "bg-gray-100 text-gray-600"}`}>
+              {inst.status || "Unknown"}
+            </span>
+            <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-100 text-purple-700 border border-purple-300">
+              {inst.plan || "Premium"}
+            </span>
+          </div>
+        </div>
 
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shrink-0">
-                {org.name?.[0]?.toUpperCase() || "?"}
+        {/* ── QUICK STATS ── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Directors",    value: directors.length,     icon: Users     },
+            { label: "Branches",     value: branches.length,       icon: GitBranch },
+            { label: "City",         value: fmt(org.city) || "—", icon: MapPin    },
+            {
+              label: "Member Since",
+              value: inst.createdAt ? new Date(inst.createdAt).toLocaleDateString() : "—",
+              icon: Calendar,
+            },
+          ].map((stat) => (
+            <div key={stat.label} className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                <stat.icon size={16} className="text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {formatText(org.name)}
-                </h1>
-                <p className="text-gray-500 text-sm mt-0.5">{org.type} · {formatText(org.city)}, {formatText(org.state)}</p>
+                <p className="text-base font-bold text-gray-800 leading-tight">{stat.value}</p>
+                <p className="text-xs text-gray-400">{stat.label}</p>
               </div>
             </div>
-
-            <div className="flex flex-wrap gap-3">
-              <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${statusStyles[inst.status] || "bg-gray-100 text-gray-600"}`}>
-                {inst.status || "Unknown"}
-              </span>
-              <span className="px-4 py-1.5 rounded-full text-sm font-semibold bg-purple-100 text-purple-700 border border-purple-200">
-                {inst.plan || "Premium"}
-              </span>
-            </div>
-          </div>
-
-          {/* Quick stats row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{directors.length}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Directors</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{branches.length}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Branches</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-blue-600 truncate">{org.city ? formatText(org.city) : "—"}</p>
-              <p className="text-xs text-gray-400 mt-0.5">City</p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-blue-600">
-                {inst.createdAt ? new Date(inst.createdAt).toLocaleDateString() : "—"}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">Created</p>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* ── ORGANISATION DETAILS ── */}
-        <SectionCard title="Organisation Details" icon={Building2}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <Field label="Registered Name"    value={formatText(org.name)} />
-            <Field label="Organisation Type"  value={org.type} />
-            <Field label="Phone Number"       value={org.phone} />
-            <Field label="Alternate Phone"    value={org.altPhone} />
-            <Field label="Email Address"      value={org.email} />
-            <Field label="Secondary Email"    value={org.secondaryEmail} />
-            <Field label="City"               value={formatText(org.city)} />
-            <Field label="State"              value={formatText(org.state)} />
-            <Field label="PIN Code"           value={org.pin} />
-            <Field label="Head Office"        value={formatText(org.headOffice)} />
-            <div className="sm:col-span-2 lg:col-span-3">
-              <Field
-                label="Address"
-                value={[org.address1, org.address2].filter(Boolean).join(", ") || "—"}
-              />
+        {/* ── MAIN LAYOUT: LEFT SIDEBAR + RIGHT CONTENT ── */}
+        <div className="flex gap-6 items-start">
+
+          {/* ── LEFT SIDEBAR ── */}
+          <div className="w-60 shrink-0 bg-white rounded-xl shadow-sm overflow-hidden sticky top-6">
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <p className="text-xs font-bold text-left uppercase tracking-widest text-gray-400">Sections</p>
             </div>
-          </div>
-        </SectionCard>
-
-        {/* ── DIRECTORS ── */}
-        {directors.length > 0 && (
-          <SectionCard title={`Directors / Partners (${directors.length})`} icon={Users}>
-            <div className="space-y-6">
-              {directors.map((d, idx) => (
-                <div key={idx} className={`${idx > 0 ? "pt-6 border-t border-gray-100" : ""}`}>
-                  <p className="text-sm font-bold text-blue-600 mb-3">Director {idx + 1} — {formatText(d.name)}</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Field label="Email"         value={d.email} />
-                    <Field label="Contact"        value={d.contact} />
-                    <Field label="Mobile"         value={d.mobile} />
-                    <Field label="WhatsApp"       value={d.whatsapp} />
-                    <Field label="Gender"         value={d.gender} />
-                    <Field label="Date of Birth"  value={d.dob} />
-                    <Field label="% of Interest"  value={d.interest ? `${d.interest}%` : null} />
-                    <Field label="Father's Name"  value={formatText(d.father)} />
-                    <Field label="Spouse Name"    value={formatText(d.spouse)} />
-
-                    {/* Bank */}
-                    {(d.bank?.bankName || d.bank?.accountNumber) && (
-                      <>
-                        <div className="sm:col-span-2 lg:col-span-3 mt-2">
-                          <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-2">Bank Details</p>
-                        </div>
-                        <Field label="Bank Name"       value={d.bank?.bankName} />
-                        <Field label="Account Number"  value={d.bank?.accountNumber} />
-                        <Field label="IFSC Code"       value={d.bank?.ifscCode} />
-                      </>
-                    )}
-
-                    {/* Addresses */}
-                    {d.currentAddress?.line1 && (
-                      <div className="sm:col-span-2 lg:col-span-3">
-                        <Field
-                          label="Current Address"
-                          value={[d.currentAddress.line1, d.currentAddress.line2, formatText(d.currentAddress.city), formatText(d.currentAddress.state), d.currentAddress.pin].filter(Boolean).join(", ")}
-                        />
-                      </div>
-                    )}
-                    {d.permanentAddress?.line1 && (
-                      <div className="sm:col-span-2 lg:col-span-3">
-                        <Field
-                          label="Permanent Address"
-                          value={[d.permanentAddress.line1, d.permanentAddress.line2, formatText(d.permanentAddress.city), formatText(d.permanentAddress.state), d.permanentAddress.pin].filter(Boolean).join(", ")}
-                        />
-                      </div>
-                    )}
-
-                    {/* Documents */}
-                    {(d.documents?.panNo || d.documents?.aadhaarNo) && (
-                      <>
-                        <Field label="PAN Number"     value={d.documents?.panNo} />
-                        <Field label="Aadhaar Number" value={d.documents?.aadhaarNo} />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        {/* ── LEGAL DOCUMENTS ── */}
-        <SectionCard title="Legal Documents" icon={FileText}>
-          <div className="space-y-6">
-
-            {/* Land & Building */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <Landmark size={13} /> Land & Building
-              </p>
-              <DocRow label="Property Deed"                  value={legal.propertyDeed}          doc={legal.propertyDeedDoc} />
-              <DocRow label="Building Approval"              value={legal.buildingApproval}       doc={legal.buildingApprovalDoc} />
-              <DocRow label="Building Completion Certificate" value={legal.completionCertificate} doc={legal.completionCertificateDoc} />
-            </div>
-
-            {/* NOCs */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <ShieldCheck size={13} /> No Objection Certificates
-              </p>
-              <DocRow label="Fire Department NOC"       value={legal.fireNOC}           doc={legal.fireNOCDoc} />
-              <DocRow label="Police NOC"                value={legal.policeNOC}          doc={legal.policeNOCDoc} />
-              <DocRow label="Municipality NOC"          value={legal.municipalityNOC}    doc={legal.municipalityNOCDoc} />
-              <DocRow label="Education Department NOC"  value={legal.educationDeptNOC}   doc={legal.educationDeptNOCDoc} />
-              <DocRow label="Pollution Control NOC"     value={legal.pollutionNOC}       doc={legal.pollutionNOCDoc} />
-            </div>
-
-            {/* Infrastructure */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <Zap size={13} /> Infrastructure & Safety
-              </p>
-              <DocRow label="Water Connection"           value={legal.waterConnection}        doc={legal.waterConnectionDoc} />
-              <DocRow label="Electricity Connection"     value={legal.electricityConnection}  doc={legal.electricityConnectionDoc} />
-              <DocRow label="Safety Audit Report"        value={legal.safetyAudit}            doc={legal.safetyAuditDoc} />
-              <DocRow label="Drainage System"            value={legal.drainageSystem}         doc={legal.drainageSystemDoc} />
-            </div>
-
-            {/* Financial */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <CreditCard size={13} /> Financial & Administrative
-              </p>
-              <DocRow label="PAN"                       value={legal.panNo}        doc={legal.panDoc} />
-              <DocRow label="GSTIN"                     value={legal.gstinNo}      doc={legal.gstinDoc} />
-              <DocRow label="Bank Account"              value={legal.bankAccount}  doc={legal.bankAccountDoc} />
-              <DocRow label="Trust Deed / Society Reg." value={legal.trustDeed}    doc={legal.trustDeedDoc} />
-            </div>
-
-            {/* Education */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <BookOpen size={13} /> Education Registration
-              </p>
-              <DocRow label="DISE Code"                        value={legal.diseCode}                 doc={legal.disecodeDoc} />
-              <DocRow label="Provisional Recognition"          value={legal.provisionalRecognition}   doc={legal.provisionalRecognitionDoc} />
-              <DocRow label="Board Affiliation Certificate"    value={legal.affiliation}              doc={legal.affiliationDoc} />
-            </div>
-
-            {/* Policies */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                <ScrollText size={13} /> Mandatory Policies
-              </p>
-              <DocRow label="Child Protection Policy"    value={legal.childProtectionPolicy}  doc={legal.childProtectionPolicyDoc} />
-              <DocRow label="Harassment Prevention"      value={legal.harassmentPolicy}        doc={legal.harassmentPolicyDoc} />
-              <DocRow label="Admission Policy"           value={legal.admissionPolicy}         doc={legal.admissionPolicyDoc} />
-              <DocRow label="Fee Structure Document"     value={legal.feeStructure}            doc={legal.feeStructureDoc} />
-            </div>
-
-          </div>
-        </SectionCard>
-
-        {/* ── BRANCHES ── */}
-        {branches.length > 0 && (
-          <SectionCard title={`Branch Locations (${branches.length})`} icon={MapPin}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {branches.map((b, idx) => (
-                <div key={idx} className="border border-gray-100 rounded-xl p-4 bg-blue-50/40">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-semibold text-gray-800">
-                      {b.name ? formatText(b.name) : `Branch ${idx + 1}`}
-                    </p>
-                    {b.shortName && (
-                      <span className="text-xs font-bold bg-blue-600 text-white px-2 py-0.5 rounded">
-                        {b.shortName.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="City"           value={formatText(b.city)} />
-                    <Field label="State"          value={formatText(b.state)} />
-                    <Field label="PIN"            value={b.pin} />
-                    <Field label="GSTIN"          value={b.gstin} />
-                    <Field label="Contact Person" value={formatText(b.contactPerson)} />
-                    <Field label="Contact No"     value={b.contactNo} />
-                    <div className="col-span-2">
-                      <Field label="Email"        value={b.email} />
+            <nav className="py-2">
+              {MENU.map((item) => {
+                const Icon     = item.icon;
+                const isActive = activeMenu === item.id;
+                const count    = counts[item.id];
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveMenu(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all group ${
+                      isActive
+                        ? "bg-blue-50 border-r-2 border-blue-600"
+                        : "hover:bg-gray-50 border-r-2 border-transparent"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
+                      isActive ? "bg-blue-600" : "bg-gray-100 group-hover:bg-gray-200"
+                    }`}>
+                      <Icon size={15} className={isActive ? "text-white" : "text-gray-500"} />
                     </div>
-                    {b.address1 && (
-                      <div className="col-span-2">
-                        <Field label="Address"    value={[b.address1, b.address2].filter(Boolean).join(", ")} />
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold leading-tight ${isActive ? "text-blue-600" : "text-gray-700"}`}>
+                        {item.label}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>
+                    </div>
+                    {count !== null ? (
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                        isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
+                      }`}>
+                        {count}
+                      </span>
+                    ) : (
+                      <ChevronRight size={14} className={`shrink-0 ${isActive ? "text-blue-400" : "text-gray-300"}`} />
                     )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </SectionCard>
-        )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
 
-        {/* ── FOOTER META ── */}
-        <div className="text-center text-xs text-gray-400 pb-4">
-          Institute ID: {inst.id} · Created: {inst.createdAt || "—"}
+          {/* ── RIGHT CONTENT PANEL ── */}
+          <div className="flex-1 min-w-0 bg-white rounded-xl shadow-sm p-6">
+            {activeMenu === "organisation" && <OrganisationPanel org={org} institute={inst} />}
+            {activeMenu === "directors"    && <DirectorsPanel    directors={directors} />}
+            {activeMenu === "legal"        && <LegalPanel        legal={legal} />}
+            {activeMenu === "branches"     && <BranchesPanel     branches={branches} />}
+          </div>
+
         </div>
+
+        {/* ── FOOTER ── */}
+        <p className="text-center text-xs text-gray-400 pb-4">
+          Institute ID: {inst.id}&nbsp;·&nbsp;Created: {inst.createdAt || "—"}
+        </p>
 
       </div>
     </div>

@@ -9,7 +9,7 @@ import {
 import {
   DEPARTMENTS, COURSES_BY_DEPT, ACADEMIC_YEARS, COLOR_MAP,
   getFaculty, getStudents, addBatch, BATCH_KEY
-} from "./BatchStorage";
+} from "./BatchStorage.jsx";
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
@@ -96,13 +96,13 @@ const Input = ({ label, name, type="text", value, onChange, error, placeholder, 
 const StepBatchInfo = ({ form, setForm, errors }) => {
   const h = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 text-left">
       <div>
         <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Batch Information</h3>
         <p style={{ fontSize: "14px", color: "rgba(37,99,235,0.5)", marginTop: 4 }}>Define the batch name, academic year and strength limits.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 ">
           <Input label="Batch Name" name="name" value={form.name} onChange={h} error={errors.name} placeholder="e.g. Batch 2024-25 CSE" required />
         </div>
         <Input label="Academic Year" name="academic_year" error={errors.academic_year} required>
@@ -241,7 +241,7 @@ const StepSections = ({ form, setForm, errors }) => {
   const totalStrength = form.sections.reduce((sum, s) => sum + (parseInt(s.strength) || 0), 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 text-left">
       <div className="flex items-start justify-between">
         <div>
           <h3 style={{ fontSize: "20px", fontWeight: 900, color: B6 }}>Create Sections</h3>

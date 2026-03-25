@@ -6,7 +6,7 @@ import {
   Calendar, Hash, UserCheck, ShieldCheck, X,
   AlertTriangle, TrendingUp, Clock
 } from "lucide-react";
-import { getBatches, saveBatches, DEPARTMENTS, COLOR_MAP } from "./BatchStorage";
+import { getBatches, saveBatches, DEPARTMENTS, COLOR_MAP } from "./BatchStorage.jsx";
 
 // ─── Seed dummy batches if none exist ────────────────────────────────────────
 const seedBatches = () => {
