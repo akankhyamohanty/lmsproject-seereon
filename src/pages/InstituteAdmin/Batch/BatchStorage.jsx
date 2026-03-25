@@ -1,9 +1,11 @@
-// ─── Keys ─────────────────────────────────────────────────────────────────────
-export const BATCH_KEY    = "batch_list";
-export const FACULTY_KEY  = "faculty_list";
-export const STUDENT_KEY  = "student_list";
+/**
+ * BATCH MODULE CONFIGURATION
+ * This file now only contains UI constants and metadata.
+ * All data storage logic has been moved to the MySQL Backend.
+ */
 
 // ─── Departments ──────────────────────────────────────────────────────────────
+// Used for Category Icons and Department Labels across the Batch module
 export const DEPARTMENTS = [
   { id: "cs",      name: "Computer Science",    icon: "💻", color: "blue"    },
   { id: "math",    name: "Mathematics",          icon: "📐", color: "violet"  },
@@ -19,7 +21,8 @@ export const DEPARTMENTS = [
   { id: "med",     name: "Medical Sciences",     icon: "🏥", color: "red"     },
 ];
 
-// ─── Courses by Department ────────────────────────────────────────────────────
+// ─── Courses Fallback ─────────────────────────────────────────────────────────
+// These act as a "Smart Fallback" in the Batch Form if the database courses are empty
 export const COURSES_BY_DEPT = {
   cs:    ["B.Tech CSE", "M.Tech CSE", "BCA", "MCA", "B.Sc Computer Science"],
   math:  ["B.Sc Mathematics", "M.Sc Mathematics", "B.Sc Statistics"],
@@ -41,6 +44,7 @@ export const ACADEMIC_YEARS = [
 ];
 
 // ─── Color Map ────────────────────────────────────────────────────────────────
+// Used for dynamic styling of department badges and cards
 export const COLOR_MAP = {
   blue:    { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",    active: "bg-blue-600 border-blue-600 text-white"    },
   violet:  { bg: "bg-violet-50",  border: "border-violet-200",  text: "text-violet-700",  active: "bg-violet-600 border-violet-600 text-white"  },
@@ -49,59 +53,9 @@ export const COLOR_MAP = {
   green:   { bg: "bg-green-50",   border: "border-green-200",   text: "text-green-700",   active: "bg-green-600 border-green-600 text-white"   },
   orange:  { bg: "bg-orange-50",  border: "border-orange-200",  text: "text-orange-700",  active: "bg-orange-500 border-orange-500 text-white"  },
   yellow:  { bg: "bg-yellow-50",  border: "border-yellow-200",  text: "text-yellow-700",  active: "bg-yellow-500 border-yellow-500 text-white"  },
-  amber:   { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-700",   active: "bg-amber-500 border-amber-500 text-white"   },
+  amber:   { bg: "bg-amber-50",   border: "border-amber-200",   text: "text-amber-700",   active: "bg-amber-500 border-amber-500 text-white"  },
   rose:    { bg: "bg-rose-50",    border: "border-rose-200",    text: "text-rose-700",    active: "bg-rose-600 border-rose-600 text-white"    },
   pink:    { bg: "bg-pink-50",    border: "border-pink-200",    text: "text-pink-700",    active: "bg-pink-600 border-pink-600 text-white"    },
   slate:   { bg: "bg-slate-50",   border: "border-slate-200",   text: "text-slate-700",   active: "bg-slate-600 border-slate-600 text-white"   },
   red:     { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-700",     active: "bg-red-600 border-red-600 text-white"     },
-};
-
-// ─── Batch CRUD ───────────────────────────────────────────────────────────────
-export const getBatches = () => {
-  try {
-    return JSON.parse(localStorage.getItem(BATCH_KEY) || "[]");
-  } catch {
-    return [];
-  }
-};
-
-export const saveBatches = (batches) => {
-  localStorage.setItem(BATCH_KEY, JSON.stringify(batches));
-};
-
-export const addBatch = (batch) => {
-  const batches = getBatches();
-  batches.push(batch);
-  saveBatches(batches);
-};
-
-export const updateBatch = (id, updates) => {
-  const batches = getBatches().map(b => b.id === id ? { ...b, ...updates } : b);
-  saveBatches(batches);
-};
-
-export const deleteBatch = (id) => {
-  saveBatches(getBatches().filter(b => b.id !== id));
-};
-
-export const getBatchById = (id) => {
-  return getBatches().find(b => b.id === Number(id)) || null;
-};
-
-// ─── Faculty helpers ──────────────────────────────────────────────────────────
-export const getFaculty = () => {
-  try {
-    return JSON.parse(localStorage.getItem(FACULTY_KEY) || "[]");
-  } catch {
-    return [];
-  }
-};
-
-// ─── Student helpers ──────────────────────────────────────────────────────────
-export const getStudents = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STUDENT_KEY) || "[]");
-  } catch {
-    return [];
-  }
 };

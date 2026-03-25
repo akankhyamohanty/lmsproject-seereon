@@ -153,8 +153,8 @@ export default function Calendar() {
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">Academic Calendar</h1>
-          <p className="text-lg text-slate-600">View your classes, exams, and important dates</p>
+          <h1 className="text-4xl md:text-5xl text-left font-bold text-slate-900 mb-2">Academic Calendar</h1>
+          <p className="text-lg text-left text-slate-600">View your classes, exams, and important dates</p>
         </div>
 
         {/* Main Grid */}

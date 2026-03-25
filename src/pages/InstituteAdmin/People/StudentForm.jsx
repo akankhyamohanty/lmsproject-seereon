@@ -116,7 +116,7 @@ export const StudentForm = () => {
                               setEditingStudent(student);
                               setShowFormModal(true);
                             }}
-                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                            className="p-2 text-blue-600 hover:bg-purple-50 rounded-lg transition"
                           >
                             <Edit size={18} />
                           </button>

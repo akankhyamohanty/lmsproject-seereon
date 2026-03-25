@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import authService from '../services/authService';
 
 export const AuthContext = createContext();
 
@@ -20,83 +21,51 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // --- UPDATED LOGIN FUNCTION ---
+  // --- CONNECTED TO BACKEND ---
   const login = async (email, password, instituteCode, roleType) => {
-    // 1. Simulate Network Delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // 1. Call the real backend service
+      const response = await authService.login({ 
+        email, 
+        password, 
+        instituteCode, 
+        roleType 
+      });
 
-    // 2. --- VALIDATION LOGIC ---
-    // Institute Code is required for everyone except Super Admin
-    if (roleType !== 'super_admin') {
-      if (!instituteCode) throw new Error("Institute Code is required.");
-      if (instituteCode === 'SUSPENDED') throw new Error("Your institute's subscription is suspended.");
-      if (instituteCode === 'INACTIVE') throw new Error("This institute account is currently inactive.");
-    }
-
-    // 3. --- CREDENTIAL CHECK ---
-    if (password !== 'password123') {
-      throw new Error("Invalid credentials. Please check your email and password.");
-    }
-
-    // 4. --- ASSIGN USER & ROLE ---
-    let loggedInUser;
-
-    if (roleType === 'super_admin') {
-      // Strict Super Admin Check
-      if (email === 'superadmin@test.com') {
-        loggedInUser = { 
-          id: 1, 
-          name: 'Super Admin', 
-          email: email, 
-          role: 'super_admin' 
-        };
-      } else {
-        throw new Error("Access Denied: You do not have Super Admin privileges.");
-      }
-    } 
-    
-    // --- KEY FIX STARTS HERE ---
-    else if (roleType === 'institute_admin') {
-      loggedInUser = { 
-        id: 2, 
-        name: 'Institute Admin', 
-        email: email, 
-        role: 'institute_admin', // Explicitly set role
-        instituteCode: instituteCode 
+      // 2. ✅ FIXED: Look for 'response.data' which is where our backend puts the Institute details!
+      // We add a fallback {} so it NEVER crashes on undefined.
+      const loggedInUser = response.data || response.admin || response.user || {};
+      
+      // Ensure the role is present
+      const normalizedUser = {
+        ...loggedInUser,
+        role: loggedInUser.role || roleType 
       };
-    } 
-    
-    else if (roleType === 'faculty') {
-      loggedInUser = { 
-        id: 3, 
-        name: 'Faculty Member', 
-        email: email, 
-        role: 'faculty', // Explicitly set role
-        instituteCode: instituteCode 
-      };
-    } 
-    
-    else if (roleType === 'student') {
-      loggedInUser = { 
-        id: 4, 
-        name: 'Subham', // Matching your Dashboard UI
-        email: email, 
-        role: 'student', // Explicitly set role
-        rollNumber: '2101201', // Adding mock data for dashboard
-        instituteCode: instituteCode 
-      };
-    }
-    // --- KEY FIX ENDS HERE ---
 
-    // 5. Save and Set State
-    localStorage.setItem('user', JSON.stringify(loggedInUser));
-    setUser(loggedInUser);
-    return loggedInUser;
+      // 3. Save to LocalStorage and State
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
+      setUser(normalizedUser);
+
+      // Return it so the Login component can use it to redirect
+      return normalizedUser;
+
+    } catch (error) {
+      // ✅ FIXED: Better error handling to show EXACTLY why it failed if it does
+      console.error("AuthContext Error:", error);
+      const message = error.response?.data?.message || error.message || "Login failed. Please check your connection.";
+      throw new Error(message);
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await authService.logout(); // Clears HTTP-only cookies on backend
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
   return (

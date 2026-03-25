@@ -1,26 +1,3 @@
-// import { useFetch } from '../../hooks/useFetch';
-
-// export const AdminDashboard = () => {
-//   const { data, loading, error } = useFetch('/admin/dashboard');
-
-//   if (loading) return <div className="text-center py-12">Loading...</div>;
-//   if (error) return <div className="text-red-600 py-12">{error}</div>;
-
-//   return (
-//     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-//       <div className="bg-white p-6 rounded-lg shadow">
-//         <h3 className="text-gray-600 text-sm font-semibold">Total Faculty</h3>
-//         <p className="text-3xl font-bold text-blue-600 mt-2">{data?.faculty_count || 0}</p>
-//       </div>
-
-//       <div className="bg-white p-6 rounded-lg shadow">
-//         <h3 className="text-gray-600 text-sm font-semibold">Total Students</h3>
-//         <p className="text-3xl font-bold text-green-600 mt-2">{data?.student_count || 0}</p>
-//       </div>
-//     </div>
-//   );
-// };
-
 import { Bell, Search, Users, DollarSign, BookOpen, AlertCircle } from 'lucide-react';
 import { useFetch } from '../../hooks/useFetch';
 import { useAuth } from '../../hooks/useAuth';

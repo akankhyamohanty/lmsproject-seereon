@@ -56,9 +56,7 @@ const AdminDashboard = () => {
   return (
     <div className="bg-white min-h-screen font-sans">
       
-      {/* ⚠️ HEADER REMOVED (Handled by Layout) */}
-
-      {/* Dashboard Content */}
+    
       <main>
         
         {/* 6 Stats Cards Grid */}

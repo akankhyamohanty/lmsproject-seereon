@@ -159,7 +159,7 @@ export const StudentProfile = () => {
 
         <button
           onClick={handleUpdate}
-          className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700"
+          className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 text-left"
         >
           Update details
         </button>

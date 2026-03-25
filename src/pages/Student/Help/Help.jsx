@@ -180,8 +180,8 @@ export default function Help() {
       <div className="max-w-9xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-2">Help & Support</h1>
-          <p className="text-lg text-slate-600">Get help with your queries and issues</p>
+          <h1 className="text-4xl text-left md:text-5xl font-bold text-slate-900 mb-2">Help & Support</h1>
+          <p className="text-lg text-slate-600 text-left">Get help with your queries and issues</p>
         </div>
 
         {/* Tabs */}
@@ -190,7 +190,7 @@ export default function Help() {
             onClick={() => setActiveTab('help')}
             className={`px-6 py-3 rounded-lg font-semibold transition-all ${
               activeTab === 'help'
-                ? 'bg-slate-900 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300'
             }`}
           >
@@ -201,7 +201,7 @@ export default function Help() {
             onClick={() => setActiveTab('myTickets')}
             className={`px-6 py-3 rounded-lg font-semibold transition-all ${
               activeTab === 'myTickets'
-                ? 'bg-slate-900 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-white text-slate-900 border-2 border-slate-200 hover:border-slate-300'
             }`}
           >
@@ -245,7 +245,7 @@ export default function Help() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Issue Type */}
                 <div>
-                  <label className="block text-md font-semibold text-slate-900 mb-2">
+                  <label className="block text-md text-left font-semibold text-slate-900 mb-2">
                     Issue Type <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -270,7 +270,7 @@ export default function Help() {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-md font-semibold text-slate-900 mb-2">
+                  <label className="block text-left text-md font-semibold text-slate-900 mb-2">
                     Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -283,7 +283,7 @@ export default function Help() {
                       errors.description ? 'border-red-500' : 'border-slate-200'
                     } focus:outline-none focus:border-blue-500 resize-none`}
                   />
-                  <p className="text-md text-slate-500 mt-2">
+                  <p className="text-md text-left text-slate-500 mt-2">
                     Provide as much detail as possible to help us resolve your issue quickly
                   </p>
                   {errors.description && (
@@ -293,7 +293,7 @@ export default function Help() {
 
                 {/* Attachment */}
                 <div>
-                  <label className="block text-md font-semibold text-slate-900 mb-2">
+                  <label className="block text-left text-md font-semibold text-slate-900 mb-2">
                     Attachment (Optional)
                   </label>
                   <label className="flex flex-col items-center justify-center w-full border-2 border-dashed border-slate-300 rounded-lg p-8 cursor-pointer hover:border-slate-400 transition-all">
@@ -333,7 +333,7 @@ export default function Help() {
                 <div className="flex gap-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-slate-900 text-white py-3 rounded-lg font-semibold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
                   >
                     <MessageSquare className="w-5 h-5" />
                     Submit Ticket

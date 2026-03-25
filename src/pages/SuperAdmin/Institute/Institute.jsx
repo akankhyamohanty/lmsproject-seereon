@@ -1,6 +1,7 @@
-import { Eye, Trash2, Plus, CheckCircle, AlertCircle } from "lucide-react";
+import { Eye, Trash2, Plus, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { adminService } from "../../../services/adminService"; // Adjust path if needed
 
 const statusStyles = {
   Active: "bg-green-100 text-green-700 border border-green-300",
@@ -9,22 +10,51 @@ const statusStyles = {
 };
 
 const formatText = (text = "") =>
-  text.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+  text ? text.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : "";
 
 export default function Institute() {
   const navigate = useNavigate();
   const [institutes, setInstitutes] = useState([]);
   const [filteredInstitutes, setFilteredInstitutes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  /* ================= LOAD DATA ================= */
+  /* ================= LOAD LIVE DATA FROM MYSQL ================= */
+  const fetchInstitutes = async () => {
+    try {
+      setIsLoading(true);
+      const response = await adminService.getInstitutes();
+      
+      // FIXED: The backend already flattened the data (e.g., dbInst.name). 
+      // We map those flat properties back into the organisation object your UI expects.
+      const formattedData = response.data.map(dbInst => ({
+        id: dbInst.id,
+        status: dbInst.status || "Active", 
+        createdAt: dbInst.joined || dbInst.created_at, // Use backend's formatted date if available
+        plan: dbInst.plan || "Premium",
+        organisation: {
+          name: dbInst.name || "N/A",           // <-- Fixed
+          email: dbInst.email || "N/A",         // <-- Fixed
+          city: dbInst.city || "N/A",           // <-- Fixed
+          state: dbInst.state || "N/A",         // <-- Fixed
+          type: dbInst.type || "Institute",     // <-- Fixed
+        },
+        raw: dbInst 
+      }));
+
+      setInstitutes(formattedData);
+      setFilteredInstitutes(formattedData);
+    } catch (error) {
+      console.error("Failed to load institutes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const storedInstitutes =
-      JSON.parse(localStorage.getItem("institutes")) || [];
-    setInstitutes(storedInstitutes);
-    setFilteredInstitutes(storedInstitutes);
+    fetchInstitutes();
   }, []);
 
   /* ================= FILTER ================= */
@@ -33,16 +63,12 @@ export default function Institute() {
 
     if (searchTerm) {
       filtered = filtered.filter((inst) =>
-        inst?.organisation?.name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase())
+        inst?.organisation?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (typeFilter !== "All") {
-      filtered = filtered.filter(
-        (inst) => inst?.organisation?.type === typeFilter
-      );
+      filtered = filtered.filter((inst) => inst?.organisation?.type === typeFilter);
     }
 
     if (statusFilter !== "All") {
@@ -52,29 +78,51 @@ export default function Institute() {
     setFilteredInstitutes(filtered);
   }, [searchTerm, typeFilter, statusFilter, institutes]);
 
-  /* ================= DELETE ================= */
-  const deleteInstitute = (id) => {
-    if (window.confirm("Are you sure you want to delete this institute?")) {
-      const updated = institutes.filter((inst) => inst?.id !== id);
-      setInstitutes(updated);
-      localStorage.setItem("institutes", JSON.stringify(updated));
+  /* ================= DELETE (API CALL) ================= */
+  const deleteInstitute = async (id) => {
+    if (window.confirm("Are you sure you want to permanently delete this institute?")) {
+      try {
+        await adminService.deleteInstitute(id); 
+        const updated = institutes.filter((inst) => inst?.id !== id);
+        setInstitutes(updated); 
+      } catch (error) {
+        alert("Failed to delete institute.");
+        console.error(error);
+      }
     }
   };
 
-  /* ================= TOGGLE STATUS ================= */
-  const toggleStatus = (id, currentStatus) => {
-    const updated = institutes.map((inst) =>
-      inst?.id === id
-        ? {
-            ...inst,
-            status: currentStatus === "Active" ? "Suspended" : "Active",
-          }
-        : inst
-    );
+  /* ================= TOGGLE STATUS (API CALL) ================= */
+  const toggleStatus = async (id, currentStatus) => {
+    try {
+      // Toggle logic
+      const newIsActive = currentStatus === "Active" ? false : true;
+      
+      await adminService.updateInstituteStatus(id, newIsActive); 
 
-    setInstitutes(updated);
-    localStorage.setItem("institutes", JSON.stringify(updated));
+      // Update UI instantly
+      const updated = institutes.map((inst) =>
+        inst?.id === id
+          ? {
+              ...inst,
+              status: currentStatus === "Active" ? "Suspended" : "Active",
+            }
+          : inst
+      );
+      setInstitutes(updated);
+    } catch (error) {
+      alert("Failed to change status.");
+      console.error(error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
@@ -92,14 +140,14 @@ export default function Institute() {
           </div>
 
           <button
-            onClick={() => navigate("/admin/institute/form")}
+            onClick={() => navigate("/super-admin/institutes/create")}
             className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-semibold transition shadow-md w-full md:w-auto"
           >
             <Plus size={20} /> Add Institute
           </button>
         </div>
 
-        {/* ================= STATS (MOVED TO TOP) ================= */}
+        {/* ================= STATS ================= */}
         {institutes.length > 0 && (
           <div className="grid text-xl grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <StatCard title="Total" value={institutes.length} />
@@ -131,13 +179,13 @@ export default function Institute() {
               placeholder="Search institutes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
 
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="All">All Types</option>
               <option value="College">College</option>
@@ -149,7 +197,7 @@ export default function Institute() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value="All">All Status</option>
               <option value="Active">Active</option>
@@ -157,7 +205,7 @@ export default function Institute() {
               <option value="Trial">Trial</option>
             </select>
 
-            <select className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+            <select className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
               <option>All Plans</option>
               <option>Premium</option>
               <option>Standard</option>
@@ -171,7 +219,7 @@ export default function Institute() {
           <table className="w-full min-w-[900px]">
             <thead className="bg-gray-100 text-gray-800 text-lg">
               <tr>
-                <th className="px-4 py-3 text-center">Organisation</th>
+                <th className="px-4 py-3 text-left">Organisation</th>
                 <th className="px-4 py-3 text-center">Type</th>
                 <th className="px-4 py-3 text-center">Location</th>
                 <th className="px-4 py-3 text-center">Plan</th>
@@ -182,10 +230,17 @@ export default function Institute() {
             </thead>
 
             <tbody>
+              {filteredInstitutes.length === 0 && (
+                <tr>
+                  <td colSpan="7" className="text-center py-8 text-gray-500">
+                    No institutes found.
+                  </td>
+                </tr>
+              )}
               {filteredInstitutes.map((inst) => (
                 <tr key={inst?.id} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-4">
-                    <div className="font-semibold">
+                    <div className="font-semibold text-gray-800">
                       {formatText(inst?.organisation?.name)}
                     </div>
                     <div className="text-md text-gray-500">
@@ -193,28 +248,28 @@ export default function Institute() {
                     </div>
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center text-gray-700">
                     {inst?.organisation?.type}
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center text-gray-700">
                     {formatText(inst?.organisation?.city)},{" "}
                     {formatText(inst?.organisation?.state)}
                   </td>
 
-                  <td className="px-4 py-4">
-                    {inst?.plan || "Premium"}
+                  <td className="px-4 py-4 text-center text-gray-700">
+                    {inst?.plan}
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <span
-                      className={`px-3 py-1 rounded-full text-md font-semibold ${statusStyles[inst?.status]}`}
+                      className={`px-3 py-1 rounded-full text-sm font-semibold ${statusStyles[inst?.status]}`}
                     >
                       {inst?.status}
                     </span>
                   </td>
 
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center text-gray-700">
                     {inst?.createdAt
                       ? new Date(inst.createdAt).toLocaleDateString()
                       : "-"}
@@ -224,29 +279,30 @@ export default function Institute() {
                     <div className="flex justify-center gap-2">
                       <button
                         onClick={() =>
-                          navigate(`/admin/institute/${inst?.id}/view`, {
-                            state: { institute: inst },
+                          navigate(`/super-admin/institutes/${inst?.id}/view`, {
+                            state: { institute: inst.raw || inst },
                           })
                         }
-                        className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200"
+                        className="p-2 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition"
+                        title="View Profile"
                       >
-                        <Eye size={16} />
+                        <Eye size={18} />
                       </button>
 
                       <button
-                        onClick={() =>
-                          toggleStatus(inst?.id, inst?.status)
-                        }
-                        className="p-2 bg-green-100 text-green-600 rounded-full hover:bg-green-200"
+                        onClick={() => toggleStatus(inst?.id, inst?.status)}
+                        className="p-2 bg-yellow-100 text-yellow-600 rounded-full hover:bg-yellow-200 transition"
+                        title="Toggle Status"
                       >
-                        <CheckCircle size={16} />
+                        <CheckCircle size={18} />
                       </button>
 
                       <button
                         onClick={() => deleteInstitute(inst?.id)}
-                        className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200"
+                        className="p-2 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition"
+                        title="Delete Institute"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>
@@ -261,58 +317,56 @@ export default function Institute() {
           {filteredInstitutes.map((inst) => (
             <div
               key={inst?.id}
-              className="bg-white rounded-xl shadow-sm p-4 space-y-2"
+              className="bg-white rounded-xl shadow-sm p-4 space-y-2 border border-gray-100"
             >
-              <div className="font-semibold text-lg">
+              <div className="font-semibold text-lg text-gray-800">
                 {formatText(inst?.organisation?.name)}
               </div>
               <div className="text-md text-gray-500">
                 {inst?.organisation?.email}
               </div>
 
-              <div className="text-md">
+              <div className="text-md text-gray-700 mt-2">
                 <strong>Type:</strong> {inst?.organisation?.type}
               </div>
-              <div className="text-md">
+              <div className="text-md text-gray-700">
                 <strong>Location:</strong>{" "}
                 {formatText(inst?.organisation?.city)},{" "}
                 {formatText(inst?.organisation?.state)}
               </div>
-              <div className="text-md">
+              <div className="text-md text-gray-700 flex items-center gap-2">
                 <strong>Status:</strong>{" "}
                 <span
-                  className={`px-2 py-1 rounded-full text-md ${statusStyles[inst?.status]}`}
+                  className={`px-2 py-1 rounded-full text-xs font-semibold ${statusStyles[inst?.status]}`}
                 >
                   {inst?.status}
                 </span>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4 border-t border-gray-100 mt-2">
                 <button
                   onClick={() =>
-                    navigate(`/admin/institute/${inst?.id}/view`, {
-                      state: { institute: inst },
+                    navigate(`/super-admin/institutes/${inst?.id}/view`, {
+                      state: { institute: inst.raw || inst },
                     })
                   }
-                  className="flex-1 bg-blue-100 text-blue-600 py-2 rounded-lg"
+                  className="flex-1 flex items-center justify-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 rounded-lg font-medium transition"
                 >
-                  View
+                  <Eye size={16} /> View
                 </button>
 
                 <button
-                  onClick={() =>
-                    toggleStatus(inst?.id, inst?.status)
-                  }
-                  className="flex-1 bg-green-100 text-green-600 py-2 rounded-lg"
+                  onClick={() => toggleStatus(inst?.id, inst?.status)}
+                  className="flex-1 flex items-center justify-center gap-1 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 py-2 rounded-lg font-medium transition"
                 >
-                  Toggle
+                  <CheckCircle size={16} /> Status
                 </button>
 
                 <button
                   onClick={() => deleteInstitute(inst?.id)}
-                  className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg"
+                  className="flex-1 flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg font-medium transition"
                 >
-                  Delete
+                  <Trash2 size={16} /> Delete
                 </button>
               </div>
             </div>
@@ -326,9 +380,9 @@ export default function Institute() {
 /* ================= REUSABLE STAT CARD ================= */
 function StatCard({ title, value, color = "text-gray-800" }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 text-center">
-      <div className="text-md text-gray-500">{title}</div>
-      <div className={`text-3xl font-bold ${color}`}>{value}</div>
+    <div className="bg-white rounded-xl shadow-sm p-6 text-center border border-gray-100">
+      <div className="text-sm uppercase tracking-wider text-gray-500 font-semibold mb-1">{title}</div>
+      <div className={`text-4xl font-bold ${color}`}>{value}</div>
     </div>
   );
 }

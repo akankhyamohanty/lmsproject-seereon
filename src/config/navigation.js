@@ -17,6 +17,16 @@ export const navConfigs = {
   super_admin: [
     { label: "Dashboard", path: "/super-admin/dashboard", icon: LayoutDashboard },
     { label: "Institute", path: "/super-admin/institutes", icon: Building2 },
+    { label: "Dashboard",         path: "/admin/dashboard",      icon: LayoutDashboard },
+    { label: "Faculty Approvals", path: "/admin/faculty",        icon: UserCheck },
+    { label: "Total Students",    path: "/admin/students",       icon: Users },
+    { label: "Academic Setup",    path: "/admin/academics",      icon: BookOpen },
+    { label: "Fees Structure",    path: "/admin/fees/structure", icon: DollarSign },
+    // ✅ CHANGED: "/admin/fees" -> "/admin/fees/publish" to avoid conflict
+    { label: "Publish Fees",      path: "/admin/fees/publish",   icon: CreditCard },
+    { label: "Notifications",     path: "/admin/communication",  icon: Bell },
+    { label: "Reports",           path: "/admin/reports",        icon: FileText },
+    { label: "Settings",          path: "/admin/settings",       icon: Settings },
   ],
 
   institute_admin: [

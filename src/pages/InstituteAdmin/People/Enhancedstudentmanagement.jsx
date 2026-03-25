@@ -141,8 +141,8 @@ export const StudentList = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
                 activeTab === tab
-                  ? "bg-slate-800 text-white shadow-md"
-                  : "text-slate-500 hover:bg-slate-50"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-blue-600 hover:bg-slate-50"
               }`}
             >
               {tab}
@@ -168,12 +168,12 @@ export const StudentList = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="py-5 pl-6 pr-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Student</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Type</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Program</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Email</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Status</th>
-                <th className="py-5 pr-6 text-[13px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
+                <th className="py-5 pl-6 pr-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Student</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Type</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Program</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Email</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Status</th>
+                <th className="py-5 pr-6 text-[13px] font-black uppercase text-blue-400 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

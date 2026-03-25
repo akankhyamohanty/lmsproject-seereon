@@ -71,8 +71,8 @@ export const MyCourses = () => {
       
       {/* 1. HEADER */}
       <div className="mb-10 mt-2">
-        <h1 className="text-3xl font-black text-[#1e293b] tracking-tight">My Courses</h1>
-        <p className="text-slate-400 font-medium mt-2">View all your enrolled courses</p>
+        <h1 className="text-3xl text-left font-black text-[#1e293b] tracking-tight">My Courses</h1>
+        <p className="text-slate-400  text-left font-medium mt-2">View all your enrolled courses</p>
       </div>
 
       {/* 2. COURSE GRID */}

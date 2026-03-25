@@ -16,10 +16,10 @@ export const StatCard = ({
         <div className="flex-1">
           <p className="text-gray-600 text-sm font-medium mb-2">{title}</p>
           <p className="text-3xl font-bold text-gray-900">{value}</p>
-          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+          {subtitle && <p className="text-md text-gray-500 mt-1">{subtitle}</p>}
           {trend && (
             <div className="flex items-center gap-1 mt-2">
-              <span className={`text-xs font-semibold ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-md font-semibold ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
                 {trendValue}
               </span>
             </div>

@@ -90,14 +90,14 @@ export const CourseDetails = () => {
   };
 
   if (loading) {
-    return <div className="w-full max-w-7xl mx-auto pb-12">Loading...</div>;
+    return <div className="w-full max-w-8xl mx-auto pb-12">Loading...</div>;
   }
 
   const courseTitle = selectedCourse?.title || "Advanced Mathematics";
   const courseProgress = selectedCourse?.progress || 65;
 
   return (
-    <div className="w-full max-w-7xl mx-auto pb-12">
+    <div className="w-full max-w-8xl text-left mx-auto pb-12">
       
       {/* 1. BACK NAVIGATION */}
       <div className="mb-6 mt-2">
@@ -188,7 +188,7 @@ export const CourseDetails = () => {
           </div>
 
           {/* Progress Section */}
-          <div className="max-w-2xl">
+          <div className="max-w-8xl">
             <h3 className="text-md font-bold text-slate-600 mb-3">Course Complete</h3>
             
             {/* Progress Bar */}
