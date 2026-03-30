@@ -5,7 +5,8 @@ import {
   ChevronRight, ChevronLeft, Plus, Eye, Pencil, Trash2,
   BookOpen, Building2, Layers, Users, Hash, UserCheck,
   ShieldCheck, Calendar, Search, X, CheckCircle, Loader,
-  AlertTriangle, RefreshCw, Home, ArrowRight, GraduationCap
+  AlertTriangle, RefreshCw, Home, ArrowRight, GraduationCap,
+  UserPlus, Book, Clock, MapPin, ChevronDown
 } from "lucide-react";
 import { DEPARTMENTS } from "./BatchStorage.jsx";
 
@@ -18,7 +19,7 @@ const B6_12 = "rgba(37,99,235,0.12)";
 const B6_15 = "rgba(37,99,235,0.15)";
 const B6_20 = "rgba(37,99,235,0.20)";
 
-// ─── Known program prefixes (order matters — longest first) ──────────────────
+// ─── Known program prefixes ──────────────────────────────────────────────────
 const PROGRAM_PREFIXES = [
   "B.Tech", "M.Tech", "B.Sc", "M.Sc", "B.A.", "M.A.",
   "B.Com", "M.Com", "BA LLB", "BBA LLB", "BBA", "MBA",
@@ -26,7 +27,6 @@ const PROGRAM_PREFIXES = [
   "B.Pharm", "M.Pharm", "Diploma",
 ];
 
-// Extract { program, specialization } from a course name
 const parseCourse = (course = "") => {
   for (const prefix of PROGRAM_PREFIXES) {
     if (course.startsWith(prefix)) {
@@ -37,13 +37,154 @@ const parseCourse = (course = "") => {
   return { program: course, specialization: course };
 };
 
-// Program icon mapping
 const PROGRAM_ICONS = {
   "B.Tech": "🎓", "M.Tech": "🔬", "B.Sc":  "⚗️",  "M.Sc":  "🧪",
   "BCA":    "💻", "MCA":   "🖥️",  "BBA":   "💼", "MBA":   "📊",
   "B.Com":  "📒", "M.Com": "📈", "LLB":   "⚖️",  "LLM":   "🏛️",
   "MBBS":   "🏥", "BDS":   "🦷", "B.Pharm":"💊", "Diploma":"📋",
   "BA LLB": "⚖️",  "BBA LLB":"⚖️",
+};
+
+// ─── Assign Faculty Modal (THE POWER COMPONENT) ──────────────────────────────
+const AssignFacultyModal = ({ batch, onClose, showToast }) => {
+  const [subjects, setSubjects] = useState([]);
+  const [faculties, setFaculties] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    subjectId: "",
+    facultyId: "",
+    schedule: "",
+    roomNo: ""
+  });
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user') || '{}')?.token;
+        const [subRes, facRes] = await Promise.all([
+          axios.get("http://localhost:5000/api/admin/subjects", { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get("http://localhost:5000/api/admin/faculty", { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+        setSubjects(subRes.data.subjects || []);
+        setFaculties(facRes.data.faculty || facRes.data.data || []);
+      } catch (err) {
+        console.error("Error loading metadata", err);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    fetchMetadata();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user') || '{}')?.token;
+      const res = await axios.post("http://localhost:5000/api/admin/batches/assign-faculty", {
+        batchId: batch.id,
+        ...formData
+      }, { headers: { Authorization: `Bearer ${token}` } });
+
+      if (res.data.success) {
+        showToast("Class assigned and notifications blasted!");
+        onClose();
+      }
+    } catch (err) {
+      alert("Failed to assign class. Please check server logs.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      style={{ background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(8px)" }}>
+      <div className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl"
+           style={{ animation: "modalIn 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div className="bg-blue-600 p-8 text-white text-left">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-black tracking-tight">Assign Faculty</h2>
+              <p className="text-blue-100 text-xs mt-1 font-bold uppercase tracking-wider">Creating class for {batch.name}</p>
+            </div>
+            <div className="p-3 bg-white/10 rounded-2xl border border-white/20"><UserPlus size={24}/></div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-5 text-left">
+          {loadingData ? (
+             <div className="py-12 text-center flex flex-col items-center gap-4">
+               <Loader className="animate-spin text-blue-600 w-8 h-8" />
+               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Loading Resources...</p>
+             </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Subject</label>
+                <div className="relative">
+                   <Book className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
+                   <select required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})}
+                     className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:bg-white font-black text-slate-900 transition-all appearance-none cursor-pointer">
+                     <option value="" disabled className="text-slate-400 font-medium">Choose a subject...</option>
+                     {subjects.map(s => <option key={s.id} value={s.id} className="text-slate-900">{s.subject_name || s.name}</option>)}
+                   </select>
+                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Assign Faculty</label>
+                <div className="relative">
+                   <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
+                   <select required value={formData.facultyId} onChange={e => setFormData({...formData, facultyId: e.target.value})}
+                     className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:bg-white font-black text-slate-900 transition-all appearance-none cursor-pointer">
+                     <option value="" disabled className="text-slate-400 font-medium">Choose a teacher...</option>
+                     {/* 🎯 FIXED: Printing f.name directly from the faculty table */}
+                     {faculties.map(f => (
+                       <option key={f.id} value={f.id} className="text-slate-900">
+                         {f.name || "Unnamed Faculty"}
+                       </option>
+                     ))}
+                   </select>
+                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18}/>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Schedule</label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
+                    <input required placeholder="Mon 10:30 AM" value={formData.schedule} onChange={e => setFormData({...formData, schedule: e.target.value})}
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:bg-white font-bold text-sm text-slate-900 transition-all placeholder:text-slate-400" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Room No</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
+                    <input placeholder="Room 302" value={formData.roomNo} onChange={e => setFormData({...formData, roomNo: e.target.value})}
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:bg-white font-bold text-sm text-slate-900 transition-all placeholder:text-slate-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-6 border-t border-slate-100">
+                <button type="button" onClick={onClose} className="flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-slate-400 hover:bg-slate-100 transition-all">Cancel</button>
+                <button type="submit" disabled={submitting}
+                  className="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-blue-200 hover:bg-slate-900 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                  {submitting ? <Loader className="animate-spin" size={16}/> : <><UserPlus size={16}/> Blast Schedule</>}
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </div>
+    </div>
+  );
 };
 
 // ─── Delete Modal ─────────────────────────────────────────────────────────────
@@ -73,7 +214,6 @@ const DeleteModal = ({ batch, onClose, onConfirm }) => {
             <Layers size={20} color={B6} className="flex-shrink-0"/>
             <div>
               <p className="font-black text-blue-600">{batch.name}</p>
-              {/* FIXED: b.course to b.course_name */}
               <p className="text-sm" style={{ color: "rgba(37,99,235,0.5)" }}>{batch.course_name} · {batch.student_count || 0} students</p>
             </div>
           </div>
@@ -105,7 +245,7 @@ const DeleteModal = ({ batch, onClose, onConfirm }) => {
 };
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
-const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
+const ViewModal = ({ batch, onClose, onEdit, onDelete, onAssign }) => {
   if (!batch) return null;
   const fillPct = batch.max_strength
     ? Math.min(100, Math.round(((batch.student_count || 0) / parseInt(batch.max_strength)) * 100))
@@ -125,7 +265,6 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
               </div>
               <div>
                 <h2 className="text-xl font-black text-white">{batch.name}</h2>
-                {/* FIXED: b.course to b.course_name */}
                 <p className="text-white/65 text-sm mt-0.5">{batch.course_name} · {batch.department_name}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-white text-blue-600">{batch.status}</span>
@@ -153,6 +292,18 @@ const ViewModal = ({ batch, onClose, onEdit, onDelete }) => {
           ))}
         </div>
         <div className="overflow-y-auto flex-1 p-6 space-y-4 mt-2">
+          
+          <div className="p-5 rounded-2xl flex justify-between items-center bg-blue-50 border border-blue-100">
+            <div>
+              <p className="font-black text-blue-800 text-sm">Class Scheduling</p>
+              <p className="text-xs text-blue-600/70 font-medium">Assign a teacher and subject to this batch.</p>
+            </div>
+            <button onClick={() => { onClose(); onAssign(batch); }} 
+              className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md shadow-blue-200 hover:bg-slate-900 transition-all flex items-center gap-2">
+              <UserPlus size={14}/> Assign Now
+            </button>
+          </div>
+
           <div className="p-4 rounded-2xl" style={{ background: B6_05, border: `1px solid ${B6_12}` }}>
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-black uppercase tracking-widest" style={{ color: "rgba(37,99,235,0.5)" }}>Batch Capacity</span>
@@ -294,6 +445,7 @@ const BatchBrowser = () => {
 
   const [viewBatch, setViewBatch]     = useState(null);
   const [deleteBatch, setDeleteBatch] = useState(null);
+  const [assignBatch, setAssignBatch] = useState(null);
   const [toast, setToast]             = useState(null);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
@@ -323,7 +475,6 @@ const BatchBrowser = () => {
   const programGroups = useMemo(() => {
     const map = {};
     batches.forEach(b => {
-      // FIXED: b.course_name instead of b.course
       const { program } = parseCourse(b.course_name || "");
       if (!map[program]) map[program] = { program, icon: PROGRAM_ICONS[program] || "🎓", batches: [] };
       map[program].batches.push(b);
@@ -335,7 +486,6 @@ const BatchBrowser = () => {
     programGroups.filter(g =>
       g.program.toLowerCase().includes(search.toLowerCase()) ||
       g.batches.some(b =>
-        // FIXED: b.course_name instead of b.course
         (b.course_name || "").toLowerCase().includes(search.toLowerCase()) ||
         (b.department_name || "").toLowerCase().includes(search.toLowerCase())
       )
@@ -348,13 +498,12 @@ const BatchBrowser = () => {
     if (!pg) return [];
     const map = {};
     pg.batches.forEach(b => {
-      // FIXED: b.course_name instead of b.course
       const { specialization } = parseCourse(b.course_name || "");
       const dept = DEPARTMENTS.find(d => d.id === b.department_id);
       if (!map[specialization]) {
         map[specialization] = {
           specialization,
-          fullCourse: b.course_name, // FIXED
+          fullCourse: b.course_name,
           department_name: b.department_name || dept?.name,
           department_id: b.department_id,
           icon: dept?.icon || "📚",
@@ -369,7 +518,6 @@ const BatchBrowser = () => {
   // ── Level 3: batches for selected specialization ──────────────────────────
   const batchesForSpec = useMemo(() => {
     if (!selectedSpecialization) return [];
-    // FIXED: b.course_name instead of b.course
     return batches.filter(b => b.course_name === selectedSpecialization.fullCourse);
   }, [batches, selectedSpecialization]);
 
@@ -802,24 +950,34 @@ const BatchBrowser = () => {
                             </div>
                           </div>
 
+                          {/* 🎯 THE ASSIGN BUTTON BAR */}
                           <div className="flex items-center gap-2 pt-3" style={{ borderTop: `1px solid ${B6_08}` }}
                             onClick={e => e.stopPropagation()}>
+                            
+                            <button onClick={() => setAssignBatch(batch)}
+                              className="py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+                              style={{ background: "#2563eb", color: "white", flex: 2 }}
+                              onMouseEnter={e => e.currentTarget.style.background = "#1d4ed8"}
+                              onMouseLeave={e => e.currentTarget.style.background = "#2563eb"}>
+                              <UserPlus size={14}/> Assign Class
+                            </button>
+
                             <button onClick={() => setViewBatch(batch)}
-                              className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                              className="flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                               style={{ background: "rgba(37,99,235,0.08)", color: "#2563eb" }}
                               onMouseEnter={e => { e.currentTarget.style.background = "#2563eb"; e.currentTarget.style.color = "white"; }}
                               onMouseLeave={e => { e.currentTarget.style.background = "rgba(37,99,235,0.08)"; e.currentTarget.style.color = "#2563eb"; }}>
-                              <Eye size={12}/> View
+                              <Eye size={12}/>
                             </button>
                             <button onClick={() => navigate(`/admin/batch/create?edit=${batch.id}`)}
-                              className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                              className="flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                               style={{ background: "rgba(217,119,6,0.08)", color: "#d97706" }}
                               onMouseEnter={e => { e.currentTarget.style.background = "#d97706"; e.currentTarget.style.color = "white"; }}
                               onMouseLeave={e => { e.currentTarget.style.background = "rgba(217,119,6,0.08)"; e.currentTarget.style.color = "#d97706"; }}>
-                              <Pencil size={12}/> Edit
+                              <Pencil size={12}/>
                             </button>
                             <button onClick={() => setDeleteBatch(batch)}
-                              className="py-2 px-3 rounded-xl text-xs font-bold transition-all"
+                              className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center"
                               style={{ background: "rgba(220,38,38,0.08)", color: "#dc2626" }}
                               onMouseEnter={e => { e.currentTarget.style.background = "#dc2626"; e.currentTarget.style.color = "white"; }}
                               onMouseLeave={e => { e.currentTarget.style.background = "rgba(220,38,38,0.08)"; e.currentTarget.style.color = "#dc2626"; }}>
@@ -843,12 +1001,22 @@ const BatchBrowser = () => {
         )}
       </div>
 
+      {/* 🎯 RENDER NEW MODAL */}
+      {assignBatch && (
+        <AssignFacultyModal 
+          batch={assignBatch} 
+          onClose={() => setAssignBatch(null)} 
+          showToast={showToast} 
+        />
+      )}
+
       {viewBatch && (
         <ViewModal
           batch={viewBatch}
           onClose={() => setViewBatch(null)}
           onEdit={b => navigate(`/admin/batch/create?edit=${b.id}`)}
           onDelete={b => { setViewBatch(null); setDeleteBatch(b); }}
+          onAssign={b => { setViewBatch(null); setAssignBatch(b); }}
         />
       )}
       {deleteBatch && (

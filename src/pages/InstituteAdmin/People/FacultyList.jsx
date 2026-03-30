@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // 👈 ADDED AXIOS
+import axios from "axios";
 import {
   Search, Eye, Plus, Calendar, Filter, Loader, RefreshCw,
   Pencil, Trash2, X, Save, AlertTriangle, CheckCircle,
@@ -73,7 +73,7 @@ const EditInput = ({ label, name, type = "text", value, onChange, error, require
         className={`w-full px-3 py-2.5 rounded-xl border text-md font-medium outline-none transition appearance-none
           ${error ? "border-blue-400 bg-blue-50" : "border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"}`}>
         <option value="">Select</option>
-        {options.map(o => <option key={o}>{o}</option>)}
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     ) : (
       <input type={type} name={name} value={value || ""} onChange={onChange} disabled={disabled}
@@ -92,8 +92,7 @@ const EditInput = ({ label, name, type = "text", value, onChange, error, require
 const ViewModal = ({ faculty: f, onClose, onEdit, onDelete }) => {
   if (!f) return null;
   const s = statusStyle(f.status);
-  const eduEntries = Object.entries(f.education || {}).filter(([, v]) => v && (v.marks || v.file || v.board || v.university || v.degree));
-
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-5"
       style={{ background: "rgba(2,6,23,0.65)", backdropFilter: "blur(10px)" }}
@@ -258,23 +257,24 @@ const EditModal = ({ faculty, onClose, onSave }) => {
     if (Object.keys(e).length > 0) return;
     setLoading(true);
     
-    // Combine first & last name back for backend if needed
     const updatedData = {
         ...form,
         name: `${form.first_name} ${form.last_name || ''}`.trim(),
-        dept: form.department // Map back to DB column name
+        dept: form.department
     };
 
     try {
-        const stored = JSON.parse(localStorage.getItem('user'));
-        const token = stored?.token;
+        let token = localStorage.getItem('token'); 
+        if (!token) {
+          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          token = storedUser?.token || storedUser?.data?.token; 
+        }
         
-        // DYNAMIC API CALL - Replace with your actual Edit Endpoint
         await axios.put(`http://localhost:5000/api/admin/faculty/${faculty.id}`, updatedData, {
             headers: { Authorization: `Bearer ${token}` }
         });
 
-        onSave(form); // Update local state
+        onSave(form);
         setSaved(true);
         setTimeout(() => { setLoading(false); onClose(); }, 500);
 
@@ -434,15 +434,17 @@ const DeleteModal = ({ faculty: f, onClose, onConfirm }) => {
     if (!match || loading) return;
     setLoading(true);
     try {
-        const stored = JSON.parse(localStorage.getItem('user'));
-        const token = stored?.token;
+        let token = localStorage.getItem('token'); 
+        if (!token) {
+          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+          token = storedUser?.token || storedUser?.data?.token; 
+        }
         
-        // DYNAMIC API CALL - Replace with your actual Delete Endpoint
         await axios.delete(`http://localhost:5000/api/admin/faculty/${f.id}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
         
-        onConfirm(f.id); // Parent sets delF=null
+        onConfirm(f.id); 
     } catch (err) {
         console.error(err);
         alert("Failed to delete from server.");
@@ -523,11 +525,9 @@ export const FacultyList = () => {
     setTimeout(() => setToast(null), 3200);
   };
 
-  // 🚀 DYNAMIC FETCH LOGIC 🚀
   const load = async () => {
     setLoading(true);
     try {
-        // 1. SMART TOKEN RETRIEVAL (Just like the form!)
         let token = localStorage.getItem('token'); 
         if (!token) {
           const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -545,14 +545,13 @@ export const FacultyList = () => {
         });
 
         if (response.data.success) {
-            // Data Adapter: Maps the MySQL data perfectly to your UI
             const formattedData = response.data.faculty.map(f => ({
                 ...f,
                 first_name: f.name ? f.name.split(" ")[0] : "",
                 last_name: f.name ? f.name.split(" ").slice(1).join(" ") : "",
                 department: f.dept || "",
                 email: f.email || `${f.empId?.toLowerCase() || 'fac'}@institute.edu`, 
-                status: f.status || "Active", // Fallback so the UI filter tabs work
+                status: f.status || "Active", 
                 created_at: f.created_at || new Date().toISOString()
             }));
             setFaculty(formattedData);
@@ -617,7 +616,6 @@ export const FacultyList = () => {
         @keyframes rowIn   { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
       `}</style>
 
-      {/* Toast */}
       {toast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]" style={{ animation: "toastIn .3s ease" }}>
           <div className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-md font-semibold border
@@ -629,7 +627,6 @@ export const FacultyList = () => {
       )}
 
       <div className="font-sans w-full text-left pb-12">
-        {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-2">
           <div>
             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Faculty Directory</h1>
@@ -652,7 +649,6 @@ export const FacultyList = () => {
           </div>
         </div>
 
-        {/* Tabs + search */}
         <div className="flex flex-col md:flex-row gap-3 mb-5 justify-between items-end">
           <div className="bg-white p-1.5 rounded-xl border border-slate-200 inline-flex flex-wrap gap-1 shadow-sm">
             {["all", "pending", "active", "rejected"].map(t => {
@@ -678,7 +674,6 @@ export const FacultyList = () => {
           </div>
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">

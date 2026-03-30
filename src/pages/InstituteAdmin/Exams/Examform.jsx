@@ -5,12 +5,29 @@ import { jsPDF } from "jspdf";
 import axios from "axios";
 import {
   SEMESTER_OPTIONS,
-  BATCH_OPTIONS, // Used as fallback
+  BATCH_OPTIONS, 
   YEAR_OPTIONS,
-  SUBJECT_OPTIONS, // Used as fallback
+  SUBJECT_OPTIONS, 
   EXAM_TYPE_OPTIONS,
   DURATION_OPTIONS,
 } from "./Examstorage.jsx";
+
+// 🎯 HELPER: Safely grabs the token from local storage and formats the headers
+const getAuthConfig = () => {
+  let token = localStorage.getItem("token");
+  if (!token || token === "undefined") {
+    try {
+      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+      token = userObj?.token;
+    } catch (e) {}
+  }
+  
+  const config = { withCredentials: true, headers: {} }; 
+  if (token && token !== "undefined" && token !== "null") {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+};
 
 // ─── Constants for Question Builder ───────────────────────────────────────────
 const QUESTION_TYPE_OPTIONS = [
@@ -28,9 +45,9 @@ const DIFFICULTY_OPTIONS = [
   { value: "Hard", label: "Hard" },
 ];
 
-// ─── Shared UI ────────────────────────────────────────────────────────────────
+// ─── Shared UI (Preserved & Fixed for Visibility) ─────────────────────────────
 const Label = ({ children, required }) => (
-  <label className="block text-sm font-medium text-gray-700 mb-1">
+  <label className="block text-sm font-medium text-gray-800 mb-1">
     {children} {required && <span className="text-red-500">*</span>}
   </label>
 );
@@ -43,7 +60,7 @@ const Input = ({ value, onChange, placeholder, type = "text", min, name }) => (
     onChange={onChange}
     placeholder={placeholder}
     min={min}
-    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
   />
 );
 
@@ -53,21 +70,24 @@ const Select = ({ value, onChange, options, placeholder, disabled, name }) => (
     value={value}
     onChange={onChange}
     disabled={disabled}
-    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
   >
-    <option value="">{placeholder}</option>
-    {options?.map((o) => (
-      <option key={o.value} value={o.value}>{o.label}</option>
+    <option value="" className="text-gray-900">{placeholder}</option>
+    {/* 🎯 FIXED: Explicitly forcing text-gray-900 on every option to fix the blank dropdown issue */}
+    {options?.map((o, index) => (
+      <option key={`${o.value}-${index}`} value={o.value} className="text-gray-900">
+        {o.label}
+      </option>
     ))}
   </select>
 );
 
 const ErrMsg = ({ msg }) =>
-  msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
+  msg ? <p className="text-red-500 text-xs mt-1 font-medium">{msg}</p> : null;
 
 const Section = ({ title, children }) => (
   <div className="mb-6">
-    <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 pb-2 border-b border-gray-100">
+    <h2 className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-4 pb-2 border-b border-gray-200">
       {title}
     </h2>
     {children}
@@ -78,7 +98,6 @@ const Section = ({ title, children }) => (
 const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) => {
   const handlePrint = () => window.print();
 
-  // Use dynamic subjects if loaded, otherwise fallback to local storage options
   const activeSubjects = dynamicSubjects.length > 0 ? dynamicSubjects : SUBJECT_OPTIONS;
   const subjLabel = activeSubjects.find((o) => String(o.value) === String(form.subject))?.label || form.subject;
   
@@ -86,9 +105,9 @@ const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) =
   const totalMarksCalc = questionsList.reduce((s, q) => s + Number(q.marks || 0), 0);
 
   const difficultyBadgeColor = {
-    Easy: "bg-green-100 text-green-700",
-    Medium: "bg-yellow-100 text-yellow-700",
-    Hard: "bg-red-100 text-red-700",
+    Easy: "bg-green-100 text-green-800",
+    Medium: "bg-yellow-100 text-yellow-800",
+    Hard: "bg-red-100 text-red-800",
   };
 
   return (
@@ -111,7 +130,7 @@ const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) =
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
           <div className="qp-no-print flex items-center justify-between px-6 py-4 bg-slate-50 border-b border-slate-200 shrink-0">
-            <div className="flex items-center gap-2 text-slate-700">
+            <div className="flex items-center gap-2 text-slate-800">
               <span className="text-lg">🖨️</span>
               <span className="font-bold text-sm uppercase tracking-tight">Question Paper Preview</span>
             </div>
@@ -119,18 +138,18 @@ const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) =
               <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-md">
                 🖨️ Print / Save PDF
               </button>
-              <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-200 rounded-xl transition-all">✕</button>
+              <button onClick={onClose} className="p-2 text-slate-500 hover:bg-slate-200 hover:text-slate-800 rounded-xl transition-all">✕</button>
             </div>
           </div>
 
           <div id="qp-print-content" className="overflow-y-auto flex-1">
-            <div className="p-10 text-slate-800 bg-white">
+            <div className="p-10 text-slate-900 bg-white">
               <div className="text-center mb-8 pb-6 border-b-2 border-slate-900">
                 <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">ACADEMIC INSTITUTION</h1>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Department of {subjLabel}</p>
+                <p className="text-xs font-bold text-slate-600 uppercase tracking-[0.2em] mt-1">Department of {subjLabel}</p>
                 <div className="mt-4">
                   <h2 className="text-xl font-black text-blue-700">{form.title}</h2>
-                  {typeLabel && <p className="text-sm font-semibold text-slate-500 mt-1">{typeLabel}</p>}
+                  {typeLabel && <p className="text-sm font-semibold text-slate-600 mt-1">{typeLabel}</p>}
                 </div>
               </div>
 
@@ -146,45 +165,45 @@ const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) =
                   { label: "Batch", value: form.batch || "—" },
                   { label: "Venue", value: form.venue || "—" },
                 ].map(({ label, value }) => (
-                  <div key={label} className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
-                    <p className="font-bold text-slate-800 mt-0.5 text-sm">{value}</p>
+                  <div key={label} className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
+                    <p className="font-bold text-slate-900 mt-0.5 text-sm">{value}</p>
                   </div>
                 ))}
               </div>
 
               {form.instructions && (
                 <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Instructions</p>
-                  <p className="text-sm text-slate-700 leading-relaxed">{form.instructions}</p>
+                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-1">Instructions</p>
+                  <p className="text-sm text-slate-800 leading-relaxed">{form.instructions}</p>
                 </div>
               )}
 
               <div className="space-y-6">
                 <div className="flex justify-between items-center border-b-2 border-slate-900 pb-2">
-                  <h3 className="font-black text-xs uppercase tracking-widest">Questions</h3>
-                  <span className="font-black text-xs uppercase tracking-widest">Marks</span>
+                  <h3 className="font-black text-xs uppercase tracking-widest text-slate-900">Questions</h3>
+                  <span className="font-black text-xs uppercase tracking-widest text-slate-900">Marks</span>
                 </div>
 
                 {questionsList.length === 0 ? (
-                  <p className="text-center text-slate-400 italic py-8 text-sm">No questions added yet.</p>
+                  <p className="text-center text-slate-500 italic py-8 text-sm">No questions added yet.</p>
                 ) : (
                   questionsList.map((q, index) => (
-                    <div key={index} className="border-b border-slate-100 pb-5 last:border-0">
+                    <div key={index} className="border-b border-slate-200 pb-5 last:border-0">
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                             <span className="font-black text-slate-900 text-sm">Q{index + 1}.</span>
-                            <span className="text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{q.type}</span>
-                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${difficultyBadgeColor[q.difficulty] || "bg-slate-100 text-slate-500"}`}>{q.difficulty}</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{q.type}</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${difficultyBadgeColor[q.difficulty] || "bg-slate-200 text-slate-700"}`}>{q.difficulty}</span>
                           </div>
-                          <p className="font-semibold text-slate-800 text-[15px] leading-relaxed">{q.question}</p>
+                          <p className="font-semibold text-slate-900 text-[15px] leading-relaxed">{q.question}</p>
                           {q.type === "MCQ" && (
                             <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1.5">
                               {["A", "B", "C", "D"].map((opt) => (
                                 q[`option${opt}`] && (
-                                  <div key={opt} className="flex items-start gap-2 text-sm text-slate-700">
-                                    <span className="font-bold text-slate-500 shrink-0">{opt})</span>
+                                  <div key={opt} className="flex items-start gap-2 text-sm text-slate-800">
+                                    <span className="font-bold text-slate-600 shrink-0">{opt})</span>
                                     <span>{q[`option${opt}`]}</span>
                                   </div>
                                 )
@@ -194,45 +213,19 @@ const QuestionPaperPrint = ({ form, questionsList, onClose, dynamicSubjects }) =
                           {q.type !== "MCQ" && (
                             <div className="mt-3 space-y-2">
                               {Array.from({ length: q.type === "LONG_ANSWER" || q.type === "SUBJECTIVE" ? 5 : 2 }).map((_, i) => (
-                                <div key={i} className="w-full h-px bg-slate-200" />
+                                <div key={i} className="w-full h-px bg-slate-300" />
                               ))}
                             </div>
                           )}
                         </div>
-                        <div className="shrink-0 text-center border-2 border-slate-900 rounded-lg w-14 py-2">
+                        <div className="shrink-0 text-center border-2 border-slate-900 rounded-lg w-14 py-2 bg-white">
                           <p className="font-black text-lg text-slate-900 leading-none">{q.marks}</p>
-                          <p className="text-[8px] font-bold text-slate-400 uppercase">marks</p>
+                          <p className="text-[8px] font-bold text-slate-500 uppercase">marks</p>
                         </div>
                       </div>
                     </div>
                   ))
                 )}
-
-                {questionsList.length > 0 && (
-                  <div className="flex justify-end pt-4 border-t-2 border-slate-900">
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Marks</p>
-                      <p className="text-3xl font-black text-blue-700">{form.totalMarks || totalMarksCalc}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-16 flex justify-between items-end">
-                <div className="text-center">
-                  <div className="w-32 h-px bg-slate-300 mb-2" />
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Examiner Signature</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-32 h-px bg-slate-300 mb-2" />
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">HOD / Controller</p>
-                </div>
-              </div>
-
-              <div className="mt-10 pt-6 border-t border-slate-100 text-center">
-                <p className="text-[8px] text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
-                  This is a digitally generated question paper. · Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
-                </p>
               </div>
             </div>
           </div>
@@ -275,7 +268,6 @@ const ExamForm = () => {
   const [saving, setSaving] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false); 
 
-  // 🎯 Dynamic Setup States
   const [faculties, setFaculties] = useState([]);
   const [dynamicSubjects, setDynamicSubjects] = useState([]);
   const [dynamicBatches, setDynamicBatches] = useState([]);
@@ -286,35 +278,40 @@ const ExamForm = () => {
     optionA: "", optionB: "", optionC: "", optionD: "",
   });
 
-  // 🎯 Fetch Faculties, Courses, and Batches together
   useEffect(() => {
     const fetchSetupData = async () => {
       try {
-        let token = localStorage.getItem('token'); 
-        if (!token) {
-          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-          token = storedUser?.token || storedUser?.data?.token; 
-        }
-        const headers = { Authorization: `Bearer ${token}` };
+        const config = getAuthConfig(); 
 
-        // Fetch all needed dropdown data simultaneously
         const [facRes, courseRes, batchRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/admin/faculty", { headers }).catch(() => ({ data: { success: false } })),
-          axios.get("http://localhost:5000/api/admin/courses", { headers }).catch(() => ({ data: { success: false } })),
-          axios.get("http://localhost:5000/api/admin/batches", { headers }).catch(() => ({ data: { success: false } }))
+          axios.get("http://localhost:5000/api/admin/faculty", config).catch(() => ({ data: { success: false } })),
+          axios.get("http://localhost:5000/api/admin/courses", config).catch(() => ({ data: { success: false } })),
+          axios.get("http://localhost:5000/api/admin/batches", config).catch(() => ({ data: { success: false } }))
         ]);
 
-        if (facRes.data?.success) {
-          setFaculties(facRes.data.faculty.map(f => ({ value: f.id, label: f.name })));
+        // 🎯 FIXED: Super robust "catch-all" mappings to prevent blank dropdowns
+        if (facRes.data?.success || facRes.data?.data) {
+          const fData = facRes.data.data || facRes.data.faculty || [];
+          setFaculties(fData.map(f => {
+            const displayLabel = f.name || f.first_name || f.faculty_name || `Faculty #${f.id}`;
+            return { value: f.id, label: displayLabel };
+          }));
         }
+        
         if (courseRes.data?.success || courseRes.data?.data) {
           const cData = courseRes.data.data || courseRes.data.courses || [];
-          setDynamicSubjects(cData.map(c => ({ value: c.id, label: c.courseTitle || c.course_name })));
+          setDynamicSubjects(cData.map(c => {
+            const displayLabel = c.courseTitle || c.course_name || c.title || c.name || c.subject_name || `Course #${c.id}`;
+            return { value: displayLabel, label: displayLabel };
+          }));
         }
+        
         if (batchRes.data?.success || batchRes.data?.data) {
           const bData = batchRes.data.data || batchRes.data.batches || [];
-          // Ensure value maps correctly depending on whether you save ID or Name
-          setDynamicBatches(bData.map(b => ({ value: b.batch_name || b.id, label: b.batch_name })));
+          setDynamicBatches(bData.map(b => {
+            const displayLabel = b.batch_name || b.name || b.batch || `Batch #${b.id}`;
+            return { value: displayLabel, label: displayLabel };
+          }));
         }
       } catch (error) {
         console.error("Failed to load setup data:", error);
@@ -441,7 +438,6 @@ const ExamForm = () => {
     return e;
   };
 
-  // 🚀 SINGLE, CORRECT handleSave
   const handleSave = async () => {
     const e = validate();
     setErrors(e); 
@@ -458,8 +454,6 @@ const ExamForm = () => {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token') || JSON.parse(localStorage.getItem('user'))?.token;
-      
       const formData = new FormData();
       Object.keys(form).forEach(key => {
         if (key !== "attachedPdf" && form[key] !== null) {
@@ -471,13 +465,12 @@ const ExamForm = () => {
         formData.append("question_paper", form.attachedPdf);
       }
 
+      const config = getAuthConfig();
+      config.headers["Content-Type"] = "multipart/form-data";
+
       const res = isEdit 
-        ? await axios.put(`http://localhost:5000/api/admin/exams/${editExam.id}`, formData, {
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
-          })
-        : await axios.post("http://localhost:5000/api/admin/exams", formData, {
-            headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" }
-          });
+        ? await axios.put(`http://localhost:5000/api/admin/exams/${editExam.id}`, formData, config)
+        : await axios.post("http://localhost:5000/api/admin/exams", formData, config);
 
       if (res.data.success) {
         toast.success(isEdit ? "Exam Updated Successfully!" : "Exam Scheduled Successfully!");
@@ -492,22 +485,22 @@ const ExamForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
       <div className="flex items-center gap-3 mb-6 max-w-8xl mx-auto">
-        <button onClick={() => navigate("/admin/exams")} className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 bg-white hover:bg-gray-50 text-gray-500">←</button>
+        <button onClick={() => navigate("/admin/exams")} className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 bg-white hover:bg-gray-100 text-gray-700">←</button>
         <div>
-          <h1 className="text-xl text-left font-bold text-gray-800">{isEdit ? "Edit Exam" : "Schedule New Exam"}</h1>
-          <p className="text-sm text-gray-500">Set exam details and build or assign the question paper</p>
+          <h1 className="text-xl text-left font-bold text-gray-900">{isEdit ? "Edit Exam" : "Schedule New Exam"}</h1>
+          <p className="text-sm text-gray-600">Set exam details and build or assign the question paper</p>
         </div>
       </div>
 
       <div className="max-w-8xl mx-auto">
         <div className="flex gap-2 mb-6 border-b border-gray-200 pb-4">
-          <button onClick={() => setActiveTab("details")} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+          <button onClick={() => setActiveTab("details")} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "details" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100"}`}>
             1. Exam Details
           </button>
           {!isEdit && (
-            <button onClick={() => setActiveTab("builder")} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "builder" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+            <button onClick={() => setActiveTab("builder")} className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "builder" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-800 border border-gray-300 hover:bg-gray-100"}`}>
               2. Question Builder ({questionsList.length})
             </button>
           )}
@@ -564,10 +557,10 @@ const ExamForm = () => {
               </Section>
 
               <Section title="Faculty Assignment & Permissions">
-                <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
                   <div className="flex items-center gap-2 mb-4">
-                    <input type="checkbox" id="delegate" checked={form.isAssigned} onChange={set("isAssigned")} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" />
-                    <label htmlFor="delegate" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                    <input type="checkbox" id="delegate" checked={form.isAssigned} onChange={set("isAssigned")} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300" />
+                    <label htmlFor="delegate" className="text-sm font-bold text-gray-800 cursor-pointer">
                       Delegate Question Paper creation to a specific Faculty?
                     </label>
                   </div>
@@ -583,32 +576,32 @@ const ExamForm = () => {
 
               {!form.isAssigned && !isEdit && (
                 <Section title="Question Paper (Self-Build)">
-                  <div className={`p-5 rounded-xl border-2 border-dashed flex items-center justify-between ${form.attachedPdf ? "bg-green-50 border-green-300" : "bg-purple-50 border-purple-200"}`}>
+                  <div className={`p-5 rounded-xl border-2 border-dashed flex items-center justify-between ${form.attachedPdf ? "bg-green-50 border-green-300" : "bg-purple-50 border-purple-300"}`}>
                     <div>
-                      <p className="font-bold text-sm text-gray-800">Question Paper PDF</p>
-                      <p className="text-xs text-gray-500">{form.attachedPdf ? form.attachedPdf.name : "Build questions in Tab 2 to generate paper."}</p>
+                      <p className="font-bold text-sm text-gray-900">Question Paper PDF</p>
+                      <p className="text-xs text-gray-700">{form.attachedPdf ? form.attachedPdf.name : "Build questions in Tab 2 to generate paper."}</p>
                     </div>
                     {!form.attachedPdf ? (
-                      <button type="button" onClick={() => setActiveTab("builder")} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-md">
+                      <button type="button" onClick={() => setActiveTab("builder")} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-700">
                         Open Question Builder
                       </button>
                     ) : (
                       <div className="flex gap-2">
-                        <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-purple-300 text-purple-700 rounded-lg text-xs font-bold hover:bg-purple-50 transition-all">
+                        <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-4 py-2 bg-white border border-purple-400 text-purple-800 rounded-lg text-xs font-bold hover:bg-purple-100 transition-all">
                           🖨️ Print Paper
                         </button>
-                        <button type="button" onClick={handleDownloadPDF} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-xs font-bold">
+                        <button type="button" onClick={handleDownloadPDF} className="px-4 py-2 bg-white border border-gray-300 text-gray-800 rounded-lg text-xs font-bold hover:bg-gray-100">
                           Download
                         </button>
-                        <span className="text-green-600 bg-green-100 px-3 py-2 rounded-lg font-bold text-xs">✅ Attached</span>
+                        <span className="text-green-800 bg-green-200 px-3 py-2 rounded-lg font-bold text-xs">✅ Attached</span>
                       </div>
                     )}
                   </div>
                 </Section>
               )}
 
-              <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
-                <button onClick={() => navigate("/admin/exams")} className="px-5 py-2.5 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50">Cancel</button>
+              <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+                <button onClick={() => navigate("/admin/exams")} className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-100 bg-white">Cancel</button>
                 <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-60 shadow-lg shadow-blue-500/30 transition-all">
                   {saving ? "Saving..." : isEdit ? "Update Exam" : "Schedule Exam"}
                 </button>
@@ -619,7 +612,7 @@ const ExamForm = () => {
           {activeTab === "builder" && (
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Add New Question</h3>
+                <h3 className="font-bold text-gray-900 border-b border-gray-200 pb-2">Add New Question</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div><Label required>Type</Label><Select name="type" value={currentQ.type} onChange={handleQChange} options={QUESTION_TYPE_OPTIONS} /></div>
                   <div><Label required>Difficulty</Label><Select name="difficulty" value={currentQ.difficulty} onChange={handleQChange} options={DIFFICULTY_OPTIONS} /></div>
@@ -627,42 +620,41 @@ const ExamForm = () => {
                 <div><Label required>Marks</Label><Input name="marks" type="number" value={currentQ.marks} onChange={handleQChange} /></div>
                 <div>
                   <Label required>Question</Label>
-                  <textarea name="question" value={currentQ.question} onChange={handleQChange} rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+                  <textarea name="question" value={currentQ.question} onChange={handleQChange} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 {currentQ.type === "MCQ" && (
-                  <div className="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-xl">
+                  <div className="grid grid-cols-2 gap-3 bg-gray-100 p-4 rounded-xl border border-gray-200">
                     <Input name="optionA" value={currentQ.optionA} onChange={handleQChange} placeholder="Option A" />
                     <Input name="optionB" value={currentQ.optionB} onChange={handleQChange} placeholder="Option B" />
                     <Input name="optionC" value={currentQ.optionC} onChange={handleQChange} placeholder="Option C" />
                     <Input name="optionD" value={currentQ.optionD} onChange={handleQChange} placeholder="Option D" />
                   </div>
                 )}
-                <button onClick={addQuestion} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm">+ Add to List</button>
+                <button onClick={addQuestion} className="w-full py-2.5 bg-gray-200 text-gray-800 hover:bg-gray-300 font-bold rounded-xl text-sm transition-colors">+ Add to List</button>
               </div>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col h-full max-h-[500px]">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col h-full max-h-[500px]">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-800">Paper Preview ({questionsList.length})</h3>
+                  <h3 className="font-bold text-gray-900">Paper Preview ({questionsList.length})</h3>
                   {questionsList.length > 0 && (
-                    <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-100 transition-all">
+                    <button type="button" onClick={() => setShowPrintModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-800 rounded-lg text-xs font-bold hover:bg-gray-100 transition-all">
                       🖨️ Print Preview
                     </button>
                   )}
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+                <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
                   {questionsList.map((q, i) => (
-                    <div key={i} className="bg-white p-3 border border-gray-100 rounded-lg shadow-sm flex justify-between group">
+                    <div key={i} className="bg-white p-3 border border-gray-200 rounded-lg shadow-sm flex justify-between group">
                       <div className="text-sm">
-                        <p className="font-semibold">{i + 1}. {q.question}</p>
-                        <p className="text-[10px] text-gray-400">{q.marks} Marks | {q.difficulty}</p>
+                        <p className="font-bold text-gray-900">{i + 1}. {q.question}</p>
+                        <p className="text-[11px] font-medium text-gray-600 mt-1">{q.marks} Marks | {q.difficulty}</p>
                       </div>
-                      <button onClick={() => removeQuestion(i)} className="text-red-400 opacity-0 group-hover:opacity-100">🗑</button>
+                      <button onClick={() => removeQuestion(i)} className="text-red-500 opacity-0 group-hover:opacity-100 hover:text-red-700 transition-all">🗑</button>
                     </div>
                   ))}
                 </div>
                 
-                {/* 🚀 FIXED BUTTONS FOR TAB 2 */}
-                <div className="flex flex-col gap-3 pt-4 border-t border-slate-200 mt-4">
+                <div className="flex flex-col gap-3 pt-4 border-t border-gray-300 mt-4">
                   <button onClick={generateAndAttachPDF} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md text-sm hover:bg-blue-700 transition">
                     1. Generate PDF & Attach
                   </button>
@@ -674,7 +666,7 @@ const ExamForm = () => {
                     {saving ? "Saving Exam..." : "2. Schedule Exam"}
                   </button>
                   {(!form.isAssigned && !form.attachedPdf && !isEdit) && (
-                    <p className="text-xs text-center text-slate-500 italic">
+                    <p className="text-xs text-center text-gray-600 font-medium">
                       You must generate the PDF first before scheduling.
                     </p>
                   )}

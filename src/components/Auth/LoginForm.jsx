@@ -141,19 +141,19 @@ export const Login = () => {
           </div>
 
           <div>
-            <h2 className="text-4xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
+            <h2 className="text-5xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
             <p className="text-slate-500 mt-2 text-lg">Please enter your details to sign in.</p>
           </div>
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-in fade-in slide-in-from-top-1">
+            <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-md font-medium animate-in fade-in slide-in-from-top-1">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-widest">Email Address</label>
+              <label className="text-md font-bold text-slate-700 uppercase tracking-widest">Email Address</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Mail size={16} className="text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -163,7 +163,7 @@ export const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-md font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
                   placeholder="name@institute.com"
                   required
                 />
@@ -172,7 +172,7 @@ export const Login = () => {
 
             {roleType !== "super_admin" && (
               <div className="space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-widest">Institute Code</label>
+                <label className="text-md font-bold text-slate-700 uppercase tracking-widest">Institute Code</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Building2 size={16} className="text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -182,7 +182,7 @@ export const Login = () => {
                     name="instituteCode"
                     value={formData.instituteCode}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-md font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
                     placeholder="e.g. KII751030"
                     required
                   />
@@ -191,7 +191,7 @@ export const Login = () => {
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-widest">Password</label>
+              <label className="text-md font-bold text-slate-700 uppercase tracking-widest">Password</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock size={16} className="text-slate-400 group-focus-within:text-blue-600 transition-colors" />
@@ -201,7 +201,7 @@ export const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
+                  className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-md font-medium text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-all"
                   placeholder="••••••••"
                   required
                 />
@@ -218,7 +218,7 @@ export const Login = () => {
             <button
               type="submit"
               disabled={loading || isSuccess}
-              className={`w-full py-3.5 rounded-xl font-bold text-sm tracking-widest uppercase shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 
+              className={`w-full py-3.5 rounded-xl font-bold text-md tracking-widest uppercase shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 
                 ${isSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30'}`}
             >
               {loading ? (
@@ -235,7 +235,7 @@ export const Login = () => {
           <div className="space-y-4 pt-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-              <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-black text-slate-400"><span className="bg-white px-2">Select Access Level</span></div>
+              <div className="relative flex justify-center text-[14px] uppercase tracking-[0.2em] font-black text-slate-400"><span className="bg-white px-2">Select Access Level</span></div>
             </div>
             <div className="p-1 bg-slate-50 border border-slate-100 rounded-xl grid grid-cols-4 gap-1">
               {["super_admin", "institute_admin", "faculty", "student"].map((role) => (
@@ -243,7 +243,7 @@ export const Login = () => {
                   key={role}
                   type="button"
                   onClick={() => { setRoleType(role); setError(""); }}
-                  className={`py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200
+                  className={`py-2 text-[14px] font-bold uppercase tracking-wider rounded-lg transition-all duration-200
                     ${roleType === role ? "bg-white text-blue-600 shadow-sm border border-slate-100" : "text-slate-400 hover:text-slate-600"}`}
                 >
                   {role === 'super_admin' ? 'Super' : role === 'institute_admin' ? 'Admin' : role.split('_')[0]}

@@ -18,17 +18,17 @@ const getToken = () => {
 };
 
 export const StudentList = () => {
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab]           = useState("all");
+  const [searchQuery, setSearchQuery]       = useState("");
+  const [students, setStudents]             = useState([]);
+  const [loading, setLoading]               = useState(true);
 
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent]   = useState(null);
+  const [deleteConfirm, setDeleteConfirm]     = useState(null);
+  const [isAddModalOpen, setIsAddModalOpen]   = useState(false);
 
-  // --- DYNAMIC: FETCH STUDENTS ---
+  // ── FETCH ────────────────────────────────────────────────────────────────────
   const fetchStudents = async () => {
     setLoading(true);
     try {
@@ -42,21 +42,26 @@ export const StudentList = () => {
       if (response.data.success) {
         const formattedData = response.data.students.map(s => ({
           ...s,
-          db_id: s.id, 
-          id: s.rollNo || s.student_code || `STU-${s.id}`,
-          name: s.name || `${s.first_name} ${s.last_name}`.trim(),
-          firstName: s.first_name || s.name?.split(" ")[0] || "",
-          lastName: s.last_name || s.name?.split(" ").slice(1).join(" ") || "",
-          type: s.type || "University",
-          status: s.status ? s.status.charAt(0).toUpperCase() + s.status.slice(1) : "Pending",
-          course: s.course || "-",
-          standard: s.standard || "-",
-          section: s.section || "A",
-          email: s.email || "",
-          phone: s.phone || "-",
-          // Parse JSON if stored as string in DB
-          address: s.address ? (typeof s.address === 'string' ? JSON.parse(s.address) : s.address) : {},
-          documents: s.documents ? (typeof s.documents === 'string' ? JSON.parse(s.documents) : s.documents) : {}
+          db_id     : s.id,                                               // real DB primary key
+          id        : s.rollNo || s.student_code || `STU-${s.id}`,       // display ID
+          name      : s.name || `${s.first_name} ${s.last_name}`.trim(),
+          firstName : s.first_name || s.name?.split(" ")[0] || "",
+          lastName  : s.last_name  || s.name?.split(" ").slice(1).join(" ") || "",
+          type      : s.type   || "University",
+          status    : s.status
+                        ? s.status.charAt(0).toUpperCase() + s.status.slice(1)
+                        : "Pending",
+          course    : s.course    || "-",
+          standard  : s.standard  || "-",
+          section   : s.section   || "A",
+          email     : s.email     || "",
+          phone     : s.phone     || "-",
+          address   : s.address
+                        ? (typeof s.address   === 'string' ? JSON.parse(s.address)   : s.address)
+                        : {},
+          documents : s.documents
+                        ? (typeof s.documents === 'string' ? JSON.parse(s.documents) : s.documents)
+                        : {},
         }));
         setStudents(formattedData);
       }
@@ -67,11 +72,9 @@ export const StudentList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
+  useEffect(() => { fetchStudents(); }, []);
 
-  // --- DYNAMIC: SAVE STUDENT ---
+  // ── SAVE (CREATE / UPDATE) ───────────────────────────────────────────────────
   const handleSaveStudent = async (newStudentData) => {
     try {
       const token = getToken();
@@ -79,25 +82,32 @@ export const StudentList = () => {
 
       const payload = {
         ...newStudentData,
-        rollNo: newStudentData.rollNo || `STU${Math.floor(Math.random() * 90000) + 10000}`,
-        name: `${newStudentData.firstName} ${newStudentData.lastName}`.trim(),
-        first_name: newStudentData.firstName,
-        last_name: newStudentData.lastName,
+        rollNo     : newStudentData.rollNo || `STU${Math.floor(Math.random() * 90000) + 10000}`,
+        name       : `${newStudentData.firstName} ${newStudentData.lastName}`.trim(),
+        first_name : newStudentData.firstName,
+        last_name  : newStudentData.lastName,
       };
 
-      if (editingStudent && editingStudent.db_id) {
-        await axios.put(`http://localhost:5000/api/admin/students/${editingStudent.db_id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+      if (editingStudent?.db_id) {
+        // ✅ PUT uses the real DB id (db_id), NOT the display roll-number id
+        await axios.put(
+          `http://localhost:5000/api/admin/students/${editingStudent.db_id}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert("Student profile updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/admin/students", payload, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await axios.post(
+          "http://localhost:5000/api/admin/students",
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert("Student enrolled successfully! They can now log in.");
       }
 
       setEditingStudent(null);
       setIsAddModalOpen(false);
-      fetchStudents(); // Refresh data from DB
+      fetchStudents();
 
     } catch (err) {
       console.error("Save Error:", err);
@@ -105,30 +115,36 @@ export const StudentList = () => {
     }
   };
 
-  // --- DYNAMIC: DELETE STUDENT ---
-  const handleDelete = async (id) => {
+  // ── DELETE ───────────────────────────────────────────────────────────────────
+  const handleDelete = async (student) => {
+    // ✅ FIXED: receive the full student object, use db_id (not display id)
     try {
-      const studentToDelete = students.find(s => s.id === id);
       const token = getToken();
-      if (!token || !studentToDelete?.db_id) return;
+      if (!token || !student?.db_id) {
+        console.error("Delete aborted — missing token or db_id", { token: !!token, db_id: student?.db_id });
+        return;
+      }
 
-      await axios.delete(`http://localhost:5000/api/admin/students/${studentToDelete.db_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.delete(
+        `http://localhost:5000/api/admin/students/${student.db_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       setDeleteConfirm(null);
-      fetchStudents(); // Refresh data from DB
+      fetchStudents();
 
     } catch (err) {
       console.error("Delete Error:", err);
-      alert("Failed to delete student.");
+      alert(err.response?.data?.message || "Failed to delete student.");
     }
   };
 
+  // ── FILTER ───────────────────────────────────────────────────────────────────
   const filteredStudents = students.filter(item => {
     const matchesStatus = activeTab === "all" || item.status.toLowerCase() === activeTab;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchQuery.toLowerCase())   ||
       item.email.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
@@ -140,39 +156,37 @@ export const StudentList = () => {
       <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Student Management</h1>
-          <p className="text-md font-bold text-slate-500 uppercase tracking-widest mt-2">Manage all student enrollments and records</p>
+          <p className="text-md font-bold text-slate-500 uppercase tracking-widest mt-2">
+            Manage all student enrollments and records
+          </p>
         </div>
-
         <button
-          onClick={() => {
-            setEditingStudent(null);
-            setIsAddModalOpen(true);
-          }}
+          onClick={() => { setEditingStudent(null); setIsAddModalOpen(true); }}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold text-md uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-blue-200 transition-all"
         >
           <Plus size={18} /> Add Student
         </button>
       </div>
 
-      {/* TABS & FILTERS */}
+      {/* TABS & SEARCH */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 justify-between items-end">
         <div className="bg-white p-1 rounded-xl border border-slate-200 inline-flex shadow-sm">
-         {[
-  { key: "all",      label: "All",      active: "text-blue-700 bg-blue-50 border-blue-300",     badge: "bg-blue-100 text-blue-700"},
-  { key: "pending",  label: "Pending",  active: "text-orange-700 bg-orange-50 border-orange-300", badge: "bg-orange-100 text-orange-700"},
-  { key: "active",  label: "Active",  active: "text-emerald-700 bg-emerald-50 border-emerald-400", badge: "bg-emerald-100 text-emerald-700" },
-  { key: "rejected", label: "Rejected", active: "text-red-700 bg-red-50 border-red-300",         badge: "bg-red-100 text-red-700" },
-].map((tab) => (
-  <button
-    key={tab.key}
-    onClick={() => setActiveTab(tab.key)}
-    className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
-      activeTab === tab.key ? tab.active : "text-slate-500 hover:bg-slate-50"
-    }`}
-  >
-    {tab.label}
-  </button>
-))}
+          {[
+            { key: "all",      label: "All",      active: "text-blue-700 bg-blue-50 border-blue-300",      badge: "bg-blue-100 text-blue-700"    },
+            { key: "pending",  label: "Pending",  active: "text-orange-700 bg-orange-50 border-orange-300",  badge: "bg-orange-100 text-orange-700" },
+            { key: "active",   label: "Active",   active: "text-emerald-700 bg-emerald-50 border-emerald-400",badge: "bg-emerald-100 text-emerald-700"},
+            { key: "rejected", label: "Rejected", active: "text-red-700 bg-red-50 border-red-300",          badge: "bg-red-100 text-red-700"       },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
+                activeTab === tab.key ? tab.active : "text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="relative w-full md:w-80">
@@ -180,7 +194,7 @@ export const StudentList = () => {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name, ID, email..."
             className="w-full bg-white border border-slate-200 pl-10 pr-4 py-2.5 rounded-xl text-md font-medium outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
           />
@@ -194,27 +208,27 @@ export const StudentList = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
                 <th className="py-5 pl-6 pr-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Student</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Type</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Program</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Email</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Status</th>
-                <th className="py-5 pr-6 text-[13px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
+                <th className="py-5 px-4  text-[13px] font-black uppercase text-slate-400 tracking-widest">Type</th>
+                <th className="py-5 px-4  text-[13px] font-black uppercase text-slate-400 tracking-widest">Program</th>
+                <th className="py-5 px-4  text-[13px] font-black uppercase text-slate-400 tracking-widest">Email</th>
+                <th className="py-5 px-4  text-[13px] font-black uppercase text-slate-400 tracking-widest">Status</th>
+                <th className="py-5 pr-6  text-[13px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="py-12 text-center text-slate-500 font-bold">
-                    Loading Students...
-                  </td>
+                  <td colSpan="6" className="py-12 text-center text-slate-500 font-bold">Loading Students…</td>
                 </tr>
               ) : filteredStudents.length > 0 ? (
-                filteredStudents.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
+                filteredStudents.map(item => (
+                  <tr key={item.db_id ?? item.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="py-4 pl-6 pr-4">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-md shrink-0 border ${
-                          item.type === 'School' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                          item.type === 'School'
+                            ? 'bg-orange-50 text-orange-600 border-orange-100'
+                            : 'bg-blue-50 text-blue-600 border-blue-100'
                         }`}>
                           {item.name[0]}
                         </div>
@@ -227,7 +241,9 @@ export const StudentList = () => {
 
                     <td className="py-4 px-4">
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border inline-flex items-center gap-1 ${
-                        item.type === 'School' ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-blue-50 text-blue-700 border-blue-100'
+                        item.type === 'School'
+                          ? 'bg-orange-50 text-orange-700 border-orange-100'
+                          : 'bg-blue-50 text-blue-700 border-blue-100'
                       }`}>
                         {item.type === 'School' ? <School size={11} /> : <Building2 size={11} />}
                         {item.type}
@@ -251,15 +267,14 @@ export const StudentList = () => {
 
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border ${
-                        item.status === 'Pending' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                        item.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                        'bg-red-50 text-red-700 border-red-200'
+                        item.status === 'Pending'  ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                        item.status === 'Active'   ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                     'bg-red-50 text-red-700 border-red-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                           item.status === 'Pending' ? 'bg-orange-500' :
-                          item.status === 'Active' ? 'bg-emerald-500' :
-                          'bg-red-500'
-                        }`}></span>
+                          item.status === 'Active'  ? 'bg-emerald-500' : 'bg-red-500'
+                        }`} />
                         {item.status}
                       </span>
                     </td>
@@ -274,17 +289,14 @@ export const StudentList = () => {
                           <Eye size={18} />
                         </button>
                         <button
-                          onClick={() => {
-                            setEditingStudent(item);
-                            setIsAddModalOpen(true);
-                          }}
+                          onClick={() => { setEditingStudent(item); setIsAddModalOpen(true); }}
                           className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
                           title="Edit"
                         >
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => setDeleteConfirm(item)}
+                          onClick={() => setDeleteConfirm(item)}   // ✅ pass full item (has db_id)
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                           title="Delete"
                         >
@@ -300,7 +312,7 @@ export const StudentList = () => {
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Filter size={48} className="text-slate-200 mb-4" />
                       <p className="text-md font-bold">No students found</p>
-                      <p className="text-md mt-1 font-medium">Try adjusting your search filters or add a new student.</p>
+                      <p className="text-md mt-1 font-medium">Try adjusting your search or add a new student.</p>
                     </div>
                   </td>
                 </tr>
@@ -314,10 +326,7 @@ export const StudentList = () => {
       {isAddModalOpen && (
         <EnhancedStudentForm
           student={editingStudent}
-          onClose={() => {
-            setIsAddModalOpen(false);
-            setEditingStudent(null);
-          }}
+          onClose={() => { setIsAddModalOpen(false); setEditingStudent(null); }}
           onSave={handleSaveStudent}
         />
       )}
@@ -338,7 +347,7 @@ export const StudentList = () => {
         <DeleteConfirmModal
           student={deleteConfirm}
           onClose={() => setDeleteConfirm(null)}
-          onConfirm={() => handleDelete(deleteConfirm.id)}
+          onConfirm={() => handleDelete(deleteConfirm)} // ✅ FIXED: pass full object, not just id
         />
       )}
     </div>
@@ -350,93 +359,68 @@ export const StudentList = () => {
 // ============================================================================
 const EnhancedStudentForm = ({ student, onClose, onSave }) => {
   const [form, setForm] = useState({
-    type: student?.type || "University",
-    firstName: student?.firstName || student?.name?.split(" ")[0] || "",
-    lastName: student?.lastName || student?.name?.split(" ").slice(1).join(" ") || "",
-    email: student?.email || "",
-    phone: student?.phone || "",
-    dob: student?.dob || "",
-    gender: student?.gender || "",
-    aadhar: student?.aadhar || "",
-    pan: student?.pan || "",
-    course: student?.course || "",
-    standard: student?.standard || "",
-    section: student?.section || "",
-    rollNo: student?.rollNo || "",
-    year: student?.year || "2024-25",
-    status: student?.status || "Pending",
-    documents: student?.documents || {
+    type      : student?.type      || "University",
+    firstName : student?.firstName || student?.name?.split(" ")[0]              || "",
+    lastName  : student?.lastName  || student?.name?.split(" ").slice(1).join(" ") || "",
+    email     : student?.email     || "",
+    password  : "", // 🌟 INITIALIZED HERE
+    phone     : student?.phone     || "",
+    dob       : student?.dob       || "",
+    gender    : student?.gender    || "",
+    aadhar    : student?.aadhar    || "",
+    pan       : student?.pan       || "",
+    course    : student?.course    || "",
+    standard  : student?.standard  || "",
+    section   : student?.section   || "",
+    rollNo    : student?.rollNo    || "",
+    year      : student?.year      || "2024-25",
+    status    : student?.status    || "Pending",
+    documents : student?.documents || {
       aadhar: null, pan: null, tenth: null, twelfth: null, graduation: null, masters: null
     },
-    address: student?.address || {
+    address   : student?.address   || {
       street: "", city: "", state: "", pincode: "", country: "India"
-    }
+    },
   });
 
   const [activeTab, setActiveTab] = useState("personal");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({
-      ...prev,
-      address: { ...prev.address, [name]: value }
-    }));
-  };
+  const handleChange        = e => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleAddressChange = e => setForm(prev => ({
+    ...prev, address: { ...prev.address, [e.target.name]: e.target.value }
+  }));
 
   const handleDocumentUpload = (e, docType) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      alert("Only PDF and images allowed");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
-      return;
-    }
-
+    if (!validTypes.includes(file.type)) { alert("Only PDF and images allowed"); return; }
+    if (file.size > 5 * 1024 * 1024)    { alert("File size must be less than 5MB"); return; }
     setForm(prev => ({
       ...prev,
       documents: {
         ...prev.documents,
-        [docType]: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploaded: new Date().toLocaleDateString()
-        }
+        [docType]: { name: file.name, size: file.size, type: file.type, uploaded: new Date().toLocaleDateString() }
       }
     }));
   };
 
-  const handleTypeChange = (type) => {
-    setForm(prev => ({
-      ...prev,
-      type,
-      course: "",
-      standard: ""
-    }));
-  };
+  const handleTypeChange = type => setForm(prev => ({ ...prev, type, course: "", standard: "" }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
     if (!form.firstName || !form.email) {
       alert("Please fill required fields (First Name, Email)");
       return;
     }
+    
+    // 🌟 PASSWORD VALIDATION: Require password if creating a brand new student
+    if (!student && !form.password) {
+      alert("Please set a default Account Password for the new student.");
+      return;
+    }
 
-    onSave({
-      name: `${form.firstName} ${form.lastName}`,
-      ...form
-    });
+    onSave({ name: `${form.firstName} ${form.lastName}`, ...form });
   };
 
   return createPortal(
@@ -449,7 +433,9 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
             <h3 className="font-black text-slate-800 text-lg">
               {student ? 'Edit Student' : 'Enroll New Student'}
             </h3>
-            <p className="text-md font-bold text-slate-500 uppercase tracking-widest mt-1">Complete all required information</p>
+            <p className="text-md font-bold text-slate-500 uppercase tracking-widest mt-1">
+              Complete all required information
+            </p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full text-slate-600 transition-all">
             <X size={22} />
@@ -459,17 +445,14 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
         {/* TAB NAVIGATION */}
         <div className="bg-slate-50 border-b border-slate-200 px-8 py-4 flex gap-2 overflow-x-auto sticky top-0">
           {[
-            { id: "personal", label: "Personal", icon: "👤" },
-            { id: "academic", label: "Academic", icon: "🎓" },
-            { id: "address", label: "Address", icon: "📍" },
-            { id: "documents", label: "Documents", icon: "📄" }
+            { id: "personal",  label: "Personal",  icon: "👤" },
+            { id: "academic",  label: "Academic",  icon: "🎓" },
+            { id: "address",   label: "Address",   icon: "📍" },
+            { id: "documents", label: "Documents", icon: "📄" },
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={(e) => {
-                e.preventDefault();
-                setActiveTab(tab.id);
-              }}
+              onClick={e => { e.preventDefault(); setActiveTab(tab.id); }}
               className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition ${
                 activeTab === tab.id
                   ? "bg-white text-blue-600 shadow-sm"
@@ -481,7 +464,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
           ))}
         </div>
 
-        {/* SCROLLABLE CONTENT */}
+        {/* FORM CONTENT */}
         <div className="overflow-y-auto flex-1 p-8">
           <form id="studentForm" onSubmit={handleSubmit} className="space-y-6">
 
@@ -491,33 +474,61 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                 <div className="border-l-4 border-blue-500 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Personal Information</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { label: "First Name *", name: "firstName", type: "text",  placeholder: "John"             },
+                      { label: "Last Name *",  name: "lastName",  type: "text",  placeholder: "Doe"              },
+                      { label: "Email *",      name: "email",     type: "email", placeholder: "john@example.com" },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">{f.label}</label>
+                        <input
+                          type={f.type} name={f.name} value={form[f.name]}
+                          onChange={handleChange} placeholder={f.placeholder}
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
+                    
+                    {/* 🌟 PASSWORD FIELD - ALWAYS VISIBLE */}
                     <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">First Name *</label>
-                      <input type="text" name="firstName" value={form.firstName} onChange={handleChange} placeholder="John" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                      <label className="text-xs font-bold text-blue-600 uppercase mb-2 block">
+                        Account Password {student ? "" : "*"}
+                      </label>
+                      <input 
+                        type="password" 
+                        name="password" 
+                        value={form.password} 
+                        onChange={handleChange} 
+                        placeholder={student ? "Leave blank to keep current" : "Set default password"} 
+                        className="w-full px-4 py-2.5 border-2 border-blue-200 bg-blue-50/30 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold placeholder:font-medium" 
+                        required={!student} 
+                      />
+                      <p className="text-[10px] text-blue-500 font-bold mt-1">
+                        {student ? "Type here to reset password." : "Student uses this to log in."}
+                      </p>
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Last Name *</label>
-                      <input type="text" name="lastName" value={form.lastName} onChange={handleChange} placeholder="Doe" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Email *</label>
-                      <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="john@example.com" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Phone</label>
-                      <input type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+91 98765 43210" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Date of Birth</label>
-                      <input type="date" name="dob" value={form.dob} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
+
+                    {[
+                      { label: "Phone",        name: "phone",     type: "tel",   placeholder: "+91 98765 43210"  },
+                      { label: "Date of Birth",name: "dob",       type: "date",  placeholder: ""                 },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">{f.label}</label>
+                        <input
+                          type={f.type} name={f.name} value={form[f.name]}
+                          onChange={handleChange} placeholder={f.placeholder}
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
                     <div>
                       <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Gender</label>
-                      <select name="gender" value={form.gender} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                      <select name="gender" value={form.gender} onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
                       </select>
                     </div>
                   </div>
@@ -526,14 +537,19 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                 <div className="border-l-4 border-purple-500 pl-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Identity Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Aadhar Number</label>
-                      <input type="text" name="aadhar" value={form.aadhar} onChange={handleChange} placeholder="XXXX XXXX XXXX" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">PAN Number</label>
-                      <input type="text" name="pan" value={form.pan} onChange={handleChange} placeholder="ABCDE1234F" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
+                    {[
+                      { label: "Aadhar Number", name: "aadhar", placeholder: "XXXX XXXX XXXX" },
+                      { label: "PAN Number",    name: "pan",    placeholder: "ABCDE1234F"      },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">{f.label}</label>
+                        <input
+                          type="text" name={f.name} value={form[f.name]}
+                          onChange={handleChange} placeholder={f.placeholder}
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -543,12 +559,21 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
             {activeTab === "academic" && (
               <div className="border-l-4 border-green-500 pl-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-5">Academic Information</h3>
-
                 <div className="mb-6 flex gap-3">
-                  <button type="button" onClick={() => handleTypeChange("School")} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${form.type === "School" ? "bg-orange-100 text-orange-700 border-2 border-orange-300" : "bg-slate-100 text-slate-600 border-2 border-slate-200"}`}>
+                  <button type="button" onClick={() => handleTypeChange("School")}
+                    className={`px-6 py-2 rounded-lg font-bold text-sm transition ${
+                      form.type === "School"
+                        ? "bg-orange-100 text-orange-700 border-2 border-orange-300"
+                        : "bg-slate-100 text-slate-600 border-2 border-slate-200"
+                    }`}>
                     🏫 School
                   </button>
-                  <button type="button" onClick={() => handleTypeChange("University")} className={`px-6 py-2 rounded-lg font-bold text-sm transition ${form.type === "University" ? "bg-blue-100 text-blue-700 border-2 border-blue-300" : "bg-slate-100 text-slate-600 border-2 border-slate-200"}`}>
+                  <button type="button" onClick={() => handleTypeChange("University")}
+                    className={`px-6 py-2 rounded-lg font-bold text-sm transition ${
+                      form.type === "University"
+                        ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                        : "bg-slate-100 text-slate-600 border-2 border-slate-200"
+                    }`}>
                     🎓 University
                   </button>
                 </div>
@@ -557,21 +582,19 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                   {form.type === "University" ? (
                     <div>
                       <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Course *</label>
-                      <select name="course" value={form.course} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                      <select name="course" value={form.course} onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Course</option>
-                        <option>B.Tech CS</option>
-                        <option>B.Tech IT</option>
-                        <option>MBA</option>
-                        <option>BBA</option>
-                        <option>B.Sc</option>
-                        <option>M.Tech</option>
-                        <option>M.Sc</option>
+                        {["B.Tech CS","B.Tech IT","MBA","BBA","B.Sc","M.Tech","M.Sc"].map(c => (
+                          <option key={c}>{c}</option>
+                        ))}
                       </select>
                     </div>
                   ) : (
                     <div>
                       <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Class *</label>
-                      <select name="standard" value={form.standard} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                      <select name="standard" value={form.standard} onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Class</option>
                         {[...Array(12)].map((_, i) => (
                           <option key={i} value={`Class ${i + 1}`}>Class {i + 1}</option>
@@ -582,28 +605,30 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
 
                   <div>
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Section</label>
-                    <select name="section" value={form.section} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="section" value={form.section} onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                       <option value="">Select Section</option>
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                      <option value="D">D</option>
+                      {["A","B","C","D"].map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Roll Number</label>
-                    <input type="text" name="rollNo" value={form.rollNo} onChange={handleChange} placeholder="Leave blank to auto-generate" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" name="rollNo" value={form.rollNo} onChange={handleChange}
+                      placeholder="Leave blank to auto-generate"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
 
                   <div>
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Academic Year</label>
-                    <input type="text" value="2024-25" disabled className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-slate-100 text-slate-500" />
+                    <input type="text" value="2024-25" disabled
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm bg-slate-100 text-slate-500" />
                   </div>
-                  
+
                   <div>
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Status</label>
-                    <select name="status" value={form.status} onChange={handleChange} className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="status" value={form.status} onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
                       <option value="Pending">Pending</option>
                       <option value="Active">Active</option>
                       <option value="Rejected">Rejected</option>
@@ -620,29 +645,24 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                 <div className="space-y-5">
                   <div>
                     <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Street Address</label>
-                    <input type="text" name="street" value={form.address.street} onChange={handleAddressChange} placeholder="123 Main Street" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" name="street" value={form.address.street}
+                      onChange={handleAddressChange} placeholder="123 Main Street"
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">City</label>
-                      <input type="text" name="city" value={form.address.city} onChange={handleAddressChange} placeholder="New Delhi" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">State</label>
-                      <input type="text" name="state" value={form.address.state} onChange={handleAddressChange} placeholder="Delhi" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Pincode</label>
-                      <input type="text" name="pincode" value={form.address.pincode} onChange={handleAddressChange} placeholder="110001" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Country</label>
-                      <input type="text" name="country" value={form.address.country} onChange={handleAddressChange} placeholder="India" className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
+                    {[
+                      { label: "City",    name: "city",    placeholder: "New Delhi" },
+                      { label: "State",   name: "state",   placeholder: "Delhi"     },
+                      { label: "Pincode", name: "pincode", placeholder: "110001"    },
+                      { label: "Country", name: "country", placeholder: "India"     },
+                    ].map(f => (
+                      <div key={f.name}>
+                        <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">{f.label}</label>
+                        <input type="text" name={f.name} value={form.address[f.name]}
+                          onChange={handleAddressChange} placeholder={f.placeholder}
+                          className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -652,15 +672,14 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
             {activeTab === "documents" && (
               <div className="border-l-4 border-red-500 pl-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-5">Educational Documents</h3>
-
                 <div className="space-y-6">
                   {[
-                    { key: 'aadhar', label: 'Aadhar Card', icon: '🪪' },
-                    { key: 'pan', label: 'PAN Card', icon: '💳' },
-                    { key: 'tenth', label: '10th Standard Certificate', icon: '📚' },
-                    { key: 'twelfth', label: '12th Standard Certificate', icon: '📚' },
-                    { key: 'graduation', label: 'Graduation Degree', icon: '🎓' },
-                    { key: 'masters', label: "Master's Degree", icon: '👨‍🎓' }
+                    { key: 'aadhar',     label: 'Aadhar Card',                icon: '🪪'  },
+                    { key: 'pan',        label: 'PAN Card',                   icon: '💳'  },
+                    { key: 'tenth',      label: '10th Standard Certificate',  icon: '📚'  },
+                    { key: 'twelfth',    label: '12th Standard Certificate',  icon: '📚'  },
+                    { key: 'graduation', label: 'Graduation Degree',          icon: '🎓'  },
+                    { key: 'masters',    label: "Master's Degree",            icon: '👨‍🎓' },
                   ].map(doc => (
                     <DocumentUploadField
                       key={doc.key}
@@ -668,7 +687,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                       icon={doc.icon}
                       docType={doc.key}
                       uploaded={form.documents[doc.key]}
-                      onUpload={(e) => handleDocumentUpload(e, doc.key)}
+                      onUpload={e => handleDocumentUpload(e, doc.key)}
                     />
                   ))}
                 </div>
@@ -680,22 +699,15 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
 
         {/* FOOTER */}
         <div className="border-t border-slate-200 bg-slate-50 px-8 py-6 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition"
-          >
+          <button type="button" onClick={onClose}
+            className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition">
             Cancel
           </button>
-          <button
-            type="submit"
-            form="studentForm"
-            className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
-          >
+          <button type="submit" form="studentForm"
+            className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2">
             <FileText size={18} /> {student ? 'Update Student' : 'Enroll Student'}
           </button>
         </div>
-
       </div>
     </div>,
     document.body
@@ -703,251 +715,201 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
 };
 
 // ============================================================================
-// DOCUMENT UPLOAD FIELD COMPONENT
+// DOCUMENT UPLOAD FIELD
 // ============================================================================
-const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => {
-  return (
-    <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
-      <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-        <span className="text-lg">{icon}</span> {label}
-      </label>
-
-      <div className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
-        uploaded
-          ? 'border-emerald-300 bg-emerald-50'
-          : 'border-slate-300 hover:border-blue-400 hover:bg-blue-50'
-      }`}>
-        <input
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={onUpload}
-          className="hidden"
-          id={`doc-${docType}`}
-        />
-        <label htmlFor={`doc-${docType}`} className="block cursor-pointer">
-          <div className="flex flex-col items-center gap-2">
-            <div className={`p-3 rounded-full ${
-              uploaded
-                ? 'bg-emerald-100 text-emerald-600'
-                : 'bg-blue-100 text-blue-600'
-            }`}>
-              {uploaded ? <Check size={24} /> : <Download size={24} />}
-            </div>
-            {uploaded ? (
-              <div>
-                <p className="text-sm font-bold text-slate-800">✓ {uploaded.name}</p>
-                <p className="text-xs text-slate-500">Uploaded on {uploaded.uploaded}</p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm font-bold text-slate-700">Click to upload</p>
-                <p className="text-xs text-slate-500">PDF, JPG, PNG (Max 5MB)</p>
-              </div>
-            )}
+const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => (
+  <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
+    <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+      <span className="text-lg">{icon}</span> {label}
+    </label>
+    <div className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition ${
+      uploaded ? 'border-emerald-300 bg-emerald-50' : 'border-slate-300 hover:border-blue-400 hover:bg-blue-50'
+    }`}>
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={onUpload}
+        className="hidden" id={`doc-${docType}`} />
+      <label htmlFor={`doc-${docType}`} className="block cursor-pointer">
+        <div className="flex flex-col items-center gap-2">
+          <div className={`p-3 rounded-full ${uploaded ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+            {uploaded ? <Check size={24} /> : <Download size={24} />}
           </div>
-        </label>
+          {uploaded ? (
+            <div>
+              <p className="text-sm font-bold text-slate-800">✓ {uploaded.name}</p>
+              <p className="text-xs text-slate-500">Uploaded on {uploaded.uploaded}</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm font-bold text-slate-700">Click to upload</p>
+              <p className="text-xs text-slate-500">PDF, JPG, PNG (Max 5MB)</p>
+            </div>
+          )}
+        </div>
+      </label>
+    </div>
+  </div>
+);
+
+// ============================================================================
+// STUDENT DETAILS MODAL
+// ============================================================================
+const StudentDetailsModal = ({ student, onClose, onEdit }) => createPortal(
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 max-h-[90vh] overflow-y-auto">
+
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex justify-between items-center sticky top-0 z-10">
+        <div>
+          <h2 className="text-2xl font-black text-white">Student Profile</h2>
+          <p className="text-blue-100 text-sm mt-1">Complete information</p>
+        </div>
+        <button onClick={onClose} className="p-2 hover:bg-blue-500 rounded-full text-white transition">
+          <X size={24} />
+        </button>
+      </div>
+
+      <div className="p-8 space-y-8">
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl font-black text-blue-700 border-4 border-white shadow-lg uppercase">
+            {student.name[0]}
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900">{student.name}</h3>
+            <p className="text-slate-600 text-lg mt-1">{student.id}</p>
+            <div className="flex gap-2 mt-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                student.type === 'School' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
+              }`}>
+                {student.type === 'School' ? '🏫 School' : '🎓 University'}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                student.status === 'Active'  ? 'bg-emerald-100 text-emerald-700' :
+                student.status === 'Pending' ? 'bg-orange-100 text-orange-700'  :
+                                               'bg-red-100 text-red-700'
+              }`}>
+                {student.status}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-slate-200" />
+
+        <div>
+          <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <User size={20} className="text-blue-600" /> Personal Information
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Email",        value: student.email       },
+              { label: "Phone",        value: student.phone       },
+              { label: "Date of Birth",value: student.dob         },
+              { label: "Gender",       value: student.gender      },
+            ].map(f => (
+              <div key={f.label} className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-xs font-bold text-slate-500 uppercase">{f.label}</p>
+                <p className="text-md font-bold text-slate-800 mt-1 truncate" title={f.value}>{f.value || '-'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <GraduationCap size={20} className="text-green-600" /> Academic Information
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Program",       value: student.type === 'School' ? student.standard : student.course },
+              { label: "Section",       value: student.section  },
+              { label: "Roll Number",   value: student.rollNo   },
+              { label: "Academic Year", value: student.year     },
+            ].map(f => (
+              <div key={f.label} className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-xs font-bold text-slate-500 uppercase">{f.label}</p>
+                <p className="text-md font-bold text-slate-800 mt-1">{f.value || '—'}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {student.address && Object.keys(student.address).length > 0 && (
+          <div>
+            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <MapPin size={20} className="text-red-600" /> Address
+            </h4>
+            <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+              <p className="text-md font-bold text-slate-800">{student.address.street || "Not Provided"}</p>
+              <p className="text-md text-slate-700">
+                {student.address.city}, {student.address.state} {student.address.pincode}
+              </p>
+              <p className="text-md text-slate-700">{student.address.country}</p>
+            </div>
+          </div>
+        )}
+
+        {student.documents && Object.keys(student.documents).length > 0 && (
+          <div>
+            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <FileText size={20} className="text-purple-600" /> Documents
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(student.documents).map(([key, value]) => (
+                <div key={key} className={`p-3 rounded-lg border-2 ${
+                  value ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                }`}>
+                  <p className="text-xs font-bold text-slate-600 uppercase">
+                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                  </p>
+                  <p className={`text-sm font-bold mt-1 ${value ? 'text-emerald-700' : 'text-slate-500'}`}>
+                    {value ? '✓ Uploaded' : 'Not Uploaded'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-slate-200 bg-slate-50 px-8 py-6 flex gap-3 sticky bottom-0">
+        <button onClick={onClose}
+          className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition">
+          Close
+        </button>
+        <button onClick={onEdit}
+          className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2">
+          <Edit size={18} /> Edit Student
+        </button>
       </div>
     </div>
-  );
-};
-
-// ============================================================================
-// STUDENT DETAILS MODAL - Shows All Information
-// ============================================================================
-const StudentDetailsModal = ({ student, onClose, onEdit }) => {
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-100 max-h-[90vh] overflow-y-auto">
-
-        {/* HEADER */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6 flex justify-between items-center sticky top-0 z-10">
-          <div>
-            <h2 className="text-2xl font-black text-white">Student Profile</h2>
-            <p className="text-blue-100 text-sm mt-1">Complete information</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-blue-500 rounded-full text-white transition">
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* CONTENT */}
-        <div className="p-8 space-y-8">
-
-          {/* PROFILE HEADER */}
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl font-black text-blue-700 border-4 border-white shadow-lg uppercase">
-              {student.name[0]}
-            </div>
-            <div>
-              <h3 className="text-2xl font-black text-slate-900">{student.name}</h3>
-              <p className="text-slate-600 text-lg mt-1">{student.id}</p>
-              <div className="flex gap-2 mt-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  student.type === 'School' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {student.type === 'School' ? '🏫 School' : '🎓 University'}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  student.status === 'Active' ? 'bg-emerald-100 text-emerald-700' :
-                  student.status === 'Pending' ? 'bg-orange-100 text-orange-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {student.status}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <hr className="border-slate-200" />
-
-          {/* PERSONAL INFO */}
-          <div>
-            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <User size={20} className="text-blue-600" /> Personal Information
-            </h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Email</p>
-                <p className="text-md font-bold text-slate-800 mt-1 truncate" title={student.email}>{student.email}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Phone</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.phone || '-'}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Date of Birth</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.dob || '-'}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Gender</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.gender || '-'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ACADEMIC INFO */}
-          <div>
-            <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <GraduationCap size={20} className="text-green-600" /> Academic Information
-            </h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Program</p>
-                <p className="text-md font-bold text-slate-800 mt-1">
-                  {student.type === 'School' ? student.standard : student.course}
-                </p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Section</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.section}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-xs font-bold text-slate-500 uppercase">Roll Number</p>
-                <p className="text-md font-bold text-slate-800 mt-1">{student.rollNo || '-'}</p>
-              </div>
-              <div className="bg-slate-50 p-4 rounded-lg">
-  <p className="text-xs font-bold text-slate-500 uppercase">Academic Year</p>
-  {/* Shows the actual DB value, or a dash if it's empty */}
-  <p className="text-md font-bold text-slate-800 mt-1">{student.year || "—"}</p>
-</div>
-            </div>
-          </div>
-
-          {/* ADDRESS */}
-          {student.address && Object.keys(student.address).length > 0 && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <MapPin size={20} className="text-red-600" /> Address
-              </h4>
-              <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-                <p className="text-md font-bold text-slate-800">{student.address.street || "Not Provided"}</p>
-                <p className="text-md text-slate-700">
-                  {student.address.city}, {student.address.state} {student.address.pincode}
-                </p>
-                <p className="text-md text-slate-700">{student.address.country}</p>
-              </div>
-            </div>
-          )}
-
-          {/* DOCUMENTS */}
-          {student.documents && Object.keys(student.documents).length > 0 && (
-            <div>
-              <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <FileText size={20} className="text-purple-600" /> Documents
-              </h4>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(student.documents).map(([key, value]) => (
-                  <div key={key} className={`p-3 rounded-lg border-2 ${
-                    value ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
-                  }`}>
-                    <p className="text-xs font-bold text-slate-600 uppercase">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </p>
-                    {value ? (
-                      <p className="text-sm font-bold text-emerald-700 mt-1">✓ Uploaded</p>
-                    ) : (
-                      <p className="text-sm font-bold text-slate-500 mt-1">Not Uploaded</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* FOOTER */}
-        <div className="border-t border-slate-200 bg-slate-50 px-8 py-6 flex gap-3 sticky bottom-0">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-100 transition"
-          >
-            Close
-          </button>
-          <button
-            onClick={onEdit}
-            className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg font-bold hover:shadow-lg transition flex items-center justify-center gap-2"
-          >
-            <Edit size={18} /> Edit Student
-          </button>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
-};
+  </div>,
+  document.body
+);
 
 // ============================================================================
 // DELETE CONFIRMATION MODAL
 // ============================================================================
-const DeleteConfirmModal = ({ student, onClose, onConfirm }) => {
-  return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-8 text-center border border-slate-100">
-        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle size={32} className="text-red-600" />
-        </div>
-        <h3 className="text-xl font-black text-slate-900 mb-2">Delete Student?</h3>
-        <p className="text-slate-600 mb-6">
-          Are you sure you want to permanently delete <strong>{student.name}</strong>? This action cannot be undone.
-        </p>
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition"
-          >
-            Delete
-          </button>
-        </div>
+const DeleteConfirmModal = ({ student, onClose, onConfirm }) => createPortal(
+  <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-8 text-center border border-slate-100">
+      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+        <AlertTriangle size={32} className="text-red-600" />
       </div>
-    </div>,
-    document.body
-  );
-};
+      <h3 className="text-xl font-black text-slate-900 mb-2">Delete Student?</h3>
+      <p className="text-slate-600 mb-6">
+        Are you sure you want to permanently delete <strong>{student.name}</strong>? This cannot be undone.
+      </p>
+      <div className="flex gap-3">
+        <button onClick={onClose}
+          className="flex-1 py-3 border-2 border-slate-300 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition">
+          Cancel
+        </button>
+        <button onClick={onConfirm}
+          className="flex-1 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>,
+  document.body
+);
 
 export default StudentList;

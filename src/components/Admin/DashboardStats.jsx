@@ -57,17 +57,27 @@ export const AdminDashboard = () => {
     },
   ];
 
+  // 🌟 FIX 2: Wrapped the loading state so it doesn't break your layout structure
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex-1 p-8 bg-gray-50 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="text-slate-400 font-bold tracking-widest uppercase text-sm">Loading Dashboard...</div>
+      </div>
+    );
   }
 
+  // 🌟 FIX 1: Safely extract the admin's name
+  const adminName = user?.first_name || user?.name || "Admin";
+
   return (
-    <div className="flex-1 overflow-auto p-8 bg-gray-50">
+    <div className="flex-1 overflow-auto p-8 bg-gray-50 min-h-[calc(100vh-80px)]">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">Hi, {user?.name}</h2>
+          <h2 className="text-3xl font-bold text-gray-800 capitalize">Hi, {adminName}</h2>
           <p className="text-sm text-gray-500">Institute dashboard overview</p>
         </div>
+        
+        {/* Note: If you are using your new global Header.jsx, you might want to remove this top bar section entirely so you don't have two search bars/bells on the screen! */}
         <div className="flex items-center space-x-4">
           <div className="relative hidden md:block">
             <input
@@ -90,7 +100,7 @@ export const AdminDashboard = () => {
           return (
             <div
               key={idx}
-              className={`${card.bgColor} rounded-2xl p-6 shadow-sm hover:shadow-lg transition transform hover:scale-105`}
+              className={`${card.bgColor} rounded-2xl p-6 shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 duration-200`}
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -108,23 +118,23 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm">
+      <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h3 className="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-lg p-4 text-center transition">
-            <Users className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+          <button className="bg-blue-50 hover:bg-blue-100 border-2 border-transparent hover:border-blue-200 rounded-xl p-4 text-center transition-all group">
+            <Users className="w-6 h-6 text-blue-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-sm font-semibold text-gray-800">Add Student</p>
           </button>
-          <button className="bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-lg p-4 text-center transition">
-            <Users className="w-6 h-6 text-green-600 mx-auto mb-2" />
+          <button className="bg-green-50 hover:bg-green-100 border-2 border-transparent hover:border-green-200 rounded-xl p-4 text-center transition-all group">
+            <Users className="w-6 h-6 text-green-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-sm font-semibold text-gray-800">Add Faculty</p>
           </button>
-          <button className="bg-purple-50 hover:bg-purple-100 border-2 border-purple-200 rounded-lg p-4 text-center transition">
-            <BookOpen className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+          <button className="bg-purple-50 hover:bg-purple-100 border-2 border-transparent hover:border-purple-200 rounded-xl p-4 text-center transition-all group">
+            <BookOpen className="w-6 h-6 text-purple-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-sm font-semibold text-gray-800">New Course</p>
           </button>
-          <button className="bg-amber-50 hover:bg-amber-100 border-2 border-amber-200 rounded-lg p-4 text-center transition">
-            <DollarSign className="w-6 h-6 text-amber-600 mx-auto mb-2" />
+          <button className="bg-amber-50 hover:bg-amber-100 border-2 border-transparent hover:border-amber-200 rounded-xl p-4 text-center transition-all group">
+            <DollarSign className="w-6 h-6 text-amber-600 mx-auto mb-2 group-hover:scale-110 transition-transform" />
             <p className="text-sm font-semibold text-gray-800">Fee Setup</p>
           </button>
         </div>
@@ -132,5 +142,3 @@ export const AdminDashboard = () => {
     </div>
   );
 };
-
-

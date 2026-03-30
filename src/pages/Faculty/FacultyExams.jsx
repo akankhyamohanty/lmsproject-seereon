@@ -133,7 +133,7 @@ export const ScheduleExam = ({ onBack }) => {
     return e;
   };
 
-  // 🎯 Final Submit to DB without localStorage
+  // 🎯 Final Submit to DB 
   const handleSchedule = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); setTab("details"); return; }
@@ -143,7 +143,9 @@ export const ScheduleExam = ({ onBack }) => {
       await axios.post("http://localhost:5000/api/faculty/exams", {
         examDetails: form,
         questions: questions
-      }, { withCredentials: true });
+      }, { 
+        withCredentials: true // 🎯 Added the secure cookie sender!
+      });
       
       setSubmitted(true);
     } catch (err) {
@@ -454,7 +456,7 @@ const AddStudentModal = ({ onAdd, onCancel, existingRolls }) => {
     if (!form.roll.trim())  e.roll = "Roll No is required";
     else if (existingRolls.includes(form.roll.trim())) e.roll = "Roll No already exists";
     if (!form.name.trim())  e.name = "Student name is required";
-    if (form.theory === ""  || isNaN(form.theory))    e.theory    = "Required";
+    if (form.theory === ""  || isNaN(form.theory))     e.theory    = "Required";
     else if (+form.theory    < 0 || +form.theory    > 60) e.theory    = "0–60 only";
     if (form.practical === "" || isNaN(form.practical)) e.practical = "Required";
     else if (+form.practical  < 0 || +form.practical  > 20) e.practical = "0–20 only";
