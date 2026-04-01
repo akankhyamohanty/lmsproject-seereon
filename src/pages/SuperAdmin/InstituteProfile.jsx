@@ -1,252 +1,216 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { 
-  Save, 
-  Upload, 
-  FileText, 
   Building2, 
-  Globe, 
-  Mail, 
   Phone, 
-  Award, 
-  CreditCard,
-  Check
+  Users, 
+  FileText, 
+  MapPin, 
+  Loader2,  
+  AlertCircle
 } from "lucide-react";
+import { adminService } from "../../services/adminService";
+
+// Helper component to display fields cleanly and handle "N/A"
+const DisplayField = ({ label, value }) => (
+  <div>
+    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+      {label}
+    </label>
+    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium break-words">
+      {value ? value : <span className="text-slate-400 italic">N/A</span>}
+    </div>
+  </div>
+);
 
 export const InstituteProfile = () => {
-  // 1. Initial State (Simulating an existing institute)
-  const [formData, setFormData] = useState({
-    // Section 1: Basic Details
-    instituteName: "Global Tech University",
-    type: "University", // Could be School, College, Coaching
-    address: "123 Innovation Drive, Silicon Valley",
-    city: "San Francisco",
-    state: "California",
-    country: "USA",
-    pincode: "94105",
+  const { id } = useParams(); // Gets the ID from the URL (e.g., /super-admin/institutes/2/view)
+  const [institute, setInstitute] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-    // Section 2: Contact Details
-    email: "admin@globaltech.edu",
-    phone: "+1 (555) 123-4567",
-    website: "https://globaltech.edu",
+  useEffect(() => {
+    const fetchInstituteData = async () => {
+      try {
+        setLoading(true);
+        // Fetch the full heavy JSON data from the backend
+        const response = await adminService.getInstituteById(id);
+        if (response.success) {
+          setInstitute(response.data);
+        } else {
+          setError("Failed to load institute data.");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Section 3: Registration
-    regNumber: "REG-2023-8892",
-    accreditationBody: "WASC Senior College and University Commission",
-    certificateFile: "accreditation_cert_2024.pdf",
+    if (id) fetchInstituteData();
+  }, [id]);
 
-    // Section 4: Subscription
-    planName: "Enterprise Plan",
-    startDate: "2024-01-01",
-    endDate: "2025-01-01",
-    activeModules: ["Admission", "LMS", "Finance", "HR", "Examination"],
-  });
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
+        <p className="text-slate-600 font-medium">Loading full profile data...</p>
+      </div>
+    );
+  }
 
-  const [loading, setLoading] = useState(false);
+  if (error || !institute) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-red-500">
+        <AlertCircle className="w-16 h-16 mb-4" />
+        <h2 className="text-2xl font-bold">Profile Not Found</h2>
+        <p className="text-slate-600 mt-2">{error}</p>
+      </div>
+    );
+  }
 
-  // Handle Input Change
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle Save
-  const handleSave = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    // Simulate API Call
-    setTimeout(() => {
-      setLoading(false);
-      alert("Institute Profile Updated Successfully!");
-    }, 1000);
-  };
+  const { organisation, directors, legal, branches, institute_code, admin_email, status } = institute;
 
   return (
-    <div className="max-w-5xl mx-auto pb-10">
+    <div className="max-w-6xl mx-auto pb-10 px-4 sm:px-6">
       
       {/* Page Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Institute Profile</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage institute details and subscription status</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">Institute Profile</h1>
+          <p className="text-sm text-slate-500 mt-1">Viewing comprehensive details and configurations</p>
         </div>
-        <button 
-          onClick={handleSave}
-          disabled={loading}
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/30 disabled:opacity-70"
-        >
-          {loading ? "Saving..." : <><Save size={18} /> Save Changes</>}
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 bg-slate-100 rounded-lg border border-slate-200">
+            <span className="text-xs text-slate-500 block uppercase font-bold">Institute Code</span>
+            <span className="text-lg font-bold text-blue-700">{institute_code || "N/A"}</span>
+          </div>
+          <div className={`px-4 py-2 rounded-lg border font-bold ${status === 'Active' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+            <span className="text-xs block uppercase text-opacity-70">Status</span>
+            {status || "N/A"}
+          </div>
+        </div>
       </div>
 
-      <form className="space-y-6">
+      <div className="space-y-8">
         
-        {/* SECTION 1: BASIC DETAILS */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        {/* SECTION 1: ORGANISATION DETAILS */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
-              <Building2 size={20} />
+              <Building2 size={24} />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">Section 1: Basic Details</h2>
+            <h2 className="text-xl font-bold text-slate-800">Organisation Details</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="col-span-2 md:col-span-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Institute Name</label>
-              <input type="text" name="instituteName" value={formData.instituteName} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-              <select name="type" value={formData.type} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option>University</option>
-                <option>College</option>
-                <option>School</option>
-                <option>Coaching Center</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
-              <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
-              <input type="text" name="city" value={formData.city} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
-              <input type="text" name="state" value={formData.state} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Country</label>
-              <input type="text" name="country" value={formData.country} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Pincode</label>
-              <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <DisplayField label="Registered Name" value={organisation?.name} />
+            <DisplayField label="Organisation Type" value={organisation?.type} />
+            <DisplayField label="Head Office Location" value={organisation?.headOffice} />
+            <DisplayField label="Official Email" value={organisation?.email} />
+            <DisplayField label="Secondary Email" value={organisation?.secondaryEmail} />
+            <DisplayField label="Phone Number" value={organisation?.phone} />
+            <DisplayField label="Alternate Phone" value={organisation?.altPhone} />
+            <DisplayField label="Admin Login Email" value={admin_email} />
+            <DisplayField label="Address Line 1" value={organisation?.address1} />
+            <DisplayField label="Address Line 2" value={organisation?.address2} />
+            <DisplayField label="City" value={organisation?.city} />
+            <DisplayField label="State" value={organisation?.state} />
+            <DisplayField label="PIN Code" value={organisation?.pin} />
           </div>
         </div>
 
-        {/* SECTION 2: CONTACT DETAILS */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
-              <Phone size={20} />
-            </div>
-            <h2 className="text-lg font-bold text-slate-800">Section 2: Contact Details</h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Official Email</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-3 top-3 text-slate-400" />
-                <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-              <div className="relative">
-                <Phone size={18} className="absolute left-3 top-3 text-slate-400" />
-                <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Website</label>
-              <div className="relative">
-                <Globe size={18} className="absolute left-3 top-3 text-slate-400" />
-                <input type="text" name="website" value={formData.website} onChange={handleChange} className="w-full pl-10 p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: REGISTRATION & ACCREDITATION */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        {/* SECTION 2: DIRECTORS */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
             <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-              <Award size={20} />
+              <Users size={24} />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">Section 3: Registration & Accreditation</h2>
+            <h2 className="text-xl font-bold text-slate-800">Partners / Directors</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Registration Number</label>
-              <input type="text" name="regNumber" value={formData.regNumber} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Accreditation Body</label>
-              <input type="text" name="accreditationBody" value={formData.accreditationBody} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            
-            {/* File Upload Section */}
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-2">Certificate Files</label>
-              <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                <Upload size={32} className="text-slate-400 mb-2" />
-                <p className="text-sm text-slate-500 font-medium">Click to upload or drag and drop</p>
-                <p className="text-xs text-slate-400 mt-1">PDF, JPG or PNG (MAX. 5MB)</p>
-              </div>
-              
-              {/* Preview of Uploaded File */}
-              {formData.certificateFile && (
-                <div className="mt-3 flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <FileText size={20} className="text-blue-600" />
-                    <span className="text-sm font-medium text-slate-700">{formData.certificateFile}</span>
+          {directors && directors.length > 0 ? (
+            <div className="space-y-8">
+              {directors.map((dir, idx) => (
+                <div key={idx} className="p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <h3 className="text-lg font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">Director {idx + 1}: {dir.name || "N/A"}</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <DisplayField label="Email" value={dir.email} />
+                    <DisplayField label="Contact Number" value={dir.contact} />
+                    <DisplayField label="Gender" value={dir.gender} />
+                    <DisplayField label="Date of Birth" value={dir.dob} />
+                    <DisplayField label="% of Interest" value={dir.interest} />
+                    <DisplayField label="Father's Name" value={dir.father} />
+                    <DisplayField label="PAN Number" value={dir.documents?.panNo} />
+                    <DisplayField label="Aadhaar Number" value={dir.documents?.aadhaarNo} />
                   </div>
-                  <button type="button" className="text-xs font-bold text-blue-600 hover:underline">Preview</button>
                 </div>
-              )}
+              ))}
             </div>
-          </div>
+          ) : (
+            <p className="text-slate-500 italic">No director details found.</p>
+          )}
         </div>
 
-        {/* SECTION 4: SUBSCRIPTION */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        {/* SECTION 3: LEGAL DOCUMENTS */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
             <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
-              <CreditCard size={20} />
+              <FileText size={24} />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">Section 4: Subscription</h2>
+            <h2 className="text-xl font-bold text-slate-800">Legal & Certifications</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Plan Name</label>
-              <select name="planName" value={formData.planName} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-                <option>Basic Plan</option>
-                <option>Standard Plan</option>
-                <option>Enterprise Plan</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-              <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-              <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-            </div>
-          </div>
-
-          {/* Active Modules Badges */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-3">Active Modules</label>
-            <div className="flex flex-wrap gap-2">
-              {formData.activeModules.map((module, index) => (
-                <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                  <Check size={12} /> {module}
-                </span>
-              ))}
-              <button type="button" className="px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200">
-                + Add Module
-              </button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <DisplayField label="PAN Number" value={legal?.panNo} />
+            <DisplayField label="GSTIN Number" value={legal?.gstinNo} />
+            <DisplayField label="Trust Deed / Society Reg." value={legal?.trustDeed} />
+            <DisplayField label="DISE Code" value={legal?.diseCode} />
+            <DisplayField label="Property Deed Ref" value={legal?.propertyDeed} />
+            <DisplayField label="Building Approval" value={legal?.buildingApproval} />
+            <DisplayField label="Fire Dept NOC" value={legal?.fireNOC} />
+            <DisplayField label="Police NOC" value={legal?.policeNOC} />
+            <DisplayField label="Pollution Control NOC" value={legal?.pollutionNOC} />
+            <DisplayField label="Education Dept NOC" value={legal?.educationDeptNOC} />
+            <DisplayField label="Child Protection Policy" value={legal?.childProtectionPolicy} />
           </div>
         </div>
 
-      </form>
+        {/* SECTION 4: BRANCHES */}
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
+            <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+              <MapPin size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Branch Locations</h2>
+          </div>
+
+          {branches && branches.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {branches.map((branch, idx) => (
+                <div key={idx} className="p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                  <h3 className="text-lg font-bold text-slate-700 mb-4 border-b border-slate-200 pb-2">
+                    {branch.shortName ? `[${branch.shortName}] ` : ''} {branch.name || "Branch " + (idx + 1)}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <DisplayField label="Contact Person" value={branch.contactPerson} />
+                    <DisplayField label="Contact Number" value={branch.contactNo} />
+                    <DisplayField label="Branch Email" value={branch.email} />
+                    <DisplayField label="Branch GSTIN" value={branch.gstin} />
+                    <div className="sm:col-span-2">
+                      <DisplayField label="Address" value={`${branch.address1 || ''} ${branch.address2 || ''}, ${branch.city || ''}, ${branch.state || ''} - ${branch.pin || ''}`.trim() || null} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-500 italic">No branch details found.</p>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 };

@@ -1,54 +1,48 @@
 import React, { useState, useEffect } from "react";
 import {
   Search, Download, TrendingUp, AlertCircle, Plus, X, Check,
-  ChevronDown, User, BookOpen, Building2, DollarSign, Send,
-  Banknote, Hash, Calendar, Loader, CheckCircle, Trash2,
-  CreditCard, Receipt, Filter, RefreshCw, Eye, Copy
+  ChevronDown, DollarSign, Send, Hash, Loader, CheckCircle,
+  Trash2, CreditCard, Receipt, RefreshCw, Eye, Copy, Bell
 } from "lucide-react";
 
-// ─── Storage Keys ─────────────────────────────────────────────────────────────
+// ─── Storage ──────────────────────────────────────────────────────────────────
 const TXN_KEY = "fee_transactions_v3";
 const ST_KEY  = "fee_students_v3";
 
-const getTxns   = () => { try { return JSON.parse(localStorage.getItem(TXN_KEY) || "[]"); } catch { return []; } };
-const saveTxns  = (d) => localStorage.setItem(TXN_KEY, JSON.stringify(d));
-const getStudents = () => { try { return JSON.parse(localStorage.getItem(ST_KEY) || "[]"); } catch { return []; } };
+const getTxns    = () => { try { return JSON.parse(localStorage.getItem(TXN_KEY) || "[]"); } catch { return []; } };
+const saveTxns   = (d) => localStorage.setItem(TXN_KEY, JSON.stringify(d));
+const getStudents= () => { try { return JSON.parse(localStorage.getItem(ST_KEY)  || "[]"); } catch { return []; } };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DEPARTMENTS = [
-  "Computer Science", "Mathematics", "Physics", "Chemistry",
-  "Mechanical Engineering", "Civil Engineering", "Electronics",
-  "Business Administration", "Arts & Humanities",
+  "Computer Science","Mathematics","Physics","Chemistry",
+  "Mechanical Engineering","Civil Engineering","Electronics",
+  "Business Administration","Arts & Humanities",
 ];
-
 const COURSES = [
-  "B.Tech Computer Science", "B.Tech Information Technology",
-  "B.Tech Electronics & Communication", "B.Tech Mechanical Engineering",
-  "B.Tech Civil Engineering", "B.Sc Computer Science", "B.Sc Mathematics",
-  "B.Sc Physics", "MBA", "BBA", "M.Tech", "MCA",
+  "B.Tech Computer Science","B.Tech Information Technology",
+  "B.Tech Electronics & Communication","B.Tech Mechanical Engineering",
+  "B.Tech Civil Engineering","B.Sc Computer Science","B.Sc Mathematics",
+  "B.Sc Physics","MBA","BBA","M.Tech","MCA",
 ];
-
 const FEE_TYPES = [
-  "Tuition Fee", "Exam Fee", "Lab Fee", "Library Fee",
-  "Sports Fee", "Infrastructure Fee", "Development Fee", "Hostel Fee",
+  "Tuition Fee","Exam Fee","Lab Fee","Library Fee",
+  "Sports Fee","Infrastructure Fee","Development Fee","Hostel Fee",
 ];
+const PAYMENT_METHODS = ["Online Transfer","Cash","Cheque","DD","UPI"];
 
-const PAYMENT_METHODS = ["Online Transfer", "Cash", "Cheque", "DD", "UPI"];
-
-// ─── Seed demo transactions ───────────────────────────────────────────────────
+// ─── Seed demo ────────────────────────────────────────────────────────────────
 const seedDemo = () => {
   if (getTxns().length > 0) return;
-  const demo = [
-    { id: Date.now() + 1, txnId: "TXN-20240001", student: "Amit Sharma", studentId: 0, dept: "Computer Science", course: "B.Tech Computer Science", feeType: "Tuition Fee", amount: 45000, method: "Online Transfer", status: "Paid", date: "2024-02-01", note: "" },
-    { id: Date.now() + 2, txnId: "TXN-20240002", student: "Priya Das", studentId: 0, dept: "Mathematics", course: "B.Sc Mathematics", feeType: "Exam Fee", amount: 2500, method: "Cash", status: "Paid", date: "2024-02-03", note: "" },
-    { id: Date.now() + 3, txnId: "TXN-20240003", student: "Rahul Singh", studentId: 0, dept: "Computer Science", course: "B.Tech Computer Science", feeType: "Tuition Fee", amount: 45000, method: "Cheque", status: "Pending", date: "2024-02-05", note: "Awaiting clearance" },
-    { id: Date.now() + 4, txnId: "TXN-20240004", student: "Sneha Patel", studentId: 0, dept: "Business Administration", course: "MBA", feeType: "Lab Fee", amount: 8000, method: "UPI", status: "Paid", date: "2024-02-07", note: "" },
-    { id: Date.now() + 5, txnId: "TXN-20240005", student: "Karan Verma", studentId: 0, dept: "Electronics", course: "B.Tech Electronics & Communication", feeType: "Infrastructure Fee", amount: 12000, method: "Online Transfer", status: "Overdue", date: "2024-01-15", note: "Overdue since Jan" },
-  ];
-  saveTxns(demo);
+  saveTxns([
+    { id: 1, txnId: "TXN-20240001", student: "Amit Sharma",  studentId: 0, dept: "Computer Science",       course: "B.Tech Computer Science", feeType: "Tuition Fee",        amount: 45000, method: "Online Transfer", status: "Paid",    date: "2024-02-01", note: "" },
+    { id: 2, txnId: "TXN-20240002", student: "Priya Das",    studentId: 0, dept: "Mathematics",            course: "B.Sc Mathematics",         feeType: "Exam Fee",           amount: 2500,  method: "Cash",           status: "Paid",    date: "2024-02-03", note: "" },
+    { id: 3, txnId: "TXN-20240003", student: "Rahul Singh",  studentId: 0, dept: "Computer Science",       course: "B.Tech Computer Science", feeType: "Tuition Fee",        amount: 45000, method: "Cheque",         status: "Pending", date: "2024-02-05", note: "Awaiting clearance" },
+    { id: 4, txnId: "TXN-20240004", student: "Sneha Patel",  studentId: 0, dept: "Business Administration",course: "MBA",                      feeType: "Lab Fee",            amount: 8000,  method: "UPI",            status: "Paid",    date: "2024-02-07", note: "" },
+    { id: 5, txnId: "TXN-20240005", student: "Karan Verma",  studentId: 0, dept: "Electronics",            course: "B.Tech Electronics & Communication", feeType: "Infrastructure Fee", amount: 12000, method: "Online Transfer", status: "Overdue", date: "2024-01-15", note: "Overdue since Jan" },
+  ]);
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const genTxnId = () => `TXN-${Date.now().toString().slice(-8)}`;
 
 const STATUS_STYLE = {
@@ -58,50 +52,40 @@ const STATUS_STYLE = {
   Sent:    "bg-blue-50 text-blue-700 border-blue-200",
 };
 
-// ─── Create Payment Modal ─────────────────────────────────────────────────────
+// ─── Create Payment Modal ──────────────────────────────────────────────────────
 const CreatePaymentModal = ({ onClose, onCreated }) => {
   const students = getStudents();
-  const [step, setStep] = useState(1); // 1=form, 2=success
-  const [saving, setSaving] = useState(false);
-  const [createdTxn, setCreatedTxn] = useState(null);
-  const [copied, setCopied] = useState(false);
-
+  const [step,        setStep]        = useState(1);
+  const [saving,      setSaving]      = useState(false);
+  const [createdTxn,  setCreatedTxn]  = useState(null);
+  const [copied,      setCopied]      = useState(false);
   const [form, setForm] = useState({
-    dept: "", course: "", studentId: "", studentName: "",
-    feeType: "", amount: "", method: "Online Transfer",
-    dueDate: "", note: "",
+    dept:"", course:"", studentId:"", studentName:"",
+    feeType:"", amount:"", method:"Online Transfer", dueDate:"", note:"",
   });
   const [errors, setErrors] = useState({});
 
-  const h = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const h = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
-  // Filter students by dept/course
-  const filteredStudents = students.filter(s => {
-    const matchDept = !form.dept || s.department === form.dept;
-    const matchCourse = !form.course || s.course === form.course;
-    return matchDept && matchCourse;
-  });
+  const filteredStudents = students.filter(s =>
+    (!form.dept   || s.department === form.dept) &&
+    (!form.course || s.course     === form.course)
+  );
 
-  const handleStudentSelect = (e) => {
+  const handleStudentSelect = e => {
     const sid = Number(e.target.value);
-    const st = students.find(s => s.id === sid);
-    setForm(p => ({
-      ...p,
-      studentId: sid,
-      studentName: st ? `${st.name}` : "",
-      dept: st?.department || p.dept,
-      course: st?.course || p.course,
-    }));
+    const st  = students.find(s => s.id === sid);
+    setForm(p => ({ ...p, studentId: sid, studentName: st?.name || "", dept: st?.department || p.dept, course: st?.course || p.course }));
   };
 
   const validate = () => {
     const e = {};
-    if (!form.dept) e.dept = "Required";
-    if (!form.course) e.course = "Required";
+    if (!form.dept)        e.dept = "Required";
+    if (!form.course)      e.course = "Required";
     if (!form.studentName.trim()) e.studentName = "Required";
-    if (!form.feeType) e.feeType = "Required";
+    if (!form.feeType)     e.feeType = "Required";
     if (!form.amount || isNaN(form.amount) || Number(form.amount) <= 0) e.amount = "Enter valid amount";
-    if (!form.method) e.method = "Required";
+    if (!form.method)      e.method = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -111,36 +95,25 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
     setSaving(true);
     const txnId = genTxnId();
     const txn = {
-      id: Date.now(),
-      txnId,
-      student: form.studentName,
-      studentId: form.studentId,
-      dept: form.dept,
-      course: form.course,
-      feeType: form.feeType,
-      amount: Number(form.amount),
-      method: form.method,
-      status: "Sent",
-      date: new Date().toISOString().split("T")[0],
-      dueDate: form.dueDate,
-      note: form.note,
+      id: Date.now(), txnId,
+      student: form.studentName, studentId: form.studentId,
+      dept: form.dept, course: form.course, feeType: form.feeType,
+      amount: Number(form.amount), method: form.method,
+      status: "Sent", date: new Date().toISOString().split("T")[0],
+      dueDate: form.dueDate, note: form.note,
     };
     setTimeout(() => {
       saveTxns([...getTxns(), txn]);
-      setSaving(false);
-      setCreatedTxn(txn);
-      setStep(2);
-      onCreated?.();
+      setSaving(false); setCreatedTxn(txn); setStep(2); onCreated?.();
     }, 800);
   };
 
   const copyTxnId = () => {
     navigator.clipboard.writeText(createdTxn.txnId).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
 
-  const SelectField = ({ label, name, options, value, onChange, error, required, placeholder }) => (
+  const SF = ({ label, name, options, value, onChange, error, required, placeholder }) => (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
@@ -162,39 +135,32 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(8px)" }}
       onClick={e => e.target === e.currentTarget && onClose()}>
-
       <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden"
         style={{ animation: "modalIn 0.25s cubic-bezier(0.16,1,0.3,1)" }}>
 
         {step === 1 ? (
           <>
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-600 px-6 py-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white/20 rounded-xl"><CreditCard size={18} className="text-white" /></div>
                 <div>
                   <h2 className="text-white font-black text-lg">Create Fee Payment</h2>
-                  <p className="text-blue-200 text-xs mt-0.5">Send fee request to student</p>
+                  <p className="text-blue-200 text-xs mt-0.5">Record a student payment</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all">
-                <X size={18} />
-              </button>
+              <button onClick={onClose} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all"><X size={18} /></button>
             </div>
 
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-
-              {/* Dept + Course */}
               <div className="grid grid-cols-2 gap-3">
-                <SelectField label="Department" name="dept" value={form.dept}
+                <SF label="Department" name="dept" value={form.dept}
                   onChange={e => setForm(p => ({ ...p, dept: e.target.value, studentId: "", studentName: "" }))}
                   options={DEPARTMENTS} error={errors.dept} required />
-                <SelectField label="Course" name="course" value={form.course}
+                <SF label="Course" name="course" value={form.course}
                   onChange={e => setForm(p => ({ ...p, course: e.target.value, studentId: "", studentName: "" }))}
                   options={COURSES} error={errors.course} required />
               </div>
 
-              {/* Student Select (from registered) or Manual */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                   Student <span className="text-red-500">*</span>
@@ -205,9 +171,7 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
                       className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium outline-none appearance-none transition-all
                         ${errors.studentName ? "border-red-400 bg-red-50" : "border-slate-200 bg-slate-50 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white"}`}>
                       <option value="">Select Student</option>
-                      {filteredStudents.map(s => (
-                        <option key={s.id} value={s.id}>{s.name} ({s.rollNo})</option>
-                      ))}
+                      {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.rollNo})</option>)}
                     </select>
                     <ChevronDown size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
@@ -219,18 +183,14 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
                 )}
                 {errors.studentName && <p className="text-xs text-red-600 flex items-center gap-1"><AlertCircle size={10} />{errors.studentName}</p>}
                 {filteredStudents.length === 0 && (
-                  <p className="text-xs text-amber-600 font-semibold">No registered students for selected dept/course. Enter name manually.</p>
+                  <p className="text-xs text-amber-600 font-semibold">No registered students for this dept/course. Enter manually.</p>
                 )}
               </div>
 
-              {/* Fee Type + Amount */}
               <div className="grid grid-cols-2 gap-3">
-                <SelectField label="Fee Type" name="feeType" value={form.feeType} onChange={h}
-                  options={FEE_TYPES} error={errors.feeType} required />
+                <SF label="Fee Type" name="feeType" value={form.feeType} onChange={h} options={FEE_TYPES} error={errors.feeType} required />
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Amount <span className="text-red-500">*</span>
-                  </label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Amount <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-sm">₹</span>
                     <input name="amount" type="number" value={form.amount} onChange={h} placeholder="0"
@@ -241,10 +201,8 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
                 </div>
               </div>
 
-              {/* Method + Due Date */}
               <div className="grid grid-cols-2 gap-3">
-                <SelectField label="Payment Method" name="method" value={form.method} onChange={h}
-                  options={PAYMENT_METHODS} error={errors.method} required />
+                <SF label="Payment Method" name="method" value={form.method} onChange={h} options={PAYMENT_METHODS} error={errors.method} required />
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Due Date</label>
                   <input name="dueDate" type="date" value={form.dueDate} onChange={h}
@@ -252,14 +210,12 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
                 </div>
               </div>
 
-              {/* Note */}
               <div className="space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Note (Optional)</label>
                 <textarea name="note" value={form.note} onChange={h} rows={2} placeholder="Any additional info..."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all resize-none" />
               </div>
 
-              {/* Preview */}
               {form.studentName && form.amount && form.feeType && (
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
                   <p className="text-[10px] font-black uppercase tracking-widest text-blue-500 mb-2">Payment Preview</p>
@@ -280,40 +236,34 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
               </button>
               <button onClick={handleSubmit} disabled={saving}
                 className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-70">
-                {saving ? <><Loader size={15} className="animate-spin" /> Processing...</> : <><Send size={15} /> Send to Student</>}
+                {saving ? <><Loader size={15} className="animate-spin" /> Processing...</> : <><Send size={15} /> Record Payment</>}
               </button>
             </div>
           </>
         ) : (
-          /* Success screen */
           <div className="p-10 text-center" style={{ animation: "fadeIn 0.4s ease" }}>
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5"
-              style={{ animation: "pop 0.5s ease" }}>
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle size={40} className="text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-black text-slate-900">Payment Sent!</h2>
-            <p className="text-slate-500 mt-2 text-sm">Fee request sent to <span className="font-bold text-slate-700">{createdTxn?.student}</span></p>
-
-            {/* Transaction ID */}
+            <h2 className="text-2xl font-black text-slate-900">Payment Recorded!</h2>
+            <p className="text-slate-500 mt-2 text-sm">Fee entry created for <span className="font-bold text-slate-700">{createdTxn?.student}</span></p>
             <div className="mt-6 p-4 bg-slate-900 rounded-2xl flex items-center justify-between gap-4">
               <div className="text-left">
                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Transaction ID</p>
                 <p className="text-lg font-black text-white font-mono mt-0.5">{createdTxn?.txnId}</p>
               </div>
               <button onClick={copyTxnId}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                  copied ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-white/20"
-                }`}>
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all
+                  ${copied ? "bg-emerald-500 text-white" : "bg-white/10 text-white hover:bg-white/20"}`}>
                 {copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}
               </button>
             </div>
-
             <div className="mt-4 grid grid-cols-2 gap-3 text-left">
               {[
-                { label: "Amount", value: `₹${createdTxn?.amount?.toLocaleString()}` },
+                { label: "Amount",   value: `₹${createdTxn?.amount?.toLocaleString()}` },
                 { label: "Fee Type", value: createdTxn?.feeType },
-                { label: "Method", value: createdTxn?.method },
-                { label: "Status", value: createdTxn?.status },
+                { label: "Method",   value: createdTxn?.method  },
+                { label: "Status",   value: createdTxn?.status  },
               ].map(r => (
                 <div key={r.label} className="p-3 bg-slate-50 rounded-xl">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{r.label}</p>
@@ -321,9 +271,7 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
                 </div>
               ))}
             </div>
-
-            <button onClick={onClose}
-              className="mt-6 w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all">
+            <button onClick={onClose} className="mt-6 w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all">
               Done
             </button>
           </div>
@@ -333,14 +281,14 @@ const CreatePaymentModal = ({ onClose, onCreated }) => {
   );
 };
 
-// ─── Transaction Detail Modal ─────────────────────────────────────────────────
+// ─── Transaction Detail Modal ──────────────────────────────────────────────────
 const TxnDetailModal = ({ txn, onClose, onStatusChange }) => {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(txn.txnId).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(true); setTimeout(() => setCopied(false), 2000);
   };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(15,23,42,0.7)", backdropFilter: "blur(8px)" }}
@@ -356,40 +304,36 @@ const TxnDetailModal = ({ txn, onClose, onStatusChange }) => {
         </div>
         <div className="p-6 space-y-3">
           {[
-            { label: "Student",   value: txn.student },
-            { label: "Course",    value: txn.course },
-            { label: "Dept",      value: txn.dept },
-            { label: "Fee Type",  value: txn.feeType },
-            { label: "Amount",    value: `₹${txn.amount?.toLocaleString()}` },
-            { label: "Method",    value: txn.method },
-            { label: "Date",      value: txn.date },
-            { label: "Due Date",  value: txn.dueDate || "—" },
-            { label: "Note",      value: txn.note || "—" },
+            { label: "Student",  value: txn.student  },
+            { label: "Course",   value: txn.course   },
+            { label: "Dept",     value: txn.dept     },
+            { label: "Fee Type", value: txn.feeType  },
+            { label: "Amount",   value: `₹${txn.amount?.toLocaleString()}` },
+            { label: "Method",   value: txn.method   },
+            { label: "Date",     value: txn.date     },
+            { label: "Due Date", value: txn.dueDate || "—" },
+            { label: "Note",     value: txn.note    || "—" },
           ].map(r => (
             <div key={r.label} className="flex justify-between py-1.5 border-b border-slate-50 last:border-0">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{r.label}</span>
               <span className="text-xs font-bold text-slate-700">{r.value}</span>
             </div>
           ))}
-
           <div className="pt-2 space-y-2">
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mark Status</p>
             <div className="flex gap-2">
               {["Paid", "Pending", "Overdue"].map(s => (
                 <button key={s} onClick={() => { onStatusChange(txn.id, s); onClose(); }}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black border transition-all ${
-                    txn.status === s
-                      ? STATUS_STYLE[s] + " border-current"
-                      : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
-                  }`}>{s}</button>
+                  className={`flex-1 py-2 rounded-xl text-xs font-black border transition-all
+                    ${txn.status === s ? STATUS_STYLE[s] + " border-current" : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"}`}>
+                  {s}
+                </button>
               ))}
             </div>
           </div>
-
           <button onClick={copy}
-            className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${
-              copied ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}>
+            className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all
+              ${copied ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
             {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy Transaction ID</>}
           </button>
         </div>
@@ -399,59 +343,44 @@ const TxnDetailModal = ({ txn, onClose, onStatusChange }) => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MAIN FeeCollection Page
+// MAIN
 // ══════════════════════════════════════════════════════════════════════════════
 export const FeeCollection = () => {
-  const [txns, setTxns]         = useState([]);
-  const [search, setSearch]     = useState("");
+  const [txns,         setTxns]         = useState([]);
+  const [search,       setSearch]       = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [showCreate, setShowCreate] = useState(false);
-  const [viewTxn, setViewTxn]   = useState(null);
-  const [tick, setTick]         = useState(0);
-
+  const [showCreate,   setShowCreate]   = useState(false);
+  const [viewTxn,      setViewTxn]      = useState(null);
+  const [tick,         setTick]         = useState(0);
   const reload = () => setTick(t => t + 1);
 
-  useEffect(() => {
-    seedDemo();
-    setTxns(getTxns());
-  }, [tick]);
+  useEffect(() => { seedDemo(); setTxns(getTxns()); }, [tick]);
 
-  const changeStatus = (id, status) => {
-    saveTxns(getTxns().map(t => t.id === id ? { ...t, status } : t));
-    reload();
-  };
-
-  const deleteTxn = (id) => {
-    saveTxns(getTxns().filter(t => t.id !== id));
-    reload();
-  };
+  const changeStatus = (id, status) => { saveTxns(getTxns().map(t => t.id === id ? { ...t, status } : t)); reload(); };
+  const deleteTxn    = (id) => { saveTxns(getTxns().filter(t => t.id !== id)); reload(); };
 
   const filtered = txns.filter(t => {
     const matchSearch =
       t.student?.toLowerCase().includes(search.toLowerCase()) ||
-      t.txnId?.toLowerCase().includes(search.toLowerCase()) ||
+      t.txnId?.toLowerCase().includes(search.toLowerCase())   ||
       t.feeType?.toLowerCase().includes(search.toLowerCase()) ||
       t.dept?.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || t.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
-  // Stats
-  const totalPaid    = txns.filter(t => t.status === "Paid").reduce((s, t) => s + (t.amount || 0), 0);
+  const totalPaid    = txns.filter(t => t.status === "Paid").reduce((s, t)    => s + (t.amount || 0), 0);
   const totalPending = txns.filter(t => t.status === "Pending").reduce((s, t) => s + (t.amount || 0), 0);
   const totalOverdue = txns.filter(t => t.status === "Overdue").reduce((s, t) => s + (t.amount || 0), 0);
 
   return (
     <>
       <style>{`
-        @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
-        @keyframes pop     { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+        @keyframes modalIn { from{opacity:0;transform:scale(0.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes fadeIn  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
       <div className="w-full font-sans text-left pb-12">
-
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fee Collection</h1>
@@ -464,7 +393,7 @@ export const FeeCollection = () => {
             </button>
             <button onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95">
-              <Plus size={16} /> Create Fee Payment
+              <Plus size={16} /> Create Payment
             </button>
           </div>
         </div>
@@ -472,26 +401,23 @@ export const FeeCollection = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total Transactions", value: txns.length,                    color: "blue",    icon: Receipt   },
-            { label: "Collected",          value: `₹${(totalPaid/1000).toFixed(1)}K`, color: "emerald", icon: TrendingUp },
-            { label: "Pending",            value: `₹${(totalPending/1000).toFixed(1)}K`, color: "amber",   icon: AlertCircle },
-            { label: "Overdue",            value: `₹${(totalOverdue/1000).toFixed(1)}K`, color: "red",     icon: AlertCircle },
-          ].map((s, i) => {
-            const Icon = s.icon;
+            { label: "Total Transactions", value: txns.length,                          color: "blue",    Icon: Receipt      },
+            { label: "Collected",          value: `₹${(totalPaid/1000).toFixed(1)}K`,   color: "emerald", Icon: TrendingUp   },
+            { label: "Pending",            value: `₹${(totalPending/1000).toFixed(1)}K`,color: "amber",   Icon: AlertCircle  },
+            { label: "Overdue",            value: `₹${(totalOverdue/1000).toFixed(1)}K`,color: "red",     Icon: AlertCircle  },
+          ].map(({ label, value, color, Icon }, i) => {
             const cls = {
               blue:    "bg-blue-50 text-blue-600 border-blue-100",
               emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
               amber:   "bg-amber-50 text-amber-600 border-amber-100",
               red:     "bg-red-50 text-red-600 border-red-100",
-            }[s.color];
+            }[color];
             return (
-              <div key={s.label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"
+              <div key={label} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm"
                 style={{ animation: `fadeIn 0.3s ease ${i * 70}ms both` }}>
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${cls}`}>
-                  <Icon size={16} />
-                </div>
-                <p className="text-2xl font-black text-slate-900">{s.value}</p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{s.label}</p>
+                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-3 ${cls}`}><Icon size={16} /></div>
+                <p className="text-2xl font-black text-slate-900">{value}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{label}</p>
               </div>
             );
           })}
@@ -508,11 +434,8 @@ export const FeeCollection = () => {
           <div className="flex gap-2">
             {["all", "Paid", "Pending", "Overdue", "Sent"].map(s => (
               <button key={s} onClick={() => setFilterStatus(s)}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black border transition-all ${
-                  filterStatus === s
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                }`}>
+                className={`px-4 py-2.5 rounded-xl text-xs font-black border transition-all
+                  ${filterStatus === s ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"}`}>
                 {s === "all" ? "All" : s}
               </button>
             ))}
@@ -542,7 +465,7 @@ export const FeeCollection = () => {
               <table className="w-full text-left">
                 <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                    {["Txn ID", "Student", "Department", "Fee Type", "Amount", "Method", "Date", "Status", ""].map(h => (
+                    {["Txn ID","Student","Department","Fee Type","Amount","Method","Date","Status",""].map(h => (
                       <th key={h} className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -552,13 +475,11 @@ export const FeeCollection = () => {
                     <tr key={txn.id} className="hover:bg-slate-50/60 transition-colors group"
                       style={{ animation: `fadeIn 0.3s ease ${i * 40}ms both` }}>
                       <td className="px-4 py-3">
-                        <span className="text-xs font-mono font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                          {txn.txnId}
-                        </span>
+                        <span className="text-xs font-mono font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">{txn.txnId}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-black text-xs uppercase flex-shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-black text-xs uppercase flex-shrink-0">
                             {txn.student?.[0]}
                           </div>
                           <div>
@@ -571,9 +492,7 @@ export const FeeCollection = () => {
                       <td className="px-4 py-3">
                         <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg whitespace-nowrap">{txn.feeType}</span>
                       </td>
-                      <td className="px-4 py-3 text-sm font-black text-slate-900 whitespace-nowrap">
-                        ₹{txn.amount?.toLocaleString()}
-                      </td>
+                      <td className="px-4 py-3 text-sm font-black text-slate-900 whitespace-nowrap">₹{txn.amount?.toLocaleString()}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">{txn.method}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-slate-500 whitespace-nowrap">{txn.date}</td>
                       <td className="px-4 py-3">
@@ -583,12 +502,10 @@ export const FeeCollection = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => setViewTxn(txn)}
-                            className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View">
+                          <button onClick={() => setViewTxn(txn)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="View">
                             <Eye size={13} />
                           </button>
-                          <button onClick={() => deleteTxn(txn.id)}
-                            className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => deleteTxn(txn.id)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                             <Trash2 size={13} />
                           </button>
                         </div>
@@ -602,12 +519,8 @@ export const FeeCollection = () => {
         </div>
       </div>
 
-      {showCreate && (
-        <CreatePaymentModal onClose={() => setShowCreate(false)} onCreated={reload} />
-      )}
-      {viewTxn && (
-        <TxnDetailModal txn={viewTxn} onClose={() => setViewTxn(null)} onStatusChange={changeStatus} />
-      )}
+      {showCreate && <CreatePaymentModal onClose={() => setShowCreate(false)} onCreated={reload} />}
+      {viewTxn    && <TxnDetailModal txn={viewTxn} onClose={() => setViewTxn(null)} onStatusChange={changeStatus} />}
     </>
   );
 };

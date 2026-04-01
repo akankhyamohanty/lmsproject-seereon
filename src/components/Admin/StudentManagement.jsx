@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useFetch } from '../../hooks/useFetch';
-import { adminService } from '../../services/adminService';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export const StudentManagement = () => {
-  const { data: students, loading, error } = useFetch('/admin/students');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -12,15 +13,80 @@ export const StudentManagement = () => {
     mobile: '',
   });
 
+  // 🚀 DYNAMIC FETCH
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      // Smart token retrieval
+      let token = localStorage.getItem('token'); 
+      if (!token) {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        token = storedUser?.token || storedUser?.data?.token; 
+      }
+
+      const response = await axios.get("http://localhost:5000/api/admin/students", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Map backend data to match the exact keys your UI expects
+        const mappedStudents = response.data.students.map(s => ({
+          ...s,
+          full_name: s.name,
+          // Convert status to lowercase so your green/red color check works
+          status: (s.status || 'active').toLowerCase() 
+        }));
+        setStudents(mappedStudents);
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load students on mount
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // 🚀 DYNAMIC SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await adminService.createStudent(formData);
+      let token = localStorage.getItem('token'); 
+      if (!token) {
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        token = storedUser?.token || storedUser?.data?.token; 
+      }
+
+      // Format data to satisfy your MySQL backend requirements behind the scenes
+      const payload = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.mobile,
+        // Auto-generate missing required fields to keep your UI unchanged
+        rollNo: `STU${Math.floor(Math.random() * 90000) + 10000}`,
+        course: 'General', 
+        batch_year: new Date().getFullYear().toString()
+      };
+
+      await axios.post("http://localhost:5000/api/admin/students", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Reset form and UI
       setFormData({ firstName: '', lastName: '', email: '', mobile: '' });
       setShowForm(false);
+      
+      // Refresh the table instantly
+      fetchStudents(); 
       alert('Student created successfully');
+
     } catch (err) {
-      alert('Failed to create student');
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to create student');
     }
   };
 
@@ -103,7 +169,7 @@ export const StudentManagement = () => {
                 <td className="px-6 py-3">{student.full_name}</td>
                 <td className="px-6 py-3">{student.email}</td>
                 <td className="px-6 py-3">
-                  <span className={`px-3 py-1 rounded text-sm font-semibold ${
+                  <span className={`px-3 py-1 rounded text-sm font-semibold capitalize ${
                     student.status === 'active'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'

@@ -183,7 +183,7 @@ export default function Notification() {
             )}
             <button
               onClick={handleResetNotifications}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-600 text-white font-semibold rounded-lg hover:bg-slate-700 transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-600 transition-all"
             >
               Reset
             </button>

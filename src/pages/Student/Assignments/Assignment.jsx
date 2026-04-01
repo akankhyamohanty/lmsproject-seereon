@@ -1,273 +1,119 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Clock, FileCheck, CheckCircle } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { ClipboardList, Calendar, CheckCircle2, Clock, ChevronRight, Loader } from "lucide-react";
 
-export default function Assignment() {
-  const navigate = useNavigate();
+// 🎯 NEW HELPER: Safely gets the token without sending "undefined" causing 401 errors
+const getAuthConfig = () => {
+  let token = localStorage.getItem("token");
+  if (!token || token === "undefined") {
+    try {
+      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+      token = userObj?.token;
+    } catch (e) {}
+  }
+  
+  const config = { withCredentials: true }; // Ensures cookies are sent!
+  
+  // Only attach the header if a real token exists
+  if (token && token !== "undefined" && token !== "null") {
+    config.headers = { Authorization: `Bearer ${token}` };
+  }
+  return config;
+};
+
+const Assignments = () => {
   const [assignments, setAssignments] = useState([]);
-  const [filterStatus, setFilterStatus] = useState('all');
   const [loading, setLoading] = useState(true);
 
-  // Mock data
-  const mockAssignments = [
-    {
-      id: 1,
-      title: 'Calculus Problem Set 5',
-      course: 'Advanced Mathematics',
-      dueDate: 'Jan 30, 2026',
-      status: 'pending',
-      maximumMarks: 100,
-    },
-    {
-      id: 2,
-      title: 'Physics Lab Report - Mechanics',
-      course: 'Physics',
-      dueDate: 'Feb 2, 2026',
-      status: 'pending',
-      maximumMarks: 100,
-    },
-    {
-      id: 3,
-      title: 'Data Structures Implementation',
-      course: 'Computer Science',
-      dueDate: 'Jan 28, 2026',
-      status: 'submitted',
-      maximumMarks: 100,
-    },
-    {
-      id: 4,
-      title: 'Linear Algebra Assignment 3',
-      course: 'Advanced Mathematics',
-      dueDate: 'Jan 20, 2026',
-      status: 'evaluated',
-      maximumMarks: 100,
-    },
-  ];
-
-  // Load from localStorage on mount
   useEffect(() => {
-    // Load assignments from localStorage
-    const storedAssignments = localStorage.getItem('student_assignments');
-    if (storedAssignments) {
+    const fetchAssignments = async () => {
       try {
-        const assignments = JSON.parse(storedAssignments);
-        if (Array.isArray(assignments)) {
-          setAssignments(assignments);
-        } else {
-          setAssignments(mockAssignments);
-          localStorage.setItem('student_assignments', JSON.stringify(mockAssignments));
+        // 🎯 Using the safe auth config here to prevent 401 errors!
+        const res = await axios.get("http://localhost:5000/api/student/assignments/my-assignments", getAuthConfig());
+        
+        // Checking for either res.data.data or res.data.assignments based on your controller
+        if (res.data.success) {
+          setAssignments(res.data.data || res.data.assignments || []);
         }
-      } catch (error) {
-        console.error('Error parsing assignments:', error);
-        setAssignments(mockAssignments);
-        localStorage.setItem('student_assignments', JSON.stringify(mockAssignments));
+      } catch (err) {
+        console.error("Error fetching assignments:", err);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      // First time - store mock data
-      setAssignments(mockAssignments);
-      localStorage.setItem('student_assignments', JSON.stringify(mockAssignments));
-    }
-
-    // Load filter preference from localStorage
-    const storedFilter = localStorage.getItem('assignment_filter_status');
-    if (storedFilter) {
-      setFilterStatus(storedFilter);
-    }
-
-    setLoading(false);
+    };
+    
+    fetchAssignments();
   }, []);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-orange-100 text-orange-700 border border-orange-300';
-      case 'submitted':
-        return 'bg-blue-100 text-blue-700 border border-blue-300';
-      case 'evaluated':
-        return 'bg-green-100 text-green-700 border border-green-300';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-5 h-5" />;
-      case 'submitted':
-        return <FileCheck className="w-5 h-5" />;
-      case 'evaluated':
-        return <CheckCircle className="w-5 h-5" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusLabel = (status) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const pendingCount = assignments.filter(a => a.status === 'pending').length;
-  const submittedCount = assignments.filter(a => a.status === 'submitted').length;
-  const evaluatedCount = assignments.filter(a => a.status === 'evaluated').length;
-
-  const filteredAssignments =
-    filterStatus === 'all'
-      ? assignments
-      : assignments.filter(a => a.status === filterStatus);
-
-  // Handle filter change and save to localStorage
-  const handleFilterChange = (status) => {
-    setFilterStatus(status);
-    localStorage.setItem('assignment_filter_status', status);
-  };
-
-  // Handle viewing assignment and save to localStorage
-  const handleViewAssignment = (assignmentId) => {
-    const selectedAssignment = assignments.find(a => a.id === assignmentId);
-    if (selectedAssignment) {
-      localStorage.setItem('selected_assignment', JSON.stringify(selectedAssignment));
-    }
-    navigate(`/student/assignments/${assignmentId}`);
-  };
-
   if (loading) {
-    return <div className="min-h-screen bg-gray-50 py-8 px-4">Loading...</div>;
+    return (
+      <div className="py-32 flex flex-col items-center justify-center gap-4">
+        <Loader className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Coursework...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-8xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-6xl font-bold text-gray-900 mb-2">Assignments</h1>
-          <p className="text-lg text-gray-600">View and submit your assignments</p>
-        </div>
+    <div className="w-full max-w-10xl mx-auto pb-12 animate-in fade-in duration-700">
+      <div className="mb-10 text-left">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Assignments</h1>
+        <p className="text-slate-500 font-bold mt-2">Manage and submit your coursework</p>
+      </div>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-3 gap-6 mb-8">
-          {/* Pending Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-8 h-8 text-orange-600" />
+      <div className="grid gap-6">
+        {assignments.length > 0 ? (
+          assignments.map((item) => (
+            <div key={item.id} className="bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-center justify-between gap-6">
+              
+              <div className="flex items-start gap-6 flex-1 text-left">
+                <div className={`p-4 rounded-2xl ${item.status === 'Submitted' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                  <ClipboardList size={24} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">
+                    {item.subject_name || "General"}
+                  </span>
+                  <h3 className="text-xl font-black text-slate-800 mt-1">{item.title}</h3>
+                  <p className="text-slate-500 font-medium text-sm mt-1 line-clamp-1">{item.description}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-lg text-gray-600 font-medium">Pending</p>
-                <p className="text-4xl font-bold text-gray-900">{pendingCount}</p>
+
+              <div className="flex flex-wrap items-center gap-8 w-full md:w-auto">
+                <div className="text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
+                    <Calendar size={12} /> Due Date
+                  </p>
+                  <p className="font-bold text-slate-700">
+                    {item.due_date ? new Date(item.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : "No due date"}
+                  </p>
+                </div>
+
+                <div className={`px-4 py-2 rounded-xl flex items-center gap-2 border ${
+                  item.status === 'Submitted' 
+                  ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                  : 'bg-orange-50 border-orange-100 text-orange-600'
+                }`}>
+                  {item.status === 'Submitted' ? <CheckCircle2 size={16} /> : <Clock size={16} />}
+                  <span className="text-xs font-black uppercase tracking-widest">{item.status || "Pending"}</span>
+                </div>
+
+                <button className="bg-slate-900 text-white p-3 rounded-2xl hover:bg-blue-600 transition-all shadow-lg active:scale-95">
+                  <ChevronRight size={20} />
+                </button>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="p-20 text-center border-2 border-dashed border-slate-200 bg-slate-50 rounded-[2rem]">
+            <ClipboardList className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 font-black text-lg">No Assignments Yet!</p>
+            <p className="text-slate-400 text-sm mt-1">Enjoy your free time, your teachers haven't assigned anything.</p>
           </div>
-
-          {/* Submitted Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FileCheck className="w-8 h-8 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-lg text-gray-600 font-medium">Submitted</p>
-                <p className="text-4xl font-bold text-gray-900">{submittedCount}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Evaluated Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <div>
-                <p className="text-lg text-gray-600 font-medium">Evaluated</p>
-                <p className="text-4xl font-bold text-gray-900">{evaluatedCount}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* All Assignments Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">All Assignments</h2>
-            
-            {/* Filter */}
-            <div>
-              <label className="block text-lg font-semibold text-gray-900 mb-2">Filter by Status</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => handleFilterChange(e.target.value)}
-                className="w-full px-4 py-4 border border-gray-300 rounded-lg text-gray-700 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all bg-white cursor-pointer appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1rem center',
-                  backgroundSize: '1.5em 1.5em',
-                  paddingRight: '2.5rem',
-                }}
-              >
-                <option value="all">All Assignments</option>
-                <option value="pending">Pending</option>
-                <option value="submitted">Submitted</option>
-                <option value="evaluated">Evaluated</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-lg font-semibold text-gray-900">Assignment Title</th>
-                  <th className="px-6 py-4 text-left text-lg font-semibold text-gray-900">Course</th>
-                  <th className="px-6 py-4 text-left text-lg font-semibold text-gray-900">Due Date</th>
-                  <th className="px-6 py-4 text-left text-lg font-semibold text-gray-900">Status</th>
-                  <th className="px-6 py-4 text-left text-lg font-semibold text-gray-900">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAssignments.length > 0 ? (
-                  filteredAssignments.map((assignment) => (
-                    <tr key={assignment.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-lg font-semibold text-gray-900 text-left">
-                        {assignment.title}
-                      </td>
-                      <td className="px-6 py-4 text-lg text-gray-700 text-left">
-                        {assignment.course}
-                      </td>
-                      <td className="px-6 py-4 text-lg text-gray-700 text-left">
-                        {assignment.dueDate}
-                      </td>
-                      <td className="px-6 py-4 text-left">
-                        <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-lg font-medium ${getStatusColor(assignment.status)}`}>
-                          {getStatusIcon(assignment.status)}
-                          {getStatusLabel(assignment.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-lg font-semibold text-gray-900 text-left">
-                        <button
-                          onClick={() => handleViewAssignment(assignment.id)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors font-semibold"
-                        >
-                          View →
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center">
-                      <p className="text-lg text-gray-500">No assignments found</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default Assignments;

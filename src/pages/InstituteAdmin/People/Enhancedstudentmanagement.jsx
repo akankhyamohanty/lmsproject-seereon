@@ -6,12 +6,16 @@ import {
   AlertTriangle, School, Building2, FileText, Clock
 } from "lucide-react";
 
-const STORAGE_KEY = "student_management_list_v4";
+// 🌟 IMPORT API TO CONNECT TO BACKEND
+import api from "../../../services/api"; 
 
 export const StudentList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // 🌟 Start with empty array, data will come from MySQL
   const [students, setStudents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // --- MODAL STATES ---
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -19,95 +23,76 @@ export const StudentList = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // --- LOAD DATA ---
+  // --- 🌟 FETCH DATA FROM BACKEND ---
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setStudents(JSON.parse(stored));
-    } else {
-      const initialData = [
-        {
-          id: "STU-1001",
-          type: "University",
-          name: "John Doe",
-          email: "john@edu.in",
-          phone: "9876543210",
-          course: "B.Tech CSE",
-          section: "A",
-          year: "2024-25",
-          rollNo: "001",
-          status: "Active",
-          dob: "2000-05-15",
-          gender: "Male",
-          aadhar: "1234 5678 9012",
-          pan: "ABCDE1234F",
-          documents: {
-            aadhar: null,
-            pan: null,
-            tenth: null,
-            twelfth: null,
-            graduation: null,
-            masters: null
-          },
-          address: {
-            street: "123 Main Street",
-            city: "Delhi",
-            state: "Delhi",
-            pincode: "110001",
-            country: "India"
-          }
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/admin/students');
+        if (response.data.success) {
+          // Format data if needed to match frontend structure
+          setStudents(response.data.students);
         }
-      ];
-      setStudents(initialData);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialData));
-    }
+      } catch (error) {
+        console.error("Failed to fetch students from DB:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStudents();
   }, []);
 
-  const updateStorage = (updatedList) => {
-    setStudents(updatedList);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
-  };
-
-  // --- HANDLERS ---
-  const handleSaveStudent = (newStudentData) => {
-    if (editingStudent) {
-      // Update existing
-      const updated = students.map(s => s.id === editingStudent.id ? { ...s, ...newStudentData } : s);
-      updateStorage(updated);
-      setEditingStudent(null);
-    } else {
-      // Create new
-      const prefix = newStudentData.type === "School" ? "SCH" : "STU";
-      const newStudent = {
-        id: `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`,
-        status: "Pending",
-        documents: {
-          aadhar: null,
-          pan: null,
-          tenth: null,
-          twelfth: null,
-          graduation: null,
-          masters: null
-        },
-        address: {},
-        ...newStudentData
-      };
-      updateStorage([...students, newStudent]);
+  // --- 🌟 SAVE DATA TO BACKEND ---
+  const handleSaveStudent = async (newStudentData) => {
+    try {
+      if (editingStudent) {
+        // Update existing (Requires a PUT route on your backend)
+        // await api.put(`/admin/students/${editingStudent.id}`, newStudentData);
+        setStudents(students.map(s => s.id === editingStudent.id ? { ...s, ...newStudentData } : s));
+        setEditingStudent(null);
+        alert("Student profile updated!");
+      } else {
+        // 🚀 POST to backend: This sends the Password to your Controller!
+        const response = await api.post('/admin/students', newStudentData);
+        
+        if (response.data.success) {
+          const prefix = newStudentData.type === "School" ? "SCH" : "STU";
+          const newStudent = {
+            id: response.data.studentCode || `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`,
+            status: "Active", // Usually active once created with password
+            documents: { aadhar: null, pan: null, tenth: null, twelfth: null, graduation: null, masters: null },
+            address: {},
+            ...newStudentData
+          };
+          setStudents([...students, newStudent]);
+          alert("Student enrolled successfully! They can now log in.");
+        }
+      }
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Failed to save student:", error);
+      alert(error.response?.data?.message || "Error saving student to database.");
     }
-    setIsAddModalOpen(false);
   };
 
-  const handleDelete = (id) => {
-    const updated = students.filter(s => s.id !== id);
-    updateStorage(updated);
-    setDeleteConfirm(null);
+  const handleDelete = async (id) => {
+    try {
+      // NOTE: Uncomment when you build the DELETE route
+      // await api.delete(`/admin/students/${id}`);
+      setStudents(students.filter(s => s.id !== id));
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error("Failed to delete student:", error);
+    }
   };
 
   const filteredStudents = students.filter(item => {
+    // Check if item and necessary properties exist before calling toLowerCase
+    if (!item || !item.status || !item.name) return false;
+    
     const matchesStatus = activeTab === "all" || item.status.toLowerCase() === activeTab;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.id && item.id.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.email && item.email.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
 
@@ -141,8 +126,8 @@ export const StudentList = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-6 py-2 rounded-lg text-md font-bold uppercase tracking-wide transition-all ${
                 activeTab === tab
-                  ? "bg-slate-800 text-white shadow-md"
-                  : "text-slate-500 hover:bg-slate-50"
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-blue-600 hover:bg-slate-50"
               }`}
             >
               {tab}
@@ -168,16 +153,22 @@ export const StudentList = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="py-5 pl-6 pr-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Student</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Type</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Program</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Email</th>
-                <th className="py-5 px-4 text-[13px] font-black uppercase text-slate-400 tracking-widest">Status</th>
-                <th className="py-5 pr-6 text-[13px] font-black uppercase text-slate-400 tracking-widest text-right">Actions</th>
+                <th className="py-5 pl-6 pr-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Student</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Type</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Program</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Email</th>
+                <th className="py-5 px-4 text-[13px] font-black uppercase text-blue-400 tracking-widest">Status</th>
+                <th className="py-5 pr-6 text-[13px] font-black uppercase text-blue-400 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredStudents.length > 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan="6" className="py-12 text-center text-slate-500 font-bold">
+                    Loading records from database...
+                  </td>
+                </tr>
+              ) : filteredStudents.length > 0 ? (
                 filteredStudents.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                     <td className="py-4 pl-6 pr-4">
@@ -185,11 +176,11 @@ export const StudentList = () => {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-md shrink-0 border ${
                           item.type === 'School' ? 'bg-orange-50 text-orange-600 border-orange-100' : 'bg-blue-50 text-blue-600 border-blue-100'
                         }`}>
-                          {item.name[0]}
+                          {item.name ? item.name[0] : 'S'}
                         </div>
                         <div>
                           <h4 className="text-md font-bold text-slate-700">{item.name}</h4>
-                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{item.id}</span>
+                          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{item.rollNo || item.id}</span>
                         </div>
                       </div>
                     </td>
@@ -315,7 +306,7 @@ export const StudentList = () => {
 };
 
 // ============================================================================
-// ENHANCED STUDENT FORM - With Address, Documents, and All Fields
+// ENHANCED STUDENT FORM - With Address, Documents, and 🌟 PASSWORD FIELD
 // ============================================================================
 const EnhancedStudentForm = ({ student, onClose, onSave }) => {
   const [form, setForm] = useState(student || {
@@ -323,6 +314,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
     firstName: "",
     lastName: "",
     email: "",
+    password: "", // 🌟 INITIALIZED HERE
     phone: "",
     dob: "",
     gender: "",
@@ -334,19 +326,10 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
     rollNo: "",
     year: "2024-25",
     documents: {
-      aadhar: null,
-      pan: null,
-      tenth: null,
-      twelfth: null,
-      graduation: null,
-      masters: null
+      aadhar: null, pan: null, tenth: null, twelfth: null, graduation: null, masters: null
     },
     address: {
-      street: "",
-      city: "",
-      state: "",
-      pincode: "",
-      country: "India"
+      street: "", city: "", state: "", pincode: "", country: "India"
     }
   });
 
@@ -406,9 +389,16 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.firstName || !form.email) {
-      alert("Please fill required fields");
+      alert("Please fill required fields (First Name, Email)");
       return;
     }
+    
+    // 🌟 PASSWORD VALIDATION
+    if (!student && !form.password) {
+      alert("Please set an Account Password for the new student.");
+      return;
+    }
+
     if (form.type === "University" && !form.course) {
       alert("Please select a course");
       return;
@@ -419,7 +409,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
     }
 
     onSave({
-      name: `${form.firstName} ${form.lastName}`,
+      name: `${form.firstName} ${form.lastName}`.trim(),
       ...form
     });
   };
@@ -506,6 +496,26 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                         className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
+                    
+                    {/* 🌟 NEW PASSWORD FIELD INSERTED HERE */}
+                    <div>
+                      <label className="text-xs font-bold text-blue-600 uppercase mb-2 block">
+                        Account Password {student ? "" : "*"}
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={form.password || ""}
+                        onChange={handleChange}
+                        placeholder={student ? "Leave blank to keep current" : "Set default password"}
+                        className="w-full px-4 py-2.5 border border-blue-300 bg-blue-50/30 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        required={!student}
+                      />
+                      <p className="text-[10px] text-blue-500 font-bold mt-1">
+                        {student ? "Type here to reset password." : "Student uses this to log in."}
+                      </p>
+                    </div>
+
                     <div>
                       <label className="text-xs font-bold text-slate-600 uppercase mb-2 block">Phone</label>
                       <input
@@ -545,7 +555,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
                 </div>
 
                 {/* IDENTITY SECTION */}
-                <div className="border-l-4 border-purple-500 pl-6">
+                <div className="border-l-4 border-purple-500 pl-6 mt-6">
                   <h3 className="text-lg font-bold text-slate-900 mb-5">Identity Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
@@ -813,7 +823,7 @@ const EnhancedStudentForm = ({ student, onClose, onSave }) => {
 const DocumentUploadField = ({ label, icon, docType, uploaded, onUpload }) => {
   return (
     <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-xl border border-slate-200">
-      <label className="text-sm font-bold text-slate-700 mb-3 block-flex items-center gap-2">
+      <label className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2 block">
         <span className="text-lg">{icon}</span> {label}
       </label>
 
@@ -881,7 +891,7 @@ const StudentDetailsModal = ({ student, onClose, onEdit }) => {
           {/* PROFILE HEADER */}
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-3xl font-black text-blue-700 border-4 border-white shadow-lg">
-              {student.name[0]}
+              {student.name ? student.name[0] : 'S'}
             </div>
             <div>
               <h3 className="text-2xl font-black text-slate-900">{student.name}</h3>

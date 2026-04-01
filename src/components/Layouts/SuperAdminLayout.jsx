@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const SuperAdminLayout = () => {
-  // 1. Use Lucide Icons instead of Emojis for a cleaner UI
+  
   const superAdminLinks = [
     { label: "Dashboard", path: "/super-admin/dashboard", icon: LayoutDashboard },
     { label: "Institutes", path: "/super-admin/institutes", icon: Building2 },
