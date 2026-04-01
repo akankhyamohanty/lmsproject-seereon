@@ -99,21 +99,22 @@ const ViewModal = ({ faculty: f, onClose, onEdit, onDelete }) => {
       onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="bg-slate-50 w-full max-w-3xl max-h-[92vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200"
         style={{ animation: "modalIn .25s cubic-bezier(.16,1,.3,1)" }}>
-        {/* Profile hero */}
-        <div className="relative bg-gradient-to-br from-slate-900 to-slate-800 px-6 pt-6 pb-5 flex-shrink-0 overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.07]"
-            style={{ backgroundImage: "radial-gradient(circle at 10% 50%, #60a5fa 0%, transparent 60%), radial-gradient(circle at 90% 10%, #a78bfa 0%, transparent 60%)" }}/>
+        
+        {/* Profile hero - UPDATED TO WHITE BACKGROUND */}
+        <div className="relative bg-white border-b border-slate-200 px-6 pt-6 pb-5 flex-shrink-0 overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: "radial-gradient(circle at 10% 50%, #3b82f6 0%, transparent 60%), radial-gradient(circle at 90% 10%, #8b5cf6 0%, transparent 60%)" }}/>
           <div className="relative flex items-start gap-5">
-            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${avatarBg(f.id)} flex items-center justify-center text-2xl font-black text-white shadow-xl uppercase flex-shrink-0`}>
+            <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${avatarBg(f.id)} flex items-center justify-center text-2xl font-black text-white shadow-lg uppercase flex-shrink-0`}>
               {f.first_name?.[0]}{f.last_name?.[0]}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h2 className="text-2xl font-black text-white leading-tight">{f.first_name} {f.last_name}</h2>
-                  <p className="text-slate-400 text-md mt-1">{f.designation}{f.department ? ` · ${f.department}` : ""}</p>
+                  <h2 className="text-2xl font-black text-slate-900 leading-tight">{f.first_name} {f.last_name}</h2>
+                  <p className="text-slate-500 text-md mt-1">{f.designation}{f.department ? ` · ${f.department}` : ""}</p>
                 </div>
-                <button onClick={onClose} className="text-slate-400 hover:text-white hover:bg-white/10 rounded-xl p-2 transition flex-shrink-0">
+                <button onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl p-2 transition flex-shrink-0">
                   <X size={19}/>
                 </button>
               </div>
@@ -121,13 +122,14 @@ const ViewModal = ({ faculty: f, onClose, onEdit, onDelete }) => {
                 <span className={`inline-flex items-center gap-1.5 border px-2.5 py-1 rounded-full text-md font-bold uppercase tracking-wider ${s.badge}`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`}/>{f.status}
                 </span>
-                <span className="text-slate-500 text-md font-mono bg-slate-600/60 px-2 py-1 rounded-lg">{f.institute_code || "—"}</span>
+                <span className="text-slate-600 text-md font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">{f.institute_code || "—"}</span>
                 {f.experience && (
-                  <span className="text-slate-400 text-md bg-slate-800/40 px-2 py-1 rounded-lg">{f.experience} yrs exp.</span>
+                  <span className="text-slate-600 text-md bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg">{f.experience} yrs exp.</span>
                 )}
               </div>
             </div>
           </div>
+          
           {/* Quick stats */}
           <div className="relative grid grid-cols-4 gap-2 mt-5">
             {[
@@ -136,9 +138,9 @@ const ViewModal = ({ faculty: f, onClose, onEdit, onDelete }) => {
               { label: "Gender",     value: f.gender || "—" },
               { label: "DOB",        value: f.dob ? new Date(f.dob).toLocaleDateString("en-IN") : "—" },
             ].map(stat => (
-              <div key={stat.label} className="bg-blue-600 rounded-xl px-3 py-2 text-center">
-                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">{stat.label}</p>
-                <p className="text-md font-bold text-white mt-0.5 truncate">{stat.value}</p>
+              <div key={stat.label} className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-center">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                <p className="text-md font-bold text-slate-800 mt-0.5 truncate">{stat.value}</p>
               </div>
             ))}
           </div>

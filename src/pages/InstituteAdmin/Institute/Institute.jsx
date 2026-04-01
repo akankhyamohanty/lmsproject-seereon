@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../../../services/api";
 import {
   Building2, Users, FileText, GitBranch,
   MapPin, Phone, Mail, Landmark, ShieldCheck, Zap,
@@ -309,32 +310,38 @@ export default function Institute() {
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
-    // Read the logged-in user from storage
-    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    const fetchInstituteProfile = async () => {
+      // 1. Get basic data for the skeleton
+      const rawUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const userData = rawUser.data || rawUser;
+      
+      const instCode = userData.instituteCode || userData.code || "N/A";
 
-    if (loggedInUser) {
-      // Map user data to Institute layout
-      const activeInstitute = {
-        id: loggedInUser.code,
+      // 2. Show a temporary "Skeleton" while loading
+      setInstitute({
+        id: instCode,
         status: "Active",
         plan: "Premium",
-        createdAt: new Date().toLocaleDateString(),
-        organisation: {
-          name: loggedInUser.name,
-          type: "Institute",
-          email: loggedInUser.email || "", 
-          phone: "",
-          city: "",
-          state: ""
-        },
-        directors: [],
-        legal: {},
-        branches: []
-      };
-      setInstitute(activeInstitute);
-    }
-    
-    setLoading(false);
+        organisation: { name: "Loading Profile...", type: "Institute" },
+        directors: [], legal: {}, branches: []
+      });
+
+      // 3. 🚀 THE FIX: Use your custom 'api' to fetch the data!
+      try {
+        // Your interceptor automatically handles the base URL and the Token!
+        const response = await api.get("/admin/settings/profile");
+        if (response.data.success) {
+          // Overwrite the skeleton with the REAL data
+          setInstitute(response.data.institute);
+        }
+      } catch (err) {
+        console.error("Failed to fetch full institute profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInstituteProfile();
   }, []);
 
   /* ── Loading ── */
